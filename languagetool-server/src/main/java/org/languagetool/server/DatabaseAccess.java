@@ -151,6 +151,15 @@ class DatabaseAccess {
       return session.selectList("org.languagetool.server.UserDictMapper.selectWordList", map, new RowBounds(offset, limit));
     }
   }
+
+  List<CorpusMatchEntry> getCorpusMatches(int limit) {
+    if (sqlSessionFactory == null) {
+      return new ArrayList<>();
+    }
+    try (SqlSession session = sqlSessionFactory.openSession(true)) {
+      return session.selectList("org.languagetool.server.WikipediaMapper.selectWikipediaSuggestions", new HashMap<>(), new RowBounds(0, limit));
+    }
+  }
   
   boolean addWord(String word, Long userId) {
     validateWord(word);

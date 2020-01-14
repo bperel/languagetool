@@ -32,6 +32,7 @@ import java.sql.*;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 /**
  * Store rule matches to a database.
@@ -54,16 +55,15 @@ class DatabaseHandler extends ResultHandler {
   DatabaseHandler(File propertiesFile, int maxSentences, int maxErrors) {
     super(maxSentences, maxErrors);
 
-    String insertSql = "INSERT INTO corpus_match " +
-            "(version, language_code, ruleid, rule_category, rule_subid, rule_description, message, error_context, small_error_context, corpus_date, " +
-            "check_date, sourceuri, source_type, is_visible) "+
-            "VALUES (0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)";
+    String insertSql = "" +
+      " INSERT INTO corpus_match (version, language_code, ruleid, rule_category, rule_subid, rule_description, message, error_context, small_error_context, corpus_date, check_date, sourceuri, source_type, replacement_suggestion, is_visible)" +
+      " VALUES (0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)";
 
     Properties dbProperties = new Properties();
     try (FileInputStream inStream = new FileInputStream(propertiesFile)) {
       dbProperties.load(inStream);
       String dbUrl = getProperty(dbProperties, "dbUrl");
-      String dbUser = getProperty(dbProperties, "dbUser");
+      String dbUser = getProperty(dbProperties, "dbUsername");
       String dbPassword = getProperty(dbProperties, "dbPassword");
       batchSize = Integer.decode(dbProperties.getProperty("batchSize", "1"));
       conn = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
@@ -95,26 +95,29 @@ class DatabaseHandler extends ResultHandler {
   protected void handleResult(Sentence sentence, List<RuleMatch> ruleMatches, Language language) {
     try {
       java.sql.Date nowDate = new java.sql.Date(new Date().getTime());
-      for (RuleMatch match : ruleMatches) {
-        String smallContext = smallContextTools.getContext(match.getFromPos(), match.getToPos(), sentence.getText());
-        insertSt.setString(1, language.getShortCode());
-        Rule rule = match.getRule();
-        insertSt.setString(2, rule.getId());
-        insertSt.setString(3, rule.getCategory().getName());
-        if (rule instanceof AbstractPatternRule) {
-          AbstractPatternRule patternRule = (AbstractPatternRule) rule;
-          insertSt.setString(4, patternRule.getSubId());
-        } else {
-          insertSt.setNull(4, Types.VARCHAR);
-        }
-        insertSt.setString(5, rule.getDescription());
-        insertSt.setString(6, StringUtils.abbreviate(match.getMessage(), 255));
-
+      List<RuleMatch> rulesMatchesWithSuggestions = ruleMatches.stream()
+        .filter(match -> !match.getSuggestedReplacements().isEmpty())
+        .collect(Collectors.toList());
+      for (RuleMatch match : rulesMatchesWithSuggestions) {
         String context = contextTools.getContext(match.getFromPos(), match.getToPos(), sentence.getText());
         if (context.length() > MAX_CONTEXT_LENGTH) {
           // let's skip these strange cases, as shortening the text might leave us behind with invalid markup etc
           continue;
         }
+
+        String smallContext = smallContextTools.getContext(match.getFromPos(), match.getToPos(), sentence.getText());
+        Rule rule = match.getRule();
+
+        insertSt.setString(1, language.getShortCode());
+        insertSt.setString(2, rule.getId());
+        insertSt.setString(3, rule.getCategory().getName());
+        if (rule instanceof AbstractPatternRule) {
+          insertSt.setString(4, ((AbstractPatternRule) rule).getSubId());
+        } else {
+          insertSt.setNull(4, Types.VARCHAR);
+        }
+        insertSt.setString(5, rule.getDescription());
+        insertSt.setString(6, StringUtils.abbreviate(match.getMessage(), 255));
         insertSt.setString(7, context);
         insertSt.setString(8, StringUtils.abbreviate(smallContext, 255));
         
@@ -122,6 +125,7 @@ class DatabaseHandler extends ResultHandler {
         insertSt.setDate(10, nowDate);
         insertSt.setString(11, sentence.getUrl());
         insertSt.setString(12, sentence.getSource());
+        insertSt.setString(13, match.getSuggestedReplacements().get(0));
         insertSt.addBatch();
         if (++batchCount >= batchSize){
           executeBatch();

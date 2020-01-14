@@ -61,28 +61,41 @@ class ApiV2 {
   }
 
   void handleRequest(String path, HttpExchange httpExchange, Map<String, String> parameters, ErrorRequestLimiter errorRequestLimiter, String remoteAddress, HTTPServerConfig config) throws Exception {
-    if (path.equals("languages")) {
-      handleLanguagesRequest(httpExchange);
-    } else if (path.equals("maxtextlength")) {
-      handleMaxTextLengthRequest(httpExchange, config);
-    } else if (path.equals("configinfo")) {
-      handleGetConfigurationInfoRequest(httpExchange, parameters, config);
-    } else if (path.equals("check")) {
-      handleCheckRequest(httpExchange, parameters, errorRequestLimiter, remoteAddress);
-    } else if (path.equals("words")) {
-      handleWordsRequest(httpExchange, parameters, config);
-    } else if (path.equals("words/add")) {
-      handleWordAddRequest(httpExchange, parameters, config);
-    } else if (path.equals("words/delete")) {
-      handleWordDeleteRequest(httpExchange, parameters, config);
-    } else if (path.equals("rule/examples")) {
-      // private (i.e. undocumented) API for our own use only
-      handleRuleExamplesRequest(httpExchange, parameters);
-    } else if (path.equals("log")) {
-      // private (i.e. undocumented) API for our own use only
-      handleLogRequest(httpExchange, parameters);
-    } else {
-      throw new PathNotFoundException("Unsupported action: '" + path + "'. Please see " + API_DOC_URL);
+    switch (path) {
+      case "languages":
+        handleLanguagesRequest(httpExchange);
+        break;
+      case "maxtextlength":
+        handleMaxTextLengthRequest(httpExchange, config);
+        break;
+      case "configinfo":
+        handleGetConfigurationInfoRequest(httpExchange, parameters, config);
+        break;
+      case "check":
+        handleCheckRequest(httpExchange, parameters, errorRequestLimiter, remoteAddress);
+        break;
+      case "words":
+        handleWordsRequest(httpExchange, parameters, config);
+        break;
+      case "words/add":
+        handleWordAddRequest(httpExchange, parameters, config);
+        break;
+      case "words/delete":
+        handleWordDeleteRequest(httpExchange, parameters, config);
+        break;
+      case "wikipedia/suggestions":
+        handleWikipediaSuggestionRequest(httpExchange);
+        break;
+      case "rule/examples":
+        // private (i.e. undocumented) API for our own use only
+        handleRuleExamplesRequest(httpExchange, parameters);
+        break;
+      case "log":
+        // private (i.e. undocumented) API for our own use only
+        handleLogRequest(httpExchange, parameters);
+        break;
+      default:
+        throw new PathNotFoundException("Unsupported action: '" + path + "'. Please see " + API_DOC_URL);
     }
   }
 
@@ -162,6 +175,13 @@ class ApiV2 {
     DatabaseAccess db = DatabaseAccess.getInstance();
     boolean deleted = db.deleteWord(parameters.get("word"), limits.getPremiumUid());
     writeResponse("deleted", deleted, httpExchange);
+  }
+
+  private void handleWikipediaSuggestionRequest(HttpExchange httpExchange) throws IOException {
+    ensureGetMethod(httpExchange, "/wikipedia/suggestions");
+    DatabaseAccess db = DatabaseAccess.getInstance();
+    List<CorpusMatchEntry> suggestions = db.getCorpusMatches(10);
+    writeResponse("suggestions", suggestions, httpExchange);
   }
 
   private void handleRuleExamplesRequest(HttpExchange httpExchange, Map<String, String> params) throws Exception {
@@ -246,6 +266,20 @@ class ApiV2 {
     try (JsonGenerator g = factory.createGenerator(sw)) {
       g.writeStartObject();
       g.writeBooleanField(fieldName, added);
+      g.writeEndObject();
+    }
+    sendJson(httpExchange, sw);
+  }
+
+  private void writeResponse(String fieldName, List<CorpusMatchEntry> corpusMatchEntries, HttpExchange httpExchange) throws IOException {
+    StringWriter sw = new StringWriter();
+    try (JsonGenerator g = factory.createGenerator(sw)) {
+      g.writeStartObject();
+      g.writeArrayFieldStart(fieldName);
+      for (CorpusMatchEntry corpusMatchEntry : corpusMatchEntries) {
+        g.writeString(corpusMatchEntry.getReplacementSuggestion());
+      }
+      g.writeEndArray();
       g.writeEndObject();
     }
     sendJson(httpExchange, sw);
