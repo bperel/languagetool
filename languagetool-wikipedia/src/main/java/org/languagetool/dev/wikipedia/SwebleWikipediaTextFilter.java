@@ -51,7 +51,7 @@ public class SwebleWikipediaTextFilter implements TextMapFilter {
   }
 
   @Override
-  public PlainTextMapping filter(String wikiText) {
+  public PlainTextMapping convert(String wikiText) {
     try {
       CompiledPage compiledPage = compiler.postprocess(pageId, wikiText, null);
       TextConverter textConverter = new TextConverter(config, WRAP_COL);
@@ -69,7 +69,7 @@ public class SwebleWikipediaTextFilter implements TextMapFilter {
   }
 
   /**
-   * Set this to {@code false} for better performance. The result of {@link #filter(String)}
+   * Set this to {@code false} for better performance. The result of {@link #convert(String)}
    * will then have a {@code null} mapping.
    */
   public void enableMapping(boolean enable) {

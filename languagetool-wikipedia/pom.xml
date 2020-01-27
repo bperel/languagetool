@@ -37,6 +37,7 @@
     <properties>
         <!-- we have to repeat it here as otherwise Grails project languagetool-community-website will fail: -->
         <lucene.version>5.5.5</lucene.version>
+        <mariadb.client.version>2.5.1</mariadb.client.version>
     </properties>
     
     <build>
@@ -191,6 +192,12 @@
             <artifactId>junit</artifactId>
             <version>${junit.version}</version>
             <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mariadb.jdbc</groupId>
+            <artifactId>mariadb-java-client</artifactId>
+            <version>${mariadb.client.version}</version>
         </dependency>
         
     </dependencies>

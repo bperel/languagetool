@@ -76,7 +76,7 @@ public class WikipediaTextFilterTest {
   }
 
   private void assertExtract(String input, String expected) {
-    assertEquals(expected, swebleFilter.filter(input).getPlainText());
+    assertEquals(expected, swebleFilter.convert(input).getPlainText());
   }
 
 }

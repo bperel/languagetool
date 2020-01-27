@@ -21,7 +21,7 @@ package org.languagetool.server;
 import java.sql.Date;
 
 /**
- * An corpus match, fetched from a database.
+ * A corpus match, fetched from a database.
  * @since 4.2
  */
 public class CorpusMatchEntry {

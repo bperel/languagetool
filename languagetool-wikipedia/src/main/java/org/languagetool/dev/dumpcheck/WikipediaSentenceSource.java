@@ -19,7 +19,7 @@
 package org.languagetool.dev.dumpcheck;
 
 import org.languagetool.Language;
-import org.languagetool.dev.wikipedia.SwebleWikipediaTextFilter;
+import org.languagetool.dev.wikipedia.ParsoidWikipediaTextParser;
 import org.languagetool.tokenizers.Tokenizer;
 
 import javax.xml.stream.XMLEventReader;
@@ -47,7 +47,7 @@ public class WikipediaSentenceSource extends SentenceSource {
   private static final boolean ONLY_ARTICLES = false;
   private static final String ARTICLE_NAMESPACE = "0";
 
-  private final SwebleWikipediaTextFilter textFilter = new SwebleWikipediaTextFilter();
+  private final ParsoidWikipediaTextParser textFilter = new ParsoidWikipediaTextParser();
   private final XMLEventReader reader;
   private final Tokenizer sentenceTokenizer;
   private final List<WikipediaSentence> sentences;
@@ -64,7 +64,6 @@ public class WikipediaSentenceSource extends SentenceSource {
   /** @since 3.0 */
   WikipediaSentenceSource(InputStream xmlInput, Language language, Pattern filter) {
     super(language, filter);
-    textFilter.enableMapping(false);  // improves performance
     try {
       System.setProperty("jdk.xml.totalEntitySizeLimit", String.valueOf(Integer.MAX_VALUE));  // see https://github.com/dbpedia/extraction-framework/issues/487
       XMLInputFactory factory = XMLInputFactory.newInstance();
@@ -152,7 +151,7 @@ public class WikipediaSentenceSource extends SentenceSource {
         redirectSkipCount++;
         return;
       }
-      String textToCheck = textFilter.filter(sb.toString()).getPlainText();
+      String textToCheck = textFilter.convert(sb.toString()).getPlainText();
       for (String sentence : sentenceTokenizer.tokenize(textToCheck)) {
         if (acceptSentence(sentence)) {
           // Create an artificial ID - as we treat each sentence as a single document

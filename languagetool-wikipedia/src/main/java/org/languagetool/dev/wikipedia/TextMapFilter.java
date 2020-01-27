@@ -1,6 +1,6 @@
-/* LanguageTool, a natural language style checker 
+/* LanguageTool, a natural language style checker
  * Copyright (C) 2013 Daniel Naber (http://www.danielnaber.de)
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -20,11 +20,6 @@ package org.languagetool.dev.wikipedia;
 
 public interface TextMapFilter {
 
-  /**
-   * Filter the given text, keeping a mapping from plain text to original markup positions.
-   * Note that the result's mapping may be {@code null} if mapping has been disabled for
-   * performance reasons.
-   */
-  PlainTextMapping filter(String text);
+  PlainTextMapping convert(String text);
 
 }

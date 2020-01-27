@@ -18,22 +18,6 @@
  */
 package org.languagetool.dev.wikipedia;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringReader;
-import java.net.HttpURLConnection;
-import java.net.SocketTimeoutException;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
-
 import org.languagetool.JLanguageTool;
 import org.languagetool.Language;
 import org.languagetool.Languages;
@@ -46,6 +30,21 @@ import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
+
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringReader;
+import java.net.HttpURLConnection;
+import java.net.SocketTimeoutException;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Check a Wikipedia page (without spell check), fetching the page via the MediaWiki API.
@@ -145,8 +144,8 @@ public class WikipediaQuickCheck {
   }
 
   MarkupAwareWikipediaResult checkWikipediaMarkup(URL url, MediaWikiContent wikiContent, Language language, ErrorMarker errorMarker) throws IOException {
-    SwebleWikipediaTextFilter filter = new SwebleWikipediaTextFilter();
-    PlainTextMapping mapping = filter.filter(wikiContent.getContent());
+    ParsoidWikipediaTextParser filter = new ParsoidWikipediaTextParser();
+    PlainTextMapping mapping = filter.convert(wikiContent.getContent());
     MultiThreadedJLanguageTool langTool = getLanguageTool(language);
     List<AppliedRuleMatch> appliedMatches = new ArrayList<>();
     List<RuleMatch> matches;
@@ -192,8 +191,8 @@ public class WikipediaQuickCheck {
   public String getPlainText(String completeWikiContent) {
     MediaWikiContent wikiContent = getRevisionContent(completeWikiContent);
     String cleanedWikiContent = removeWikipediaLinks(wikiContent.getContent());
-    TextMapFilter filter = new SwebleWikipediaTextFilter();
-    return filter.filter(cleanedWikiContent).getPlainText();
+    TextMapFilter filter = new ParsoidWikipediaTextParser();
+    return filter.convert(cleanedWikiContent).getPlainText();
   }
 
   /**
@@ -201,8 +200,8 @@ public class WikipediaQuickCheck {
    */
   public PlainTextMapping getPlainTextMapping(String completeWikiContent) {
     MediaWikiContent wikiContent = getRevisionContent(completeWikiContent);
-    SwebleWikipediaTextFilter filter = new SwebleWikipediaTextFilter();
-    return filter.filter(wikiContent.getContent());
+    ParsoidWikipediaTextParser filter = new ParsoidWikipediaTextParser();
+    return filter.convert(wikiContent.getContent());
   }
 
   // catches most, not all links ("[[pt:Linux]]", but not "[[zh-min-nan:Linux]]"). Might remove some non-interlanguage links.

@@ -145,7 +145,7 @@ public class SuggestionReplacerTest {
     langTool.disableRule("OLD_SPELLING");
     langTool.disableRule("DE_TOO_LONG_SENTENCE_40");
     langTool.disableRule("PUNCTUATION_PARAGRAPH_END");
-    PlainTextMapping mapping = filter.filter(origMarkup);
+    PlainTextMapping mapping = filter.convert(origMarkup);
     List<RuleMatch> matches = langTool.check(mapping.getPlainText());
     assertThat("Expected 3 matches, got: " + matches, matches.size(), is(3));
     int oldPos = 0;
@@ -170,7 +170,7 @@ public class SuggestionReplacerTest {
     InputStream stream = SuggestionReplacerTest.class.getResourceAsStream("/org/languagetool/dev/wikipedia/wikipedia2.txt");
     String origMarkup = IOUtils.toString(stream, "utf-8");
     JLanguageTool langTool = new JLanguageTool(germanyGerman);
-    PlainTextMapping mapping = filter.filter(origMarkup);
+    PlainTextMapping mapping = filter.convert(origMarkup);
     langTool.disableRule("PUNCTUATION_PARAGRAPH_END");  //  added to prevent crash; TODO: check if needed
     List<RuleMatch> matches = langTool.check(mapping.getPlainText());
     assertTrue("Expected >= 30 matches, got: " + matches, matches.size() >= 30);
@@ -196,7 +196,7 @@ public class SuggestionReplacerTest {
   }
 
   private void applySuggestion(JLanguageTool langTool, SwebleWikipediaTextFilter filter, String text, String expected) throws IOException {
-    PlainTextMapping mapping = filter.filter(text);
+    PlainTextMapping mapping = filter.convert(text);
     List<RuleMatch> matches = langTool.check(mapping.getPlainText());
     assertThat("Expected 1 match, got: " + matches, matches.size(), is(1));
     SuggestionReplacer replacer = new SuggestionReplacer(mapping, text, new ErrorMarker("<s>", "</s>"));
