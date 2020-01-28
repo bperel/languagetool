@@ -81,6 +81,6 @@ class StdoutHandler extends ResultHandler {
   }
 
   @Override
-  public void close() throws Exception {
+  public void close() {
   }
 }

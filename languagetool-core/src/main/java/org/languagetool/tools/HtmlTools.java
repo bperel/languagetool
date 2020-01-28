@@ -72,7 +72,7 @@ public class HtmlTools {
       String attributeName = attribute.getNodeName();
       String attributeValue = attribute.getNodeValue();
 
-      htmlAttributes.add(new HtmlAttribute(null, 1, attributeName, attributeValue));
+      htmlAttributes.add(new HtmlAttribute(null, sourceUri, getFullXPath(element), attributeName, attributeValue));
       element.getAttributes().removeNamedItem(attributeName);
 
     }
@@ -93,7 +93,7 @@ public class HtmlTools {
       return anonymizedHtml == null ? null : htmlAttributes;
     }
 
-    static class HtmlNode {
+    public static class HtmlNode {
       private Integer id;
       private String sourceUri;
       private String xpath;
@@ -104,6 +104,18 @@ public class HtmlTools {
         this.sourceUri = sourceUri;
         this.xpath = xpath;
         this.tagName = tagName;
+      }
+
+      public String getSourceUri() {
+        return sourceUri;
+      }
+
+      public String getXpath() {
+        return xpath;
+      }
+
+      public String getTagName() {
+        return tagName;
       }
 
       @Override
@@ -123,33 +135,52 @@ public class HtmlTools {
       }
     }
 
-    static class HtmlAttribute {
+    public static class HtmlAttribute {
       private Integer id;
-      private Integer tagId;
+      private String sourceUri;
+      private String xpath;
       private String name;
       private String value;
 
-      public HtmlAttribute(Integer id, Integer tagId, String name, String value) {
+      public HtmlAttribute(Integer id, String sourceUri, String xpath, String name, String value) {
         this.id = id;
-        this.tagId = tagId;
+        this.sourceUri = sourceUri;
+        this.xpath = xpath;
         this.name = name;
         this.value = value;
       }
 
+      public String getSourceUri() {
+        return sourceUri;
+      }
+
+      public String getXpath() {
+        return xpath;
+      }
+
+      public String getName() {
+        return name;
+      }
+
+      public String getValue() {
+        return value;
+      }
+
       @Override
-      public boolean equals(final Object o) {
+      public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        final HtmlAttribute other = (HtmlAttribute) o;
-        return Objects.equals(id, other.id) &&
-          Objects.equals(tagId, other.tagId) &&
-          Objects.equals(name, other.name) &&
-          Objects.equals(value, other.value);
+        HtmlAttribute that = (HtmlAttribute) o;
+        return Objects.equals(id, that.id) &&
+          sourceUri.equals(that.sourceUri) &&
+          xpath.equals(that.xpath) &&
+          name.equals(that.name) &&
+          value.equals(that.value);
       }
 
       @Override
       public int hashCode() {
-        return Objects.hash(id, tagId, name, value);
+        return Objects.hash(id, sourceUri, xpath, name, value);
       }
     }
   }

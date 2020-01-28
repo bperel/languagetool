@@ -18,9 +18,11 @@
  */
 package org.languagetool.dev.dumpcheck;
 
+import org.jetbrains.annotations.NotNull;
 import org.languagetool.Language;
 import org.languagetool.dev.wikipedia.ParsoidWikipediaTextParser;
 import org.languagetool.tokenizers.Tokenizer;
+import org.languagetool.tools.HtmlTools;
 
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLInputFactory;
@@ -29,6 +31,7 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.events.XMLEvent;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.regex.Pattern;
@@ -46,6 +49,8 @@ public class WikipediaSentenceSource extends SentenceSource {
 
   private static final boolean ONLY_ARTICLES = false;
   private static final String ARTICLE_NAMESPACE = "0";
+
+  public static HashMap<String, HtmlTools.HtmlAnonymizer> anonymizedArticles = new HashMap<>();
 
   private final ParsoidWikipediaTextParser textFilter = new ParsoidWikipediaTextParser();
   private final XMLEventReader reader;
@@ -94,11 +99,16 @@ public class WikipediaSentenceSource extends SentenceSource {
         throw new NoSuchElementException();
       }
       WikipediaSentence wikiSentence = sentences.remove(0);
-      String url = "http://" + language.getShortCode() + ".wikipedia.org/wiki/" + wikiSentence.title;
+      String url = getUrl(wikiSentence.title);
       return new Sentence(wikiSentence.sentence, getSource(), wikiSentence.title, url, wikiSentence.articleCount);
     } catch (XMLStreamException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  @NotNull
+  private String getUrl(String title) {
+    return "http://" + language.getShortCode() + ".wikipedia.org/wiki/" + title;
   }
 
   @Override
@@ -137,7 +147,6 @@ public class WikipediaSentenceSource extends SentenceSource {
   private void handleTextElement(String namespace, String title, int articleCount) throws XMLStreamException {
     if (ONLY_ARTICLES && !ARTICLE_NAMESPACE.equals(namespace)) {
       namespaceSkipCount++;
-      return;
     }
     //System.out.println(articleCount + " (nsSkip:" + namespaceSkipCount + ", redirectSkip:" + redirectSkipCount + "). " + title);
     XMLEvent event = reader.nextEvent();
@@ -149,9 +158,19 @@ public class WikipediaSentenceSource extends SentenceSource {
     try {
       if (sb.toString().trim().toLowerCase().startsWith("#redirect")) {
         redirectSkipCount++;
-        return;
       }
-      String textToCheck = textFilter.convert(sb.toString()).getPlainText();
+
+      HtmlTools.HtmlAnonymizer anonymizer;
+      String articleUrl = getUrl(title);
+      if (anonymizedArticles.containsKey(articleUrl)) {
+        anonymizer = anonymizedArticles.get(articleUrl);
+      }
+      else {
+        anonymizer = textFilter.convert(sb.toString(), articleUrl);
+        anonymizedArticles.put(articleUrl, anonymizer);
+      }
+
+      String textToCheck = anonymizer.getAnonymizedHtml();
       for (String sentence : sentenceTokenizer.tokenize(textToCheck)) {
         if (acceptSentence(sentence)) {
           // Create an artificial ID - as we treat each sentence as a single document

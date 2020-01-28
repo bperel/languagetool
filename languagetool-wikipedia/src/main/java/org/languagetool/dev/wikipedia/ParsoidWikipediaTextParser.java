@@ -20,8 +20,6 @@ package org.languagetool.dev.wikipedia;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.languagetool.tools.HtmlTools;
-import org.sweble.wikitext.engine.PageTitle;
-import org.sweble.wikitext.engine.utils.SimpleWikiConfiguration;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -35,21 +33,12 @@ import java.util.zip.GZIPInputStream;
 /**
  * Convert Wikipedia syntax to HTML using Parsoid.
  */
-public class ParsoidWikipediaTextParser implements TextMapFilter {
-
-  private final PageTitle pageTitle;
+public class ParsoidWikipediaTextParser {
 
   public ParsoidWikipediaTextParser() {
-    try {
-      SimpleWikiConfiguration config = new SimpleWikiConfiguration("classpath:/org/languagetool/resource/dev/SimpleWikiConfiguration.xml");
-      pageTitle = PageTitle.make(config, "fileTitle");
-    } catch (Exception e) {
-      throw new RuntimeException("Could not set up text filter", e);
-    }
   }
 
-  @Override
-  public PlainTextMapping convert(String wikiText) {
+  public HtmlTools.HtmlAnonymizer convert(String wikiText, String articleUrl) {
     URL url;
     try {
       url = new URL("http://localhost:8024/wikipedia_fr/v3/transform/wikitext/to/html");
@@ -66,9 +55,7 @@ public class ParsoidWikipediaTextParser implements TextMapFilter {
       conn.setRequestProperty("Accept-Encoding", "gzip");
       conn.setRequestProperty("Content-Type", "application/json");
 
-      PrintWriter out = new PrintWriter(
-        new OutputStreamWriter(conn.getOutputStream(), StandardCharsets.UTF_8)
-      );
+      PrintWriter out = new PrintWriter(new OutputStreamWriter(conn.getOutputStream(), StandardCharsets.UTF_8));
       out.print(requestBody);
       out.close();
 
@@ -92,10 +79,10 @@ public class ParsoidWikipediaTextParser implements TextMapFilter {
 
       String html = sb.toString();
 
-      HtmlTools.HtmlAnonymizer htmlAnonymizer = new HtmlTools.HtmlAnonymizer("http://localhost", html);
+      HtmlTools.HtmlAnonymizer htmlAnonymizer = new HtmlTools.HtmlAnonymizer(articleUrl, html);
       htmlAnonymizer.anonymize();
 
-      return new PlainTextMapping(htmlAnonymizer.getAnonymizedHtml(), null);
+      return htmlAnonymizer;
     } catch (IOException | ParserConfigurationException | SAXException e) {
       e.printStackTrace();
       return null;

@@ -38,7 +38,7 @@ public class HtmlToolsTest {
     htmlAnonymizer.anonymize();
 
     assertEquals(htmlAnonymizer.getAnonymizedHtml(), "<tag>text</tag>");
-    assertEquals(htmlAnonymizer.getHtmlAttributes(), Collections.singletonList(new HtmlTools.HtmlAnonymizer.HtmlAttribute(null, 1, "a", "b")));
+    assertEquals(htmlAnonymizer.getHtmlAttributes(), Collections.singletonList(new HtmlTools.HtmlAnonymizer.HtmlAttribute(null, sourceUri, "tag", "a", "b")));
     assertEquals(htmlAnonymizer.getHtmlNodes(), Collections.singletonList(new HtmlTools.HtmlAnonymizer.HtmlNode(null, sourceUri, "tag", "div")));
   }
 

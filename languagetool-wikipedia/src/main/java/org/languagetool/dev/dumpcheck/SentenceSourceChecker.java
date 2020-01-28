@@ -199,7 +199,7 @@ public class SentenceSourceChecker {
     int sentenceCount = 0;
     try {
       if (propFile != null) {
-        resultHandler = new DatabaseHandler(propFile, maxSentences, maxErrors);
+        resultHandler = new DatabaseHandler.CorpusMatchDatabaseHandler(propFile, maxSentences, maxErrors);
       } else {
         resultHandler = new StdoutHandler(maxSentences, maxErrors, contextSize);
       }

@@ -47,9 +47,9 @@ public class Main {
         case "index-data":
           SentenceSourceIndexer.main(remainingArgs);
           break;
-        case "wiki-check":
-          WikipediaQuickCheck.main(remainingArgs);
-          break;
+//        case "wiki-check":
+//          WikipediaQuickCheck.main(remainingArgs);
+//          break;
         case "index":
           Indexer.main(remainingArgs);
           break;
