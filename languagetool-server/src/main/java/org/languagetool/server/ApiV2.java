@@ -181,7 +181,7 @@ class ApiV2 {
     ensureGetMethod(httpExchange, "/wikipedia/suggestions");
     DatabaseAccess db = DatabaseAccess.getInstance();
     List<CorpusMatchEntry> suggestions = db.getCorpusMatches(10);
-    writeResponse("suggestions", suggestions, httpExchange);
+    writeCorpusMatchResponse("suggestions", suggestions, httpExchange);
   }
 
   private void handleRuleExamplesRequest(HttpExchange httpExchange, Map<String, String> params) throws Exception {
@@ -278,6 +278,21 @@ class ApiV2 {
       g.writeArrayFieldStart(fieldName);
       for (CorpusMatchEntry corpusMatchEntry : corpusMatchEntries) {
         g.writeString(corpusMatchEntry.getReplacementSuggestion());
+      }
+      g.writeEndArray();
+      g.writeEndObject();
+    }
+    sendJson(httpExchange, sw);
+  }
+
+  private void writeCorpusMatchResponse(String fieldName, List<CorpusMatchEntry> corpusMatchEntries, HttpExchange httpExchange) throws IOException {
+    StringWriter sw = new StringWriter();
+    try (JsonGenerator g = factory.createGenerator(sw)) {
+      g.setCodec(new ObjectMapper());
+      g.writeStartObject();
+      g.writeArrayFieldStart(fieldName);
+      for (CorpusMatchEntry corpusMatchEntry : corpusMatchEntries) {
+        g.writeObject(corpusMatchEntry);
       }
       g.writeEndArray();
       g.writeEndObject();
