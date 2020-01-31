@@ -16,25 +16,38 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Stack;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class HtmlTools {
   public static class HtmlAnonymizer {
     public static final String DEFAULT_TAG = "tag";
 
     private String sourceUri;
-    private String html;
+    private String originalHtml;
     private String anonymizedHtml;
 
     private List<HtmlNode> htmlNodes = new ArrayList<>();
     private List<HtmlAttribute> htmlAttributes = new ArrayList<>();
 
-    public HtmlAnonymizer(String sourceUri, String html) {
-      this.sourceUri = sourceUri;
-      this.html = html;
+    public HtmlAnonymizer() { }
+
+    public static HtmlAnonymizer createFromAnonymized(String sourceUri, String anonymizedHtml, List<HtmlNode> htmlNodes, List<HtmlAttribute> htmlAttributes) {
+      HtmlAnonymizer instance = new HtmlAnonymizer();
+      instance.sourceUri = sourceUri;
+      instance.anonymizedHtml = anonymizedHtml;
+      instance.htmlNodes = htmlNodes;
+      instance.htmlAttributes = htmlAttributes;
+
+      return instance;
+    }
+
+    public static HtmlAnonymizer createFromHtml(String sourceUri, String html) {
+      HtmlAnonymizer instance = new HtmlAnonymizer();
+      instance.sourceUri = sourceUri;
+      instance.originalHtml = html;
+
+      return instance;
     }
 
     public void anonymize() throws ParserConfigurationException, IOException, SAXException {
@@ -42,30 +55,34 @@ public class HtmlTools {
       dbf.setValidating(false);
       DocumentBuilder db = dbf.newDocumentBuilder();
 
-      Document doc = db.parse(new InputSource(new StringReader(html)));
-      NodeList nodeList = doc.getElementsByTagName("*");
-      for (int i = 0; i < nodeList.getLength(); i++) {
-        Node node = nodeList.item(i);
-        switch (node.getNodeType()) {
-          case Node.ELEMENT_NODE:
-            anonymizeNode(doc, node);
-            break;
-          case Node.COMMENT_NODE:
-            doc.removeChild(node);
-        }
+      Document doc = db.parse(new InputSource(new StringReader(originalHtml)));
 
-        NamedNodeMap attributes = node.getAttributes();
-        while (attributes.getLength() > 0) {
-          removeAttribute(node, attributes.item(0));
-        }
-      }
+      anonymizeNode(doc, doc.getDocumentElement());
+
       anonymizedHtml = getStringFromDocument(doc);
     }
 
     private void anonymizeNode(Document doc, Node node) {
-      String nodeName = node.getNodeName();
-      doc.renameNode(node, null, DEFAULT_TAG);
-      htmlNodes.add(new HtmlNode(null, sourceUri, getFullXPath(node), nodeName));
+      switch (node.getNodeType()) {
+        case Node.ELEMENT_NODE:
+          String nodeName = node.getNodeName();
+          doc.renameNode(node, null, DEFAULT_TAG);
+          htmlNodes.add(new HtmlNode(null, sourceUri, getFullXPath(node), nodeName));
+
+          NamedNodeMap attributes = node.getAttributes();
+          while (attributes.getLength() > 0) {
+            removeAttribute(node, attributes.item(0));
+          }
+
+          NodeList childNodes = doc.getDocumentElement().getChildNodes();
+          for (int i = 0; i < childNodes.getLength(); i++) {
+            anonymizeNode(doc, childNodes.item(i));
+          }
+        break;
+        case Node.COMMENT_NODE:
+          node.getParentNode().removeChild(node);
+        break;
+      }
     }
 
     private void removeAttribute(Node element, Node attribute) {
@@ -77,12 +94,46 @@ public class HtmlTools {
 
     }
 
-    public void deanonymize() {
-      // TODO
+    private void deanonymizeNode(Document doc, Node node) {
+      if (node.getNodeType() == Node.ELEMENT_NODE) {
+        String nodeXPath = getFullXPath(node);
+        Optional<HtmlNode> currentHtmlNode = htmlNodes.stream().filter(htmlNode -> htmlNode.xpath.equals(nodeXPath)).findFirst();
+        if (!currentHtmlNode.isPresent()) {
+          throw new InputMismatchException("Couldn't find node for xpath " + nodeXPath);
+        }
+        doc.renameNode(node, null, currentHtmlNode.get().tagName);
+
+        List<HtmlAttribute> currentHtmlAttributes = htmlAttributes.stream().filter(htmlAttribute -> htmlAttribute.xpath.equals(nodeXPath)).collect(Collectors.toList());
+
+        for (HtmlAttribute htmlAttribute : currentHtmlAttributes) {
+          ((Element) node).setAttribute(htmlAttribute.getName(), htmlAttribute.getValue());
+        }
+
+        NodeList childNodes = doc.getDocumentElement().getChildNodes();
+        for (int i = 0; i < childNodes.getLength(); i++) {
+          deanonymizeNode(doc, childNodes.item(i));
+        }
+      }
+    }
+
+    public void deanonymize() throws ParserConfigurationException, IOException, SAXException {
+      DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+      dbf.setValidating(false);
+      DocumentBuilder db = dbf.newDocumentBuilder();
+
+      Document doc = db.parse(new InputSource(new StringReader(anonymizedHtml)));
+
+      deanonymizeNode(doc, doc.getDocumentElement());
+
+      originalHtml = getStringFromDocument(doc);
     }
 
     public String getAnonymizedHtml() {
       return anonymizedHtml;
+    }
+
+    public String getOriginalHtml() {
+      return originalHtml;
     }
 
     public List<HtmlNode> getHtmlNodes() {
