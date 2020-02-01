@@ -66,15 +66,17 @@ public class HtmlTools {
       switch (node.getNodeType()) {
         case Node.ELEMENT_NODE:
           String nodeName = node.getNodeName();
-          doc.renameNode(node, null, DEFAULT_TAG);
-          htmlNodes.add(new HtmlNode(null, sourceUri, getFullXPath(node), nodeName));
+          if (!nodeName.equals(DEFAULT_TAG)) { // This node has not already been handled
+            doc.renameNode(node, null, DEFAULT_TAG);
+            htmlNodes.add(new HtmlNode(null, sourceUri, getFullXPath(node), nodeName));
 
-          NamedNodeMap attributes = node.getAttributes();
-          while (attributes.getLength() > 0) {
-            removeAttribute(node, attributes.item(0));
+            NamedNodeMap attributes = node.getAttributes();
+            while (attributes.getLength() > 0) {
+              removeAttribute(node, attributes.item(0));
+            }
           }
 
-          NodeList childNodes = doc.getDocumentElement().getChildNodes();
+          NodeList childNodes = node.getChildNodes();
           for (int i = 0; i < childNodes.getLength(); i++) {
             anonymizeNode(doc, childNodes.item(i));
           }
@@ -94,24 +96,34 @@ public class HtmlTools {
 
     }
 
-    private void deanonymizeNode(Document doc, Node node) {
+    private void deanonymizeNodeNames(Node node, HashMap<Node, String> replacements) {
       if (node.getNodeType() == Node.ELEMENT_NODE) {
         String nodeXPath = getFullXPath(node);
         Optional<HtmlNode> currentHtmlNode = htmlNodes.stream().filter(htmlNode -> htmlNode.xpath.equals(nodeXPath)).findFirst();
         if (!currentHtmlNode.isPresent()) {
           throw new InputMismatchException("Couldn't find node for xpath " + nodeXPath);
         }
-        doc.renameNode(node, null, currentHtmlNode.get().tagName);
+        replacements.put(node, currentHtmlNode.get().tagName);
 
+        NodeList childNodes = node.getChildNodes();
+        for (int i = 0; i < childNodes.getLength(); i++) {
+          deanonymizeNodeNames(childNodes.item(i), replacements);
+        }
+      }
+    }
+
+    private void deanonymizeNodeAttributes(Node node) {
+      if (node.getNodeType() == Node.ELEMENT_NODE) {
+        String nodeXPath = getFullXPath(node);
         List<HtmlAttribute> currentHtmlAttributes = htmlAttributes.stream().filter(htmlAttribute -> htmlAttribute.xpath.equals(nodeXPath)).collect(Collectors.toList());
 
         for (HtmlAttribute htmlAttribute : currentHtmlAttributes) {
           ((Element) node).setAttribute(htmlAttribute.getName(), htmlAttribute.getValue());
         }
 
-        NodeList childNodes = doc.getDocumentElement().getChildNodes();
+        NodeList childNodes = node.getChildNodes();
         for (int i = 0; i < childNodes.getLength(); i++) {
-          deanonymizeNode(doc, childNodes.item(i));
+          deanonymizeNodeAttributes(childNodes.item(i));
         }
       }
     }
@@ -123,7 +135,13 @@ public class HtmlTools {
 
       Document doc = db.parse(new InputSource(new StringReader(anonymizedHtml)));
 
-      deanonymizeNode(doc, doc.getDocumentElement());
+      deanonymizeNodeAttributes(doc.getDocumentElement());
+
+      HashMap<Node, String> nodeNameReplacements = new HashMap<>();
+      deanonymizeNodeNames(doc.getDocumentElement(), nodeNameReplacements);
+      for (Node node : nodeNameReplacements.keySet()) {
+        doc.renameNode(node, null, nodeNameReplacements.get(node));
+      }
 
       originalHtml = getStringFromDocument(doc);
     }

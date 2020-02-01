@@ -62,6 +62,17 @@ public class HtmlToolsTest {
           Collections.singletonList(new HtmlTools.HtmlAnonymizer.HtmlNode(null, sourceUri, "tag", "div"))
         },
         {
+          "<a><b1>text 1</b1><b2>text 2</b2></a>",
+          "<tag><tag>text 1</tag><tag>text 2</tag></tag>",
+          "<a><b1>text 1</b1><b2>text 2</b2></a>",
+          Collections.emptyList(),
+          Arrays.asList(
+            new HtmlTools.HtmlAnonymizer.HtmlNode(null, sourceUri, "tag", "a"),
+            new HtmlTools.HtmlAnonymizer.HtmlNode(null, sourceUri, "tag/tag[1]", "b1"),
+            new HtmlTools.HtmlAnonymizer.HtmlNode(null, sourceUri, "tag/tag[2]", "b2")
+          )
+        },
+        {
           "<div><!--[if lt IE 9]><script src=\"script.js\"></script><![endif]-->text</div>",
           "<tag>text</tag>",
           "<div>text</div>",
@@ -77,15 +88,15 @@ public class HtmlToolsTest {
     HtmlTools.HtmlAnonymizer htmlAnonymizer = HtmlTools.HtmlAnonymizer.createFromHtml(sourceUri, originalHtml);
     htmlAnonymizer.anonymize();
 
-    assertEquals(htmlAnonymizer.getAnonymizedHtml(), anonymizedHtml);
-    assertEquals(htmlAnonymizer.getHtmlAttributes(), anonymizedHtmlAttributes);
-    assertEquals(htmlAnonymizer.getHtmlNodes(), anonymizedHtmlNodes);
+    assertEquals(anonymizedHtml, htmlAnonymizer.getAnonymizedHtml());
+    assertEquals(anonymizedHtmlAttributes, htmlAnonymizer.getHtmlAttributes());
+    assertEquals(anonymizedHtmlNodes, htmlAnonymizer.getHtmlNodes());
   }
 
   @Test
   public void testDeanonymizeAddAttributes() throws IOException, SAXException, ParserConfigurationException {
     HtmlTools.HtmlAnonymizer htmlAnonymizer = HtmlTools.HtmlAnonymizer.createFromAnonymized(sourceUri, anonymizedHtml, anonymizedHtmlNodes, anonymizedHtmlAttributes);
     htmlAnonymizer.deanonymize();
-    assertEquals(htmlAnonymizer.getOriginalHtml(), deanonymizedHtml);
+    assertEquals(deanonymizedHtml, htmlAnonymizer.getOriginalHtml());
   }
 }
