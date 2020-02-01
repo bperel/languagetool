@@ -38,12 +38,13 @@ public class CorpusMatchEntry {
   private final String smallErrorContext;
   private final Date corpusDate;
   private final Date checkDate;
-  private final String sourceuri;
+  private final String sourceUri;
   private final String sourceType;
   private final Boolean isVisible;
   private final String replacementSuggestion;
+  private final Boolean applied;
 
-  public CorpusMatchEntry(Integer id, Integer version, String languageCode, String ruleid, String ruleCategory, String ruleSubid, String ruleDescription, String message, String errorContext, String smallErrorContext, Date corpusDate, Date checkDate, String sourceuri, String sourceType, Boolean isVisible, String replacementSuggestion) {
+  public CorpusMatchEntry(Integer id, Integer version, String languageCode, String ruleid, String ruleCategory, String ruleSubid, String ruleDescription, String message, String errorContext, String smallErrorContext, Date corpusDate, Date checkDate, String sourceUri, String sourceType, Boolean isVisible, String replacementSuggestion, Boolean applied) {
     this.id = id;
     this.version = version;
     this.languageCode = languageCode;
@@ -56,10 +57,11 @@ public class CorpusMatchEntry {
     this.smallErrorContext = smallErrorContext;
     this.corpusDate = corpusDate;
     this.checkDate = checkDate;
-    this.sourceuri = sourceuri;
+    this.sourceUri = sourceUri;
     this.sourceType = sourceType;
     this.isVisible = isVisible;
     this.replacementSuggestion = replacementSuggestion;
+    this.applied = applied;
   }
 
   public Integer getVersion() {
@@ -106,8 +108,8 @@ public class CorpusMatchEntry {
     return checkDate;
   }
 
-  public String getSourceuri() {
-    return sourceuri;
+  public String getSourceUri() {
+    return sourceUri;
   }
 
   public String getSourceType() {
@@ -120,5 +122,9 @@ public class CorpusMatchEntry {
 
   public String getReplacementSuggestion() {
     return replacementSuggestion;
+  }
+
+  public Boolean getApplied() {
+    return applied;
   }
 }

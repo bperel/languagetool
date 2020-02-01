@@ -23,12 +23,17 @@ import org.languagetool.Language;
 import org.languagetool.dev.wikipedia.ParsoidWikipediaTextParser;
 import org.languagetool.tokenizers.Tokenizer;
 import org.languagetool.tools.HtmlTools;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
-import javax.xml.stream.XMLEventReader;
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamConstants;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.events.XMLEvent;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -53,7 +58,8 @@ public class WikipediaSentenceSource extends SentenceSource {
   public static HashMap<String, HtmlTools.HtmlAnonymizer> anonymizedArticles = new HashMap<>();
 
   private final ParsoidWikipediaTextParser textFilter = new ParsoidWikipediaTextParser();
-  private final XMLEventReader reader;
+  //private final XMLEventReader reader;
+  private Document doc;
   private final Tokenizer sentenceTokenizer;
   private final List<WikipediaSentence> sentences;
   private final Language language;
@@ -71,12 +77,15 @@ public class WikipediaSentenceSource extends SentenceSource {
     super(language, filter);
     try {
       System.setProperty("jdk.xml.totalEntitySizeLimit", String.valueOf(Integer.MAX_VALUE));  // see https://github.com/dbpedia/extraction-framework/issues/487
-      XMLInputFactory factory = XMLInputFactory.newInstance();
-      reader = factory.createXMLEventReader(xmlInput);
+      DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+      dbf.setValidating(false);
+      DocumentBuilder db = dbf.newDocumentBuilder();
+
+      doc = db.parse(new InputSource(xmlInput));
       sentenceTokenizer = language.getSentenceTokenizer();
       sentences = new ArrayList<>();
       this.language = language;
-    } catch (XMLStreamException e) {
+    } catch (ParserConfigurationException | SAXException | IOException e) {
       throw new RuntimeException(e);
     }
   }
@@ -99,7 +108,7 @@ public class WikipediaSentenceSource extends SentenceSource {
         throw new NoSuchElementException();
       }
       WikipediaSentence wikiSentence = sentences.remove(0);
-      String url = getUrl(wikiSentence.title);
+      String url = getUrl(wikiSentence.title, wikiSentence.revision);
       return new Sentence(wikiSentence.sentence, getSource(), wikiSentence.title, url, wikiSentence.articleCount);
     } catch (XMLStreamException e) {
       throw new RuntimeException(e);
@@ -107,8 +116,12 @@ public class WikipediaSentenceSource extends SentenceSource {
   }
 
   @NotNull
-  private String getUrl(String title) {
-    return "http://" + language.getShortCode() + ".wikipedia.org/wiki/" + title;
+  private String getUrl(String title, Integer revision) {
+    String url = "http://" + language.getShortCode() + ".wikipedia.org/wiki/" + title;
+    if (revision != null) {
+      url+="/"+revision;
+    }
+    return url;
   }
 
   @Override
@@ -119,65 +132,74 @@ public class WikipediaSentenceSource extends SentenceSource {
   private void fillSentences() throws XMLStreamException {
     String title = null;
     String namespace = null;
-    while (sentences.isEmpty() && reader.hasNext()) {
-      XMLEvent event = reader.nextEvent();
-      if (event.getEventType() == XMLStreamConstants.START_ELEMENT) {
-        String elementName = event.asStartElement().getName().getLocalPart();
-        switch (elementName) {
+    NodeList pageList = doc.getElementsByTagName("page");
+    int pageNumber = 0;
+    while (sentences.isEmpty() && pageNumber < pageList.getLength()) {
+      Node pageElement = pageList.item(pageNumber);
+      NodeList pageElementChildNodes = pageElement.getChildNodes();
+      for (int i = 0; i < pageElementChildNodes.getLength(); i++) {
+        Node pageElementChildNode = pageElementChildNodes.item(i);
+        switch(pageElementChildNode.getNodeName()) {
           case "title":
-            event = reader.nextEvent();
-            title = event.asCharacters().getData();
+            title = pageElementChildNode.getTextContent();
             articleCount++;
             if (articleCount % 100 == 0) {
               System.out.println("Article: " + articleCount);
             }
             break;
           case "ns":
-            event = reader.nextEvent();
-            namespace = event.asCharacters().getData();
+            namespace = pageElementChildNode.getTextContent();
             break;
-          case "text":
-            handleTextElement(namespace, title, articleCount);
-            break;
+          case "revision":
+            Integer revisionId = null;
+            NodeList revisionElementChildNodes = pageElementChildNode.getChildNodes();
+            for (int j = 0; j < revisionElementChildNodes.getLength(); j++) {
+              Node revisionElementChildNode = revisionElementChildNodes.item(j);
+              switch (revisionElementChildNode.getNodeName()) {
+                case "id":
+                  revisionId = Integer.parseInt(revisionElementChildNode.getTextContent());
+                break;
+                case "text":
+                  if (revisionId == null) {
+                    System.err.println("No revision id found for "+title);
+                  }
+                  else {
+                    handleTextElement(namespace, title, revisionId, revisionElementChildNode.getTextContent(), articleCount);
+                  }
+                break;
+              }
+            }
+          break;
         }
       }
+      pageNumber++;
     }
   }
 
-  private void handleTextElement(String namespace, String title, int articleCount) throws XMLStreamException {
+  private void handleTextElement(String namespace, String title, Integer revisionId, String text, int articleCount) throws XMLStreamException {
     if (ONLY_ARTICLES && !ARTICLE_NAMESPACE.equals(namespace)) {
       namespaceSkipCount++;
     }
-    //System.out.println(articleCount + " (nsSkip:" + namespaceSkipCount + ", redirectSkip:" + redirectSkipCount + "). " + title);
-    XMLEvent event = reader.nextEvent();
-    StringBuilder sb = new StringBuilder();
-    while (event.isCharacters()) {
-      sb.append(event.asCharacters().getData());
-      event = reader.nextEvent();
-    }
+
     try {
-      if (sb.toString().trim().toLowerCase().startsWith("#redirect")) {
+      if (text.trim().toLowerCase().startsWith("#redirect")) {
         redirectSkipCount++;
       }
 
       HtmlTools.HtmlAnonymizer anonymizer;
-      String articleUrl = getUrl(title);
+      String articleUrl = getUrl(title, null);
       if (anonymizedArticles.containsKey(articleUrl)) {
         anonymizer = anonymizedArticles.get(articleUrl);
       }
       else {
-        anonymizer = textFilter.convert(sb.toString(), articleUrl);
+        anonymizer = textFilter.convert(text, articleUrl);
         anonymizedArticles.put(articleUrl, anonymizer);
       }
 
       String textToCheck = anonymizer.getAnonymizedHtml();
       for (String sentence : sentenceTokenizer.tokenize(textToCheck)) {
         if (acceptSentence(sentence)) {
-          // Create an artificial ID - as we treat each sentence as a single document
-          // in e.g. the nightly checks, this helps with detection of whether a match
-          // is new or a duplicate:
-          String titleWithId = title + "/" + sentence.hashCode();
-          sentences.add(new WikipediaSentence(sentence, titleWithId, articleCount));
+          sentences.add(new WikipediaSentence(sentence, title, revisionId, articleCount));
         }
       }
     } catch (Exception e) {
@@ -186,13 +208,15 @@ public class WikipediaSentenceSource extends SentenceSource {
     }
   }
 
-  private static class WikipediaSentence {
+  static class WikipediaSentence {
     final String sentence;
     final String title;
+    final Integer revision;
     final int articleCount;
-    WikipediaSentence(String sentence, String title, int articleCount) {
+    WikipediaSentence(String sentence, String title, Integer revision, int articleCount) {
       this.sentence = sentence;
       this.title = title;
+      this.revision = revision;
       this.articleCount = articleCount;
     }
   }

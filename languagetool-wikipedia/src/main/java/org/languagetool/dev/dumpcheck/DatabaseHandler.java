@@ -32,10 +32,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -87,7 +84,7 @@ abstract class DatabaseHandler extends ResultHandler {
     private final PreparedStatement insertHtmlNodeSt;
     private final PreparedStatement insertHtmlAttributeSt;
 
-    private List<String> processedAnonymizedArticles = new ArrayList<>();
+    private Set<String> processedAnonymizedArticles = new HashSet<>();
 
     CorpusMatchDatabaseHandler(File propertiesFile, int maxSentences, int maxErrors) {
       super(propertiesFile, maxSentences, maxErrors);
@@ -105,14 +102,14 @@ abstract class DatabaseHandler extends ResultHandler {
 
       try {
         insertCorpusMatchSt = conn.prepareStatement("" +
-          " INSERT INTO corpus_match (version, language_code, ruleid, rule_category, rule_subid, rule_description, message, error_context, small_error_context, corpus_date, check_date, sourceuri, source_type, replacement_suggestion, is_visible)" +
-          " VALUES (0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)");
+          " INSERT INTO corpus_match (version, language_code, ruleid, rule_category, rule_subid, rule_description, message, error_context, small_error_context, corpus_date, check_date, source_uri, revision, source_type, replacement_suggestion, is_visible)" +
+          " VALUES (0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)");
         insertHtmlNodeSt = conn.prepareStatement("" +
-          " INSERT INTO html_node (source_uri, xpath, tag_name)" +
-          " VALUES (?, ? ,?)");
+          " INSERT INTO html_node (source_uri, revision, parent_id, child_index, tag_name)" +
+          " VALUES (?, ? ,?, ?, ?)");
         insertHtmlAttributeSt = conn.prepareStatement("" +
-          " INSERT INTO html_attribute (source_uri, node_xpath, attribute_name, attribute_value)" +
-          " VALUES (?, ?, ?, ?)");
+          " INSERT INTO html_attribute (source_uri, revision, parent_id, child_index, attribute_name, attribute_value)" +
+          " VALUES (?, ?, ?, ?, ?, ?)");
       } catch (SQLException e) {
         throw new RuntimeException(e);
       }
@@ -121,10 +118,45 @@ abstract class DatabaseHandler extends ResultHandler {
     @Override
     protected void handleResult(Sentence sentence, List<RuleMatch> ruleMatches, Language language) {
       try {
-        java.sql.Date nowDate = new java.sql.Date(new Date().getTime());
+        java.sql.Date nowDate = new java.sql.Date(new java.util.Date().getTime());
         List<RuleMatch> rulesMatchesWithSuggestions = ruleMatches.stream()
           .filter(match -> !match.getSuggestedReplacements().isEmpty())
           .collect(Collectors.toList());
+
+        List<String> urlParts = Arrays.asList(sentence.getUrl().split("/"));
+        String urlWithoutRevision = StringUtils.join(urlParts.subList(0, urlParts.size()-1), "/");
+        int revision = Integer.parseInt(urlParts.get(urlParts.size()-1));
+
+        HtmlTools.HtmlAnonymizer anonymizer = WikipediaSentenceSource.anonymizedArticles.get(urlWithoutRevision);
+        if (processedAnonymizedArticles != null && !processedAnonymizedArticles.contains(urlWithoutRevision)) {
+          for (HtmlNode node : anonymizer.getHtmlNodes()) {
+            insertHtmlNodeSt.setString(1, urlWithoutRevision);
+            insertHtmlNodeSt.setInt(2, revision);
+            if (node.getParentId() == null) {
+              insertHtmlNodeSt.setNull(3, Types.INTEGER);
+            } else {
+              insertHtmlNodeSt.setInt(3, node.getParentId());
+            }
+            insertHtmlNodeSt.setInt(4, node.getChildIndex());
+            insertHtmlNodeSt.setString(5, node.getTagName());
+            insertHtmlNodeSt.addBatch();
+          }
+          for (HtmlAttribute attribute : anonymizer.getHtmlAttributes()) {
+            insertHtmlAttributeSt.setString(1, urlWithoutRevision);
+            insertHtmlAttributeSt.setInt(2, revision);
+            if (attribute.getParentId() == null) {
+              insertHtmlAttributeSt.setNull(3, Types.INTEGER);
+            } else {
+              insertHtmlAttributeSt.setInt(3, attribute.getParentId());
+            }
+            insertHtmlAttributeSt.setInt(4, attribute.getChildIndex());
+            insertHtmlAttributeSt.setString(5, attribute.getName());
+            insertHtmlAttributeSt.setString(6, attribute.getValue());
+            insertHtmlAttributeSt.addBatch();
+          }
+          processedAnonymizedArticles.add(urlWithoutRevision);
+        }
+
         for (RuleMatch match : rulesMatchesWithSuggestions) {
           String context = contextTools.getContext(match.getFromPos(), match.getToPos(), sentence.getText());
           if (context.length() > MAX_CONTEXT_LENGTH) {
@@ -134,7 +166,7 @@ abstract class DatabaseHandler extends ResultHandler {
 
           String smallContext = smallContextTools.getContext(match.getFromPos(), match.getToPos(), sentence.getText());
 
-          addSentenceToBatch(sentence, language, nowDate, match, context, smallContext);
+          addSentenceToBatch(urlWithoutRevision, revision, sentence.getSource(), language, nowDate, match, context, smallContext);
           if (++batchCount >= batchSize){
             executeBatch();
             batchCount = 0;
@@ -154,7 +186,8 @@ abstract class DatabaseHandler extends ResultHandler {
       }
     }
 
-    private void addSentenceToBatch(Sentence sentence, Language language, java.sql.Date nowDate, RuleMatch match, String context, String smallContext) throws SQLException {
+    private void addSentenceToBatch(String urlWithoutRevision, Integer revision, String source, Language language, java.sql.Date nowDate, RuleMatch match, String context, String smallContext) throws SQLException {
+
       Rule rule = match.getRule();
       insertCorpusMatchSt.setString(1, language.getShortCode());
       insertCorpusMatchSt.setString(2, rule.getId());
@@ -171,29 +204,11 @@ abstract class DatabaseHandler extends ResultHandler {
 
       insertCorpusMatchSt.setDate(9, nowDate);  // should actually be the dump's date, but isn't really used anyway...
       insertCorpusMatchSt.setDate(10, nowDate);
-      insertCorpusMatchSt.setString(11, sentence.getUrl());
-      insertCorpusMatchSt.setString(12, sentence.getSource());
-      insertCorpusMatchSt.setString(13, match.getSuggestedReplacements().get(0));
+      insertCorpusMatchSt.setString(11, urlWithoutRevision);
+      insertCorpusMatchSt.setInt(12, revision);
+      insertCorpusMatchSt.setString(13, source);
+      insertCorpusMatchSt.setString(14, match.getSuggestedReplacements().get(0));
       insertCorpusMatchSt.addBatch();
-
-      String urlWithoutRevision = sentence.getUrl().replaceAll("/[^/]+$", "");
-      HtmlTools.HtmlAnonymizer anonymizer = WikipediaSentenceSource.anonymizedArticles.get(urlWithoutRevision);
-      if (processedAnonymizedArticles != null && !processedAnonymizedArticles.contains(urlWithoutRevision)) {
-        for (HtmlNode node : anonymizer.getHtmlNodes()) {
-          insertHtmlNodeSt.setString(1, sentence.getUrl());
-          insertHtmlNodeSt.setString(2, node.getXpath());
-          insertHtmlNodeSt.setString(3, node.getTagName());
-          insertHtmlNodeSt.addBatch();
-        }
-        for (HtmlAttribute attribute : anonymizer.getHtmlAttributes()) {
-          insertHtmlAttributeSt.setString(1, sentence.getUrl());
-          insertHtmlAttributeSt.setString(2, attribute.getXpath());
-          insertHtmlAttributeSt.setString(3, attribute.getName());
-          insertHtmlAttributeSt.setString(4, attribute.getValue());
-          insertHtmlAttributeSt.addBatch();
-        }
-        processedAnonymizedArticles.add(sentence.getUrl());
-      }
     }
 
     void executeBatch() throws SQLException {
@@ -213,11 +228,13 @@ abstract class DatabaseHandler extends ResultHandler {
 
     @Override
     public void close() throws Exception {
-      if (insertCorpusMatchSt != null) {
-        if (batchCount > 0) {
-          executeBatch();
+      for (PreparedStatement preparedStatement : Arrays.asList(insertCorpusMatchSt, insertHtmlNodeSt, insertHtmlAttributeSt)) {
+        if (preparedStatement != null) {
+          if (batchCount > 0) {
+            executeBatch();
+          }
+          preparedStatement.close();
         }
-        insertCorpusMatchSt.close();
       }
       if (conn != null) {
         conn.close();

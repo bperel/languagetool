@@ -21,6 +21,8 @@ package org.languagetool.tools;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.languagetool.tools.HtmlTools.HtmlAnonymizer.HtmlAttribute;
+import org.languagetool.tools.HtmlTools.HtmlAnonymizer.HtmlNode;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -28,7 +30,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
+import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 
@@ -39,10 +41,10 @@ public class HtmlToolsTest {
   private String originalHtml;
   private String anonymizedHtml;
   private String deanonymizedHtml;
-  private List<HtmlTools.HtmlAnonymizer.HtmlAttribute> anonymizedHtmlAttributes;
-  private List<HtmlTools.HtmlAnonymizer.HtmlNode> anonymizedHtmlNodes;
+  private Set<HtmlAttribute> anonymizedHtmlAttributes;
+  private Set<HtmlNode> anonymizedHtmlNodes;
 
-  public HtmlToolsTest(String originalHtml, String anonymizedHtml, String deanonymizedHtml, List<HtmlTools.HtmlAnonymizer.HtmlAttribute> anonymizedHtmlAttributes, List<HtmlTools.HtmlAnonymizer.HtmlNode> anonymizedHtmlNodes) {
+  public HtmlToolsTest(String originalHtml, String anonymizedHtml, String deanonymizedHtml, Set<HtmlAttribute> anonymizedHtmlAttributes, Set<HtmlNode> anonymizedHtmlNodes) {
     this.originalHtml = originalHtml;
     this.anonymizedHtml = anonymizedHtml;
     this.deanonymizedHtml = deanonymizedHtml;
@@ -58,8 +60,8 @@ public class HtmlToolsTest {
           "<div a=\"b\">text</div>",
           "<tag>text</tag>",
           "<div a=\"b\">text</div>",
-          Collections.singletonList(new HtmlTools.HtmlAnonymizer.HtmlAttribute(null, sourceUri, "tag", "a", "b")),
-          Collections.singletonList(new HtmlTools.HtmlAnonymizer.HtmlNode(null, sourceUri, "tag", "div"))
+          Collections.singletonList(new HtmlAttribute(null, sourceUri, null, 0, "a", "b")),
+          Collections.singletonList(new HtmlNode(null, null, 0, sourceUri, "div"))
         },
         {
           "<a><b1>text 1</b1><b2>text 2</b2></a>",
@@ -67,9 +69,9 @@ public class HtmlToolsTest {
           "<a><b1>text 1</b1><b2>text 2</b2></a>",
           Collections.emptyList(),
           Arrays.asList(
-            new HtmlTools.HtmlAnonymizer.HtmlNode(null, sourceUri, "tag", "a"),
-            new HtmlTools.HtmlAnonymizer.HtmlNode(null, sourceUri, "tag/tag[1]", "b1"),
-            new HtmlTools.HtmlAnonymizer.HtmlNode(null, sourceUri, "tag/tag[2]", "b2")
+            new HtmlNode(null, null, 0, sourceUri, "a"),
+            new HtmlNode(null, 0, 0, sourceUri, "b1"),
+            new HtmlNode(null, 0, 1, sourceUri, "b2")
           )
         },
         {
@@ -77,7 +79,7 @@ public class HtmlToolsTest {
           "<tag>text</tag>",
           "<div>text</div>",
           Collections.emptyList(),
-          Collections.singletonList(new HtmlTools.HtmlAnonymizer.HtmlNode(null, sourceUri, "tag", "div"))
+          Collections.singletonList(new HtmlNode(null, null, 0, sourceUri, "div"))
         }
       }
     );

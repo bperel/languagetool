@@ -27,12 +27,12 @@ public class HtmlTools {
     private String originalHtml;
     private String anonymizedHtml;
 
-    private List<HtmlNode> htmlNodes = new ArrayList<>();
-    private List<HtmlAttribute> htmlAttributes = new ArrayList<>();
+    private Set<HtmlNode> htmlNodes = new HashSet<>();
+    private Set<HtmlAttribute> htmlAttributes = new HashSet<>();
 
     public HtmlAnonymizer() { }
 
-    public static HtmlAnonymizer createFromAnonymized(String sourceUri, String anonymizedHtml, List<HtmlNode> htmlNodes, List<HtmlAttribute> htmlAttributes) {
+    public static HtmlAnonymizer createFromAnonymized(String sourceUri, String anonymizedHtml, Set<HtmlNode> htmlNodes, Set<HtmlAttribute> htmlAttributes) {
       HtmlAnonymizer instance = new HtmlAnonymizer();
       instance.sourceUri = sourceUri;
       instance.anonymizedHtml = anonymizedHtml;
@@ -57,28 +57,29 @@ public class HtmlTools {
 
       Document doc = db.parse(new InputSource(new StringReader(originalHtml)));
 
-      anonymizeNode(doc, doc.getDocumentElement());
+      anonymizeNode(doc, doc.getDocumentElement(), null, 0);
 
       anonymizedHtml = getStringFromDocument(doc);
     }
 
-    private void anonymizeNode(Document doc, Node node) {
+    private void anonymizeNode(Document doc, Node node, Integer parentId, int childIndex) {
       switch (node.getNodeType()) {
         case Node.ELEMENT_NODE:
           String nodeName = node.getNodeName();
           if (!nodeName.equals(DEFAULT_TAG)) { // This node has not already been handled
             doc.renameNode(node, null, DEFAULT_TAG);
-            htmlNodes.add(new HtmlNode(null, sourceUri, getFullXPath(node), nodeName));
+            htmlNodes.add(new HtmlNode(null, parentId, childIndex, sourceUri, nodeName));
 
             NamedNodeMap attributes = node.getAttributes();
             while (attributes.getLength() > 0) {
-              removeAttribute(node, attributes.item(0));
+              removeAttribute(node, parentId, childIndex, attributes.item(0));
             }
           }
 
+          int currentNodeId = (parentId == null ? 0 : parentId) + childIndex;
           NodeList childNodes = node.getChildNodes();
           for (int i = 0; i < childNodes.getLength(); i++) {
-            anonymizeNode(doc, childNodes.item(i));
+            anonymizeNode(doc, childNodes.item(i), currentNodeId, i);
           }
         break;
         case Node.COMMENT_NODE:
@@ -87,43 +88,46 @@ public class HtmlTools {
       }
     }
 
-    private void removeAttribute(Node element, Node attribute) {
+    private void removeAttribute(Node element, Integer parentId, Integer childIndex, Node attribute) {
       String attributeName = attribute.getNodeName();
       String attributeValue = attribute.getNodeValue();
 
-      htmlAttributes.add(new HtmlAttribute(null, sourceUri, getFullXPath(element), attributeName, attributeValue));
+      htmlAttributes.add(new HtmlAttribute(null, sourceUri, parentId, childIndex, attributeName, attributeValue));
       element.getAttributes().removeNamedItem(attributeName);
-
     }
 
-    private void deanonymizeNodeNames(Node node, HashMap<Node, String> replacements) {
+    private void deanonymizeNodeName(Node node, Integer parentId, int childIndex, HashMap<Node, String> replacements) {
       if (node.getNodeType() == Node.ELEMENT_NODE) {
-        String nodeXPath = getFullXPath(node);
-        Optional<HtmlNode> currentHtmlNode = htmlNodes.stream().filter(htmlNode -> htmlNode.xpath.equals(nodeXPath)).findFirst();
+        Optional<HtmlNode> currentHtmlNode = htmlNodes.stream().filter(htmlNode ->
+          htmlNode.parentId.equals(parentId) && htmlNode.childIndex == childIndex
+        ).findFirst();
         if (!currentHtmlNode.isPresent()) {
-          throw new InputMismatchException("Couldn't find node for xpath " + nodeXPath);
+          throw new InputMismatchException("Couldn't find node with parent id " + parentId + " and child index " + childIndex);
         }
         replacements.put(node, currentHtmlNode.get().tagName);
 
+        int currentNodeId = (parentId == null ? 0 : parentId) + childIndex;
         NodeList childNodes = node.getChildNodes();
         for (int i = 0; i < childNodes.getLength(); i++) {
-          deanonymizeNodeNames(childNodes.item(i), replacements);
+          deanonymizeNodeName(childNodes.item(i), currentNodeId, i, replacements);
         }
       }
     }
 
-    private void deanonymizeNodeAttributes(Node node) {
+    private void deanonymizeNodeAttributes(Node node, Integer parentId, int childIndex) {
       if (node.getNodeType() == Node.ELEMENT_NODE) {
-        String nodeXPath = getFullXPath(node);
-        List<HtmlAttribute> currentHtmlAttributes = htmlAttributes.stream().filter(htmlAttribute -> htmlAttribute.xpath.equals(nodeXPath)).collect(Collectors.toList());
+        List<HtmlAttribute> currentHtmlAttributes = htmlAttributes.stream().filter(htmlAttribute ->
+          htmlAttribute.parentId.equals(parentId) && htmlAttribute.childIndex == childIndex
+        ).collect(Collectors.toList());
 
         for (HtmlAttribute htmlAttribute : currentHtmlAttributes) {
           ((Element) node).setAttribute(htmlAttribute.getName(), htmlAttribute.getValue());
         }
 
+        int currentNodeId = (parentId == null ? 0 : parentId) + childIndex;
         NodeList childNodes = node.getChildNodes();
         for (int i = 0; i < childNodes.getLength(); i++) {
-          deanonymizeNodeAttributes(childNodes.item(i));
+          deanonymizeNodeAttributes(childNodes.item(i), currentNodeId, i);
         }
       }
     }
@@ -135,10 +139,10 @@ public class HtmlTools {
 
       Document doc = db.parse(new InputSource(new StringReader(anonymizedHtml)));
 
-      deanonymizeNodeAttributes(doc.getDocumentElement());
+      deanonymizeNodeAttributes(doc.getDocumentElement(), null, 0);
 
       HashMap<Node, String> nodeNameReplacements = new HashMap<>();
-      deanonymizeNodeNames(doc.getDocumentElement(), nodeNameReplacements);
+      deanonymizeNodeName(doc.getDocumentElement(), null, 0, nodeNameReplacements);
       for (Node node : nodeNameReplacements.keySet()) {
         doc.renameNode(node, null, nodeNameReplacements.get(node));
       }
@@ -154,24 +158,26 @@ public class HtmlTools {
       return originalHtml;
     }
 
-    public List<HtmlNode> getHtmlNodes() {
+    public Set<HtmlNode> getHtmlNodes() {
       return anonymizedHtml == null ? null : htmlNodes;
     }
 
-    public List<HtmlAttribute> getHtmlAttributes() {
+    public Set<HtmlAttribute> getHtmlAttributes() {
       return anonymizedHtml == null ? null : htmlAttributes;
     }
 
     public static class HtmlNode {
       private Integer id;
       private String sourceUri;
-      private String xpath;
+      private Integer parentId;
+      private Integer childIndex;
       private String tagName;
 
-      public HtmlNode(Integer id, String sourceUri, String xpath, String tagName) {
+      public HtmlNode(Integer id, Integer parentNodeId, Integer childIndex, String sourceUri, String tagName) {
         this.id = id;
         this.sourceUri = sourceUri;
-        this.xpath = xpath;
+        this.parentId = parentNodeId;
+        this.childIndex = childIndex;
         this.tagName = tagName;
       }
 
@@ -179,8 +185,12 @@ public class HtmlTools {
         return sourceUri;
       }
 
-      public String getXpath() {
-        return xpath;
+      public Integer getParentId() {
+        return parentId;
+      }
+
+      public Integer getChildIndex() {
+        return childIndex;
       }
 
       public String getTagName() {
@@ -194,27 +204,30 @@ public class HtmlTools {
         final HtmlNode other = (HtmlNode) o;
         return Objects.equals(id, other.id) &&
           Objects.equals(sourceUri, other.sourceUri) &&
-          Objects.equals(xpath, other.xpath) &&
+          Objects.equals(parentId, other.parentId) &&
+          Objects.equals(childIndex, other.childIndex) &&
           Objects.equals(tagName, other.tagName);
       }
 
       @Override
       public int hashCode() {
-        return Objects.hash(id, sourceUri, xpath, tagName);
+        return Objects.hash(id, sourceUri, parentId, childIndex, tagName);
       }
     }
 
     public static class HtmlAttribute {
       private Integer id;
       private String sourceUri;
-      private String xpath;
+      private Integer parentId;
+      private Integer childIndex;
       private String name;
       private String value;
 
-      public HtmlAttribute(Integer id, String sourceUri, String xpath, String name, String value) {
+      public HtmlAttribute(Integer id, String sourceUri, Integer parentId, Integer childIndex, String name, String value) {
         this.id = id;
         this.sourceUri = sourceUri;
-        this.xpath = xpath;
+        this.parentId = parentId;
+        this.childIndex = childIndex;
         this.name = name;
         this.value = value;
       }
@@ -223,8 +236,12 @@ public class HtmlTools {
         return sourceUri;
       }
 
-      public String getXpath() {
-        return xpath;
+      public Integer getParentId() {
+        return parentId;
+      }
+
+      public Integer getChildIndex() {
+        return childIndex;
       }
 
       public String getName() {
@@ -242,14 +259,14 @@ public class HtmlTools {
         HtmlAttribute that = (HtmlAttribute) o;
         return Objects.equals(id, that.id) &&
           sourceUri.equals(that.sourceUri) &&
-          xpath.equals(that.xpath) &&
+          parentId.equals(that.parentId) &&
           name.equals(that.name) &&
           value.equals(that.value);
       }
 
       @Override
       public int hashCode() {
-        return Objects.hash(id, sourceUri, xpath, name, value);
+        return Objects.hash(id, sourceUri, parentId, name, value);
       }
     }
   }
@@ -273,75 +290,5 @@ public class HtmlTools {
       ex.printStackTrace();
       return null;
     }
-  }
-
-  // https://lekkimworld.com/2007/06/19/building-xpath-expression-from-xml-node/
-  public static String getFullXPath(Node n) {
-    Node parent;
-    Stack<Node> hierarchy = new Stack<>();
-    StringBuilder buffer = new StringBuilder();
-
-    hierarchy.push(n);
-
-    switch (n.getNodeType()) {
-      case Node.ATTRIBUTE_NODE:
-        parent = ((Attr) n).getOwnerElement();
-        break;
-      case Node.ELEMENT_NODE:
-      case Node.DOCUMENT_NODE:
-        parent = n.getParentNode();
-        break;
-      default:
-        throw new IllegalStateException("Unexpected Node type" + n.getNodeType());
-    }
-
-    while (null != parent && parent.getNodeType() != Node.DOCUMENT_NODE) {
-      hierarchy.push(parent);
-      parent = parent.getParentNode();
-    }
-
-    Node obj;
-    while (!hierarchy.isEmpty() && null != (obj = hierarchy.pop())) {
-      boolean handled = false;
-
-      if (obj.getNodeType() == Node.ELEMENT_NODE) {
-        Element e = (Element) obj;
-
-        if (buffer.length() == 0) {
-          buffer.append(obj.getNodeName());
-        } else {
-          buffer.append("/").append(obj.getNodeName());
-
-          if (obj.hasAttributes()) {
-            if (e.hasAttribute("id")) {
-              buffer.append("[@id='").append(e.getAttribute("id")).append("']");
-              handled = true;
-            } else if (e.hasAttribute("name")) {
-              buffer.append("[@name='").append(e.getAttribute("name")).append("']");
-              handled = true;
-            }
-          }
-
-          if (!handled) {
-            int prev_siblings = 1;
-            Node prev_sibling = obj.getPreviousSibling();
-            while (null != prev_sibling) {
-              if (prev_sibling.getNodeType() == obj.getNodeType()) {
-                if (prev_sibling.getNodeName().equalsIgnoreCase(
-                  obj.getNodeName())) {
-                  prev_siblings++;
-                }
-              }
-              prev_sibling = prev_sibling.getPreviousSibling();
-            }
-            buffer.append("[").append(prev_siblings).append("]");
-          }
-        }
-      } else if (obj.getNodeType() == Node.ATTRIBUTE_NODE) {
-        buffer.append("/@");
-        buffer.append(obj.getNodeName());
-      }
-    }
-    return buffer.toString();
   }
 }
