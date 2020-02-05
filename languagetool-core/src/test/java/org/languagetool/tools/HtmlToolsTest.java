@@ -87,7 +87,7 @@ public class HtmlToolsTest {
 
   @Test
   public void testAnonymizeRemoveAttributes() throws IOException, ParserConfigurationException, SAXException {
-    HtmlTools.HtmlAnonymizer htmlAnonymizer = HtmlTools.HtmlAnonymizer.createFromHtml(sourceUri, originalHtml);
+    HtmlTools.HtmlAnonymizer htmlAnonymizer = HtmlTools.HtmlAnonymizer.createFromHtml("title", sourceUri, originalHtml);
     htmlAnonymizer.anonymize();
 
     assertEquals(anonymizedHtml, htmlAnonymizer.getAnonymizedHtml());

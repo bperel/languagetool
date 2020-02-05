@@ -31,6 +31,7 @@ import org.languagetool.tools.HtmlTools.HtmlAnonymizer.HtmlNode;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.sql.Date;
 import java.sql.*;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -43,8 +44,6 @@ abstract class DatabaseHandler extends ResultHandler {
 
   protected static Connection conn;
   protected static int batchSize;
-
-  protected PreparedStatement insertCorpusMatchSt;
   
   protected int batchCount = 0;
 
@@ -81,6 +80,8 @@ abstract class DatabaseHandler extends ResultHandler {
     private final ContextTools contextTools;
     private final ContextTools smallContextTools;
 
+    private final PreparedStatement insertCorpusArticleSt;
+    private final PreparedStatement insertCorpusMatchSt;
     private final PreparedStatement insertHtmlNodeSt;
     private final PreparedStatement insertHtmlAttributeSt;
 
@@ -101,15 +102,18 @@ abstract class DatabaseHandler extends ResultHandler {
       smallContextTools.setEscapeHtml(false);
 
       try {
+        insertCorpusArticleSt = conn.prepareStatement("" +
+          " INSERT INTO corpus_article (title, revision, text)" +
+          " VALUES (?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
         insertCorpusMatchSt = conn.prepareStatement("" +
-          " INSERT INTO corpus_match (version, language_code, ruleid, rule_category, rule_subid, rule_description, message, error_context, small_error_context, corpus_date, check_date, source_uri, revision, source_type, replacement_suggestion, is_visible)" +
-          " VALUES (0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)");
+          " INSERT INTO corpus_match (article_id, version, language_code, ruleid, rule_category, rule_subid, rule_description, message, error_context, small_error_context, corpus_date, check_date, source_type, replacement_suggestion, is_visible)" +
+          " VALUES (?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)");
         insertHtmlNodeSt = conn.prepareStatement("" +
-          " INSERT INTO html_node (source_uri, revision, parent_id, child_index, tag_name)" +
-          " VALUES (?, ? ,?, ?, ?)");
+          " INSERT INTO corpus_article_html_node (article_id, parent_id, child_index, tag_name)" +
+          " VALUES (?, ?, ?, ?)", new String[] {"id"});
         insertHtmlAttributeSt = conn.prepareStatement("" +
-          " INSERT INTO html_attribute (source_uri, revision, parent_id, child_index, attribute_name, attribute_value)" +
-          " VALUES (?, ?, ?, ?, ?, ?)");
+          " INSERT INTO corpus_article_html_attribute (article_id, parent_id, child_index, attribute_name, attribute_value)" +
+          " VALUES (?, ?, ?, ?, ?)");
       } catch (SQLException e) {
         throw new RuntimeException(e);
       }
@@ -123,39 +127,7 @@ abstract class DatabaseHandler extends ResultHandler {
           .filter(match -> !match.getSuggestedReplacements().isEmpty())
           .collect(Collectors.toList());
 
-        List<String> urlParts = Arrays.asList(sentence.getUrl().split("/"));
-        String urlWithoutRevision = StringUtils.join(urlParts.subList(0, urlParts.size()-1), "/");
-        int revision = Integer.parseInt(urlParts.get(urlParts.size()-1));
-
-        HtmlTools.HtmlAnonymizer anonymizer = WikipediaSentenceSource.anonymizedArticles.get(urlWithoutRevision);
-        if (processedAnonymizedArticles != null && !processedAnonymizedArticles.contains(urlWithoutRevision)) {
-          for (HtmlNode node : anonymizer.getHtmlNodes()) {
-            insertHtmlNodeSt.setString(1, urlWithoutRevision);
-            insertHtmlNodeSt.setInt(2, revision);
-            if (node.getParentId() == null) {
-              insertHtmlNodeSt.setNull(3, Types.INTEGER);
-            } else {
-              insertHtmlNodeSt.setInt(3, node.getParentId());
-            }
-            insertHtmlNodeSt.setInt(4, node.getChildIndex());
-            insertHtmlNodeSt.setString(5, node.getTagName());
-            insertHtmlNodeSt.addBatch();
-          }
-          for (HtmlAttribute attribute : anonymizer.getHtmlAttributes()) {
-            insertHtmlAttributeSt.setString(1, urlWithoutRevision);
-            insertHtmlAttributeSt.setInt(2, revision);
-            if (attribute.getParentId() == null) {
-              insertHtmlAttributeSt.setNull(3, Types.INTEGER);
-            } else {
-              insertHtmlAttributeSt.setInt(3, attribute.getParentId());
-            }
-            insertHtmlAttributeSt.setInt(4, attribute.getChildIndex());
-            insertHtmlAttributeSt.setString(5, attribute.getName());
-            insertHtmlAttributeSt.setString(6, attribute.getValue());
-            insertHtmlAttributeSt.addBatch();
-          }
-          processedAnonymizedArticles.add(urlWithoutRevision);
-        }
+        long articleId = createOrRetrieveArticle(sentence);
 
         for (RuleMatch match : rulesMatchesWithSuggestions) {
           String context = contextTools.getContext(match.getFromPos(), match.getToPos(), sentence.getText());
@@ -166,7 +138,7 @@ abstract class DatabaseHandler extends ResultHandler {
 
           String smallContext = smallContextTools.getContext(match.getFromPos(), match.getToPos(), sentence.getText());
 
-          addSentenceToBatch(urlWithoutRevision, revision, sentence.getSource(), language, nowDate, match, context, smallContext);
+          addSentenceToBatch(articleId, sentence.getSource(), language, nowDate, match, context, smallContext);
           if (++batchCount >= batchSize){
             executeBatch();
             batchCount = 0;
@@ -186,28 +158,78 @@ abstract class DatabaseHandler extends ResultHandler {
       }
     }
 
-    private void addSentenceToBatch(String urlWithoutRevision, Integer revision, String source, Language language, java.sql.Date nowDate, RuleMatch match, String context, String smallContext) throws SQLException {
+    private long createOrRetrieveArticle(Sentence sentence) throws SQLException {
+      List<String> urlParts = Arrays.asList(sentence.getUrl().split("/"));
+      String urlWithoutRevision = StringUtils.join(urlParts.subList(0, urlParts.size()-1), "/");
+      int revision = Integer.parseInt(urlParts.get(urlParts.size()-1));
+
+      HtmlTools.HtmlAnonymizer anonymizer = WikipediaSentenceSource.anonymizedArticles.get(urlWithoutRevision);
+      if (processedAnonymizedArticles != null && !processedAnonymizedArticles.contains(urlWithoutRevision)) {
+        insertCorpusArticleSt.setString(1, anonymizer.getTitle());
+        insertCorpusArticleSt.setInt(2, revision);
+        insertCorpusArticleSt.setString(3, anonymizer.getAnonymizedHtml());
+
+        if (insertCorpusArticleSt.executeUpdate() == 0) {
+          throw new SQLException("Creating user failed, no rows affected.");
+        }
+
+        ResultSet generatedKeys = insertCorpusArticleSt.getGeneratedKeys();
+        if (generatedKeys.next()) {
+          anonymizer.setArticleId(generatedKeys.getLong(1));
+        }
+        else {
+          throw new SQLException("Creating user failed, no ID obtained.");
+        }
+
+        for (HtmlNode node : anonymizer.getHtmlNodes()) {
+          insertHtmlNodeSt.setLong(1, anonymizer.getArticleId());
+          if (node.getParentId() == null) {
+            insertHtmlNodeSt.setNull(2, Types.INTEGER);
+          } else {
+            insertHtmlNodeSt.setInt(2, node.getParentId());
+          }
+          insertHtmlNodeSt.setInt(3, node.getChildIndex());
+          insertHtmlNodeSt.setString(4, node.getTagName());
+          insertHtmlNodeSt.addBatch();
+        }
+        for (HtmlAttribute attribute : anonymizer.getHtmlAttributes()) {
+          insertHtmlAttributeSt.setLong(1, anonymizer.getArticleId());
+          if (attribute.getParentId() == null) {
+            insertHtmlAttributeSt.setNull(2, Types.INTEGER);
+          } else {
+            insertHtmlAttributeSt.setInt(2, attribute.getParentId());
+          }
+          insertHtmlAttributeSt.setInt(3, attribute.getChildIndex());
+          insertHtmlAttributeSt.setString(4, attribute.getName());
+          insertHtmlAttributeSt.setString(5, attribute.getValue());
+          insertHtmlAttributeSt.addBatch();
+        }
+        processedAnonymizedArticles.add(urlWithoutRevision);
+      }
+      return anonymizer.getArticleId();
+    }
+
+    private void addSentenceToBatch(long articleId, String source, Language language, Date nowDate, RuleMatch match, String context, String smallContext) throws SQLException {
 
       Rule rule = match.getRule();
-      insertCorpusMatchSt.setString(1, language.getShortCode());
-      insertCorpusMatchSt.setString(2, rule.getId());
-      insertCorpusMatchSt.setString(3, rule.getCategory().getName());
+      insertCorpusMatchSt.setLong(1, articleId);
+      insertCorpusMatchSt.setString(2, language.getShortCode());
+      insertCorpusMatchSt.setString(3, rule.getId());
+      insertCorpusMatchSt.setString(4, rule.getCategory().getName());
       if (rule instanceof AbstractPatternRule) {
-        insertCorpusMatchSt.setString(4, ((AbstractPatternRule) rule).getSubId());
+        insertCorpusMatchSt.setString(5, ((AbstractPatternRule) rule).getSubId());
       } else {
-        insertCorpusMatchSt.setNull(4, Types.VARCHAR);
+        insertCorpusMatchSt.setNull(5, Types.VARCHAR);
       }
-      insertCorpusMatchSt.setString(5, rule.getDescription());
-      insertCorpusMatchSt.setString(6, StringUtils.abbreviate(match.getMessage(), 255));
-      insertCorpusMatchSt.setString(7, context);
-      insertCorpusMatchSt.setString(8, StringUtils.abbreviate(smallContext, 255));
+      insertCorpusMatchSt.setString(6, rule.getDescription());
+      insertCorpusMatchSt.setString(7, StringUtils.abbreviate(match.getMessage(), 255));
+      insertCorpusMatchSt.setString(8, context);
+      insertCorpusMatchSt.setString(9, StringUtils.abbreviate(smallContext, 255));
 
-      insertCorpusMatchSt.setDate(9, nowDate);  // should actually be the dump's date, but isn't really used anyway...
-      insertCorpusMatchSt.setDate(10, nowDate);
-      insertCorpusMatchSt.setString(11, urlWithoutRevision);
-      insertCorpusMatchSt.setInt(12, revision);
-      insertCorpusMatchSt.setString(13, source);
-      insertCorpusMatchSt.setString(14, match.getSuggestedReplacements().get(0));
+      insertCorpusMatchSt.setDate(10, nowDate);  // should actually be the dump's date, but isn't really used anyway...
+      insertCorpusMatchSt.setDate(11, nowDate);
+      insertCorpusMatchSt.setString(12, source);
+      insertCorpusMatchSt.setString(13, match.getSuggestedReplacements().get(0));
       insertCorpusMatchSt.addBatch();
     }
 

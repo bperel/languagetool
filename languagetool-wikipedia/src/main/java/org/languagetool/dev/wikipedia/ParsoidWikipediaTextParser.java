@@ -38,7 +38,7 @@ public class ParsoidWikipediaTextParser {
   public ParsoidWikipediaTextParser() {
   }
 
-  public HtmlTools.HtmlAnonymizer convert(String wikiText, String articleUrl) {
+  public HtmlTools.HtmlAnonymizer convert(String title, String wikiText, String articleUrl) {
     URL url;
     try {
       url = new URL("http://localhost:8024/wikipedia_fr/v3/transform/wikitext/to/html");
@@ -79,7 +79,7 @@ public class ParsoidWikipediaTextParser {
 
       String html = sb.toString();
 
-      HtmlTools.HtmlAnonymizer htmlAnonymizer = HtmlTools.HtmlAnonymizer.createFromHtml(articleUrl, html);
+      HtmlTools.HtmlAnonymizer htmlAnonymizer = HtmlTools.HtmlAnonymizer.createFromHtml(title, articleUrl, html);
       htmlAnonymizer.anonymize();
 
       return htmlAnonymizer;

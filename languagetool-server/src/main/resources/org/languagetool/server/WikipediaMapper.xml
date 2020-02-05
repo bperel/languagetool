@@ -2,6 +2,6 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.languagetool.server.WikipediaMapper">
     <select id="selectWikipediaSuggestions" resultType="org.languagetool.server.CorpusMatchEntry">
-        SELECT id, version, language_code, ruleid, rule_category, rule_subid, rule_description, message, error_context, small_error_context, corpus_date, check_date, sourceuri, source_type, is_visible, replacement_suggestion FROM corpus_match ORDER BY RAND() LIMIT 10
+        SELECT id, article_id, version, language_code, ruleid, rule_category, rule_subid, rule_description, message, error_context, small_error_context, corpus_date, check_date, source_type, is_visible, replacement_suggestion, applied FROM corpus_match ORDER BY RAND() LIMIT 10
 </select>
 </mapper>

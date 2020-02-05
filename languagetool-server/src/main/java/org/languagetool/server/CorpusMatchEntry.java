@@ -27,6 +27,7 @@ import java.sql.Date;
 public class CorpusMatchEntry {
 
   private Integer id;
+  private final Integer articleId;
   private final Integer version;
   private final String languageCode;
   private final String ruleid;
@@ -38,14 +39,14 @@ public class CorpusMatchEntry {
   private final String smallErrorContext;
   private final Date corpusDate;
   private final Date checkDate;
-  private final String sourceUri;
   private final String sourceType;
   private final Boolean isVisible;
   private final String replacementSuggestion;
   private final Boolean applied;
 
-  public CorpusMatchEntry(Integer id, Integer version, String languageCode, String ruleid, String ruleCategory, String ruleSubid, String ruleDescription, String message, String errorContext, String smallErrorContext, Date corpusDate, Date checkDate, String sourceUri, String sourceType, Boolean isVisible, String replacementSuggestion, Boolean applied) {
+  public CorpusMatchEntry(Integer id, Integer articleId, Integer version, String languageCode, String ruleid, String ruleCategory, String ruleSubid, String ruleDescription, String message, String errorContext, String smallErrorContext, Date corpusDate, Date checkDate, String sourceUri, Integer revision, String sourceType, Boolean isVisible, String replacementSuggestion, Boolean applied) {
     this.id = id;
+    this.articleId = articleId;
     this.version = version;
     this.languageCode = languageCode;
     this.ruleid = ruleid;
@@ -57,11 +58,14 @@ public class CorpusMatchEntry {
     this.smallErrorContext = smallErrorContext;
     this.corpusDate = corpusDate;
     this.checkDate = checkDate;
-    this.sourceUri = sourceUri;
     this.sourceType = sourceType;
     this.isVisible = isVisible;
     this.replacementSuggestion = replacementSuggestion;
     this.applied = applied;
+  }
+
+  public Integer getArticleId() {
+    return articleId;
   }
 
   public Integer getVersion() {
@@ -108,10 +112,6 @@ public class CorpusMatchEntry {
     return checkDate;
   }
 
-  public String getSourceUri() {
-    return sourceUri;
-  }
-
   public String getSourceType() {
     return sourceType;
   }
@@ -127,4 +127,5 @@ public class CorpusMatchEntry {
   public Boolean getApplied() {
     return applied;
   }
+
 }

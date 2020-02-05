@@ -192,7 +192,7 @@ public class WikipediaSentenceSource extends SentenceSource {
         anonymizer = anonymizedArticles.get(articleUrl);
       }
       else {
-        anonymizer = textFilter.convert(text, articleUrl);
+        anonymizer = textFilter.convert(title, text, articleUrl);
         anonymizedArticles.put(articleUrl, anonymizer);
       }
 

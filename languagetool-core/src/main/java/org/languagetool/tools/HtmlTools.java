@@ -23,6 +23,8 @@ public class HtmlTools {
   public static class HtmlAnonymizer {
     public static final String DEFAULT_TAG = "tag";
 
+    private long articleId;
+    private String title;
     private String sourceUri;
     private String originalHtml;
     private String anonymizedHtml;
@@ -42,8 +44,9 @@ public class HtmlTools {
       return instance;
     }
 
-    public static HtmlAnonymizer createFromHtml(String sourceUri, String html) {
+    public static HtmlAnonymizer createFromHtml(String title, String sourceUri, String html) {
       HtmlAnonymizer instance = new HtmlAnonymizer();
+      instance.title = title;
       instance.sourceUri = sourceUri;
       instance.originalHtml = html;
 
@@ -150,6 +153,18 @@ public class HtmlTools {
       originalHtml = getStringFromDocument(doc);
     }
 
+    public String getTitle() {
+      return title;
+    }
+
+    public long getArticleId() {
+      return articleId;
+    }
+
+    public void setArticleId(long articleId) {
+      this.articleId = articleId;
+    }
+
     public String getAnonymizedHtml() {
       return anonymizedHtml;
     }
@@ -179,10 +194,6 @@ public class HtmlTools {
         this.parentId = parentNodeId;
         this.childIndex = childIndex;
         this.tagName = tagName;
-      }
-
-      public String getSourceUri() {
-        return sourceUri;
       }
 
       public Integer getParentId() {
