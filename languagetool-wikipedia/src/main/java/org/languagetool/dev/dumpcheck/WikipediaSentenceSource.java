@@ -23,16 +23,13 @@ import org.languagetool.Language;
 import org.languagetool.dev.wikipedia.ParsoidWikipediaTextParser;
 import org.languagetool.tokenizers.Tokenizer;
 import org.languagetool.tools.HtmlTools;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
+import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.stream.XMLStreamException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -58,8 +55,6 @@ public class WikipediaSentenceSource extends SentenceSource {
   public static HashMap<String, HtmlTools.HtmlAnonymizer> anonymizedArticles = new HashMap<>();
 
   private final ParsoidWikipediaTextParser textFilter = new ParsoidWikipediaTextParser();
-  //private final XMLEventReader reader;
-  private Document doc;
   private final Tokenizer sentenceTokenizer;
   private final List<WikipediaSentence> sentences;
   private final Language language;
@@ -75,16 +70,87 @@ public class WikipediaSentenceSource extends SentenceSource {
   /** @since 3.0 */
   WikipediaSentenceSource(InputStream xmlInput, Language language, Pattern filter) {
     super(language, filter);
+    sentenceTokenizer = language.getSentenceTokenizer();
+    sentences = new ArrayList<>();
+    this.language = language;
+
     try {
       System.setProperty("jdk.xml.totalEntitySizeLimit", String.valueOf(Integer.MAX_VALUE));  // see https://github.com/dbpedia/extraction-framework/issues/487
-      DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-      dbf.setValidating(false);
-      DocumentBuilder db = dbf.newDocumentBuilder();
 
-      doc = db.parse(new InputSource(xmlInput));
-      sentenceTokenizer = language.getSentenceTokenizer();
-      sentences = new ArrayList<>();
-      this.language = language;
+      SAXParserFactory factory = SAXParserFactory.newInstance();
+      SAXParser saxParser = factory.newSAXParser();
+
+      class ParseLimitExceededException extends SAXException {
+        public ParseLimitExceededException(int articleCount) {
+          super("Article read limit has been exceeded : " + articleCount);
+        }
+      }
+
+      DefaultHandler handler = new DefaultHandler() {
+        private String currentQName = null;
+        private boolean isRevisionContext;
+
+        private StringBuilder title;
+        private StringBuilder namespace;
+        private StringBuilder revisionId;
+        private StringBuilder text;
+
+        @Override
+        public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
+          currentQName = qName.toLowerCase();
+
+          if (currentQName.equals("revision")) {
+            if (++articleCount % 100 == 0) {
+              System.out.println("Article #" + articleCount);
+            }
+            if (articleCount > 10) {
+              throw new ParseLimitExceededException(articleCount);
+            }
+            isRevisionContext = true;
+          }
+          else if (currentQName.equals("page") || currentQName.equals("contributor")) {
+            isRevisionContext = false;
+            if (currentQName.equals("page")) {
+              title = new StringBuilder();
+              namespace = new StringBuilder();
+              revisionId = new StringBuilder();
+              text = new StringBuilder();
+            }
+          }
+        }
+
+        @Override
+        public void endElement(String uri, String localName, String qName) {
+          if (qName.toLowerCase().equals("page")) {
+            addSentence(
+              namespace.toString().trim(),
+              title.toString().trim(),
+              Integer.parseInt(revisionId.toString().trim()),
+              text.toString().trim(),
+              articleCount
+            );
+          }
+        }
+
+        @Override
+        public void characters(char[] ch, int start, int length) {
+          String content = new String(ch, start, length);
+          switch(currentQName) {
+            case "title": title.append(content);break;
+            case "ns": namespace.append(content); break;
+            case "text": text.append(content); break;
+            case "id":
+              if (isRevisionContext) {
+                revisionId.append(content);
+              }
+            break;
+          }
+        }
+      };
+      try {
+        saxParser.parse(xmlInput, handler);
+      } catch (ParseLimitExceededException ignored) { }
+
     } catch (ParserConfigurationException | SAXException | IOException e) {
       throw new RuntimeException(e);
     }
@@ -92,27 +158,17 @@ public class WikipediaSentenceSource extends SentenceSource {
 
   @Override
   public boolean hasNext() {
-    try {
-      fillSentences();
-    } catch (XMLStreamException e) {
-      throw new RuntimeException(e);
-    }
     return sentences.size() > 0;
   }
 
   @Override
   public Sentence next() {
-    try {
-      fillSentences();
-      if (sentences.isEmpty()) {
-        throw new NoSuchElementException();
-      }
-      WikipediaSentence wikiSentence = sentences.remove(0);
-      String url = getUrl(wikiSentence.title, wikiSentence.revision);
-      return new Sentence(wikiSentence.sentence, getSource(), wikiSentence.title, url, wikiSentence.articleCount);
-    } catch (XMLStreamException e) {
-      throw new RuntimeException(e);
+    if (sentences.isEmpty()) {
+      throw new NoSuchElementException();
     }
+    WikipediaSentence wikiSentence = sentences.remove(0);
+    String url = getUrl(wikiSentence.title, wikiSentence.revision);
+    return new Sentence(wikiSentence.sentence, getSource(), wikiSentence.title, url, wikiSentence.articleCount);
   }
 
   @NotNull
@@ -129,54 +185,7 @@ public class WikipediaSentenceSource extends SentenceSource {
     return "wikipedia";
   }
 
-  private void fillSentences() throws XMLStreamException {
-    String title = null;
-    String namespace = null;
-    NodeList pageList = doc.getElementsByTagName("page");
-    int pageNumber = 0;
-    while (sentences.isEmpty() && pageNumber < pageList.getLength()) {
-      Node pageElement = pageList.item(pageNumber);
-      NodeList pageElementChildNodes = pageElement.getChildNodes();
-      for (int i = 0; i < pageElementChildNodes.getLength(); i++) {
-        Node pageElementChildNode = pageElementChildNodes.item(i);
-        switch(pageElementChildNode.getNodeName()) {
-          case "title":
-            title = pageElementChildNode.getTextContent();
-            articleCount++;
-            if (articleCount % 100 == 0) {
-              System.out.println("Article: " + articleCount);
-            }
-            break;
-          case "ns":
-            namespace = pageElementChildNode.getTextContent();
-            break;
-          case "revision":
-            Integer revisionId = null;
-            NodeList revisionElementChildNodes = pageElementChildNode.getChildNodes();
-            for (int j = 0; j < revisionElementChildNodes.getLength(); j++) {
-              Node revisionElementChildNode = revisionElementChildNodes.item(j);
-              switch (revisionElementChildNode.getNodeName()) {
-                case "id":
-                  revisionId = Integer.parseInt(revisionElementChildNode.getTextContent());
-                break;
-                case "text":
-                  if (revisionId == null) {
-                    System.err.println("No revision id found for "+title);
-                  }
-                  else {
-                    handleTextElement(namespace, title, revisionId, revisionElementChildNode.getTextContent(), articleCount);
-                  }
-                break;
-              }
-            }
-          break;
-        }
-      }
-      pageNumber++;
-    }
-  }
-
-  private void handleTextElement(String namespace, String title, Integer revisionId, String text, int articleCount) throws XMLStreamException {
+  private void addSentence(String namespace, String title, Integer revisionId, String text, int articleCount) {
     if (ONLY_ARTICLES && !ARTICLE_NAMESPACE.equals(namespace)) {
       namespaceSkipCount++;
     }
