@@ -60,8 +60,8 @@ public class HtmlToolsTest {
           "<div a=\"b\">text</div>",
           "<tag>text</tag>",
           "<div a=\"b\">text</div>",
-          Collections.singletonList(new HtmlAttribute(null, sourceUri, null, 0, "a", "b")),
-          Collections.singletonList(new HtmlNode(null, null, 0, sourceUri, "div"))
+          Collections.singletonList(new HtmlAttribute(null, null, 0, "a", "b")),
+          Collections.singletonList(new HtmlNode(null, null, 0, "div"))
         },
         {
           "<a><b1>text 1</b1><b2>text 2</b2></a>",
@@ -69,9 +69,9 @@ public class HtmlToolsTest {
           "<a><b1>text 1</b1><b2>text 2</b2></a>",
           Collections.emptyList(),
           Arrays.asList(
-            new HtmlNode(null, null, 0, sourceUri, "a"),
-            new HtmlNode(null, 0, 0, sourceUri, "b1"),
-            new HtmlNode(null, 0, 1, sourceUri, "b2")
+            new HtmlNode(null, null, 0, "a"),
+            new HtmlNode(null, 0, 0, "b1"),
+            new HtmlNode(null, 0, 1, "b2")
           )
         },
         {
@@ -79,7 +79,7 @@ public class HtmlToolsTest {
           "<tag>text</tag>",
           "<div>text</div>",
           Collections.emptyList(),
-          Collections.singletonList(new HtmlNode(null, null, 0, sourceUri, "div"))
+          Collections.singletonList(new HtmlNode(null, null, 0, "div"))
         }
       }
     );
@@ -87,7 +87,7 @@ public class HtmlToolsTest {
 
   @Test
   public void testAnonymizeRemoveAttributes() throws IOException, ParserConfigurationException, SAXException {
-    HtmlTools.HtmlAnonymizer htmlAnonymizer = HtmlTools.HtmlAnonymizer.createFromHtml("title", sourceUri, originalHtml);
+    HtmlTools.HtmlAnonymizer htmlAnonymizer = HtmlTools.HtmlAnonymizer.createFromHtml("title", originalHtml);
     htmlAnonymizer.anonymize();
 
     assertEquals(anonymizedHtml, htmlAnonymizer.getAnonymizedHtml());
@@ -97,7 +97,7 @@ public class HtmlToolsTest {
 
   @Test
   public void testDeanonymizeAddAttributes() throws IOException, SAXException, ParserConfigurationException {
-    HtmlTools.HtmlAnonymizer htmlAnonymizer = HtmlTools.HtmlAnonymizer.createFromAnonymized(sourceUri, anonymizedHtml, anonymizedHtmlNodes, anonymizedHtmlAttributes);
+    HtmlTools.HtmlAnonymizer htmlAnonymizer = HtmlTools.HtmlAnonymizer.createFromAnonymized(anonymizedHtml, anonymizedHtmlNodes, anonymizedHtmlAttributes);
     htmlAnonymizer.deanonymize();
     assertEquals(deanonymizedHtml, htmlAnonymizer.getOriginalHtml());
   }

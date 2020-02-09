@@ -44,7 +44,7 @@ public class CorpusMatchEntry {
   private final String replacementSuggestion;
   private final Boolean applied;
 
-  public CorpusMatchEntry(Integer id, Integer articleId, Integer version, String languageCode, String ruleid, String ruleCategory, String ruleSubid, String ruleDescription, String message, String errorContext, String smallErrorContext, Date corpusDate, Date checkDate, String sourceUri, Integer revision, String sourceType, Boolean isVisible, String replacementSuggestion, Boolean applied) {
+  public CorpusMatchEntry(Integer id, Integer articleId, Integer version, String languageCode, String ruleid, String ruleCategory, String ruleSubid, String ruleDescription, String message, String errorContext, String smallErrorContext, Date corpusDate, Date checkDate, String sourceType, Boolean isVisible, String replacementSuggestion, Boolean applied) {
     this.id = id;
     this.articleId = articleId;
     this.version = version;
@@ -62,6 +62,10 @@ public class CorpusMatchEntry {
     this.isVisible = isVisible;
     this.replacementSuggestion = replacementSuggestion;
     this.applied = applied;
+  }
+
+  public Integer getId() {
+    return id;
   }
 
   public Integer getArticleId() {
@@ -127,5 +131,4 @@ public class CorpusMatchEntry {
   public Boolean getApplied() {
     return applied;
   }
-
 }

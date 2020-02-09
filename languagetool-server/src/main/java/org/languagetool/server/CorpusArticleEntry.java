@@ -27,14 +27,17 @@ public class CorpusArticleEntry {
   private Integer id;
   private final String title;
   private final Integer revision;
-  private final String sourceUri;
   private final String text;
 
-  public CorpusArticleEntry(String title, Integer revision, String sourceUri, String text) {
+  public CorpusArticleEntry(Integer id, String title, Integer revision, String text) {
+    this.id = id;
     this.title = title;
     this.revision = revision;
-    this.sourceUri = sourceUri;
     this.text = text;
+  }
+
+  public Integer getId() {
+    return id;
   }
 
   public String getTitle() {
@@ -43,10 +46,6 @@ public class CorpusArticleEntry {
 
   public Integer getRevision() {
     return revision;
-  }
-
-  public String getSourceUri() {
-    return sourceUri;
   }
 
   public String getText() {

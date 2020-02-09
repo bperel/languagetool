@@ -25,7 +25,6 @@ public class HtmlTools {
 
     private long articleId;
     private String title;
-    private String sourceUri;
     private String originalHtml;
     private String anonymizedHtml;
 
@@ -34,9 +33,8 @@ public class HtmlTools {
 
     public HtmlAnonymizer() { }
 
-    public static HtmlAnonymizer createFromAnonymized(String sourceUri, String anonymizedHtml, Set<HtmlNode> htmlNodes, Set<HtmlAttribute> htmlAttributes) {
+    public static HtmlAnonymizer createFromAnonymized(String anonymizedHtml, Set<HtmlNode> htmlNodes, Set<HtmlAttribute> htmlAttributes) {
       HtmlAnonymizer instance = new HtmlAnonymizer();
-      instance.sourceUri = sourceUri;
       instance.anonymizedHtml = anonymizedHtml;
       instance.htmlNodes = htmlNodes;
       instance.htmlAttributes = htmlAttributes;
@@ -44,10 +42,9 @@ public class HtmlTools {
       return instance;
     }
 
-    public static HtmlAnonymizer createFromHtml(String title, String sourceUri, String html) {
+    public static HtmlAnonymizer createFromHtml(String title, String html) {
       HtmlAnonymizer instance = new HtmlAnonymizer();
       instance.title = title;
-      instance.sourceUri = sourceUri;
       instance.originalHtml = html;
 
       return instance;
@@ -71,7 +68,7 @@ public class HtmlTools {
           String nodeName = node.getNodeName();
           if (!nodeName.equals(DEFAULT_TAG)) { // This node has not already been handled
             doc.renameNode(node, null, DEFAULT_TAG);
-            htmlNodes.add(new HtmlNode(null, parentId, childIndex, sourceUri, nodeName));
+            htmlNodes.add(new HtmlNode(null, parentId, childIndex, nodeName));
 
             NamedNodeMap attributes = node.getAttributes();
             while (attributes.getLength() > 0) {
@@ -95,7 +92,7 @@ public class HtmlTools {
       String attributeName = attribute.getNodeName();
       String attributeValue = attribute.getNodeValue();
 
-      htmlAttributes.add(new HtmlAttribute(null, sourceUri, parentId, childIndex, attributeName, attributeValue));
+      htmlAttributes.add(new HtmlAttribute(null, parentId, childIndex, attributeName, attributeValue));
       element.getAttributes().removeNamedItem(attributeName);
     }
 
@@ -120,7 +117,7 @@ public class HtmlTools {
     private void deanonymizeNodeAttributes(Node node, Integer parentId, int childIndex) {
       if (node.getNodeType() == Node.ELEMENT_NODE) {
         List<HtmlAttribute> currentHtmlAttributes = htmlAttributes.stream().filter(htmlAttribute ->
-          htmlAttribute.parentId.equals(parentId) && htmlAttribute.childIndex == childIndex
+          Objects.equals(htmlAttribute.parentId, parentId) && Objects.equals(htmlAttribute.childIndex, childIndex)
         ).collect(Collectors.toList());
 
         for (HtmlAttribute htmlAttribute : currentHtmlAttributes) {
@@ -183,14 +180,12 @@ public class HtmlTools {
 
     public static class HtmlNode {
       private Integer id;
-      private String sourceUri;
       private Integer parentId;
       private Integer childIndex;
       private String tagName;
 
-      public HtmlNode(Integer id, Integer parentNodeId, Integer childIndex, String sourceUri, String tagName) {
+      public HtmlNode(Integer id, Integer parentNodeId, Integer childIndex, String tagName) {
         this.id = id;
-        this.sourceUri = sourceUri;
         this.parentId = parentNodeId;
         this.childIndex = childIndex;
         this.tagName = tagName;
@@ -214,7 +209,6 @@ public class HtmlTools {
         if (o == null || getClass() != o.getClass()) return false;
         final HtmlNode other = (HtmlNode) o;
         return Objects.equals(id, other.id) &&
-          Objects.equals(sourceUri, other.sourceUri) &&
           Objects.equals(parentId, other.parentId) &&
           Objects.equals(childIndex, other.childIndex) &&
           Objects.equals(tagName, other.tagName);
@@ -222,29 +216,23 @@ public class HtmlTools {
 
       @Override
       public int hashCode() {
-        return Objects.hash(id, sourceUri, parentId, childIndex, tagName);
+        return Objects.hash(id, parentId, childIndex, tagName);
       }
     }
 
     public static class HtmlAttribute {
       private Integer id;
-      private String sourceUri;
       private Integer parentId;
       private Integer childIndex;
       private String name;
       private String value;
 
-      public HtmlAttribute(Integer id, String sourceUri, Integer parentId, Integer childIndex, String name, String value) {
+      public HtmlAttribute(Integer id, Integer parentId, Integer childIndex, String name, String value) {
         this.id = id;
-        this.sourceUri = sourceUri;
         this.parentId = parentId;
         this.childIndex = childIndex;
         this.name = name;
         this.value = value;
-      }
-
-      public String getSourceUri() {
-        return sourceUri;
       }
 
       public Integer getParentId() {
@@ -269,7 +257,6 @@ public class HtmlTools {
         if (o == null || getClass() != o.getClass()) return false;
         HtmlAttribute that = (HtmlAttribute) o;
         return Objects.equals(id, that.id) &&
-          sourceUri.equals(that.sourceUri) &&
           parentId.equals(that.parentId) &&
           name.equals(that.name) &&
           value.equals(that.value);
@@ -277,7 +264,7 @@ public class HtmlTools {
 
       @Override
       public int hashCode() {
-        return Objects.hash(id, sourceUri, parentId, name, value);
+        return Objects.hash(id, parentId, name, value);
       }
     }
   }

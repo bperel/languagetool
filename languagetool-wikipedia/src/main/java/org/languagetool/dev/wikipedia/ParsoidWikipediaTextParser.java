@@ -79,7 +79,7 @@ public class ParsoidWikipediaTextParser {
 
       String html = sb.toString();
 
-      HtmlTools.HtmlAnonymizer htmlAnonymizer = HtmlTools.HtmlAnonymizer.createFromHtml(title, articleUrl, html);
+      HtmlTools.HtmlAnonymizer htmlAnonymizer = HtmlTools.HtmlAnonymizer.createFromHtml(title, html);
       htmlAnonymizer.anonymize();
 
       return htmlAnonymizer;
