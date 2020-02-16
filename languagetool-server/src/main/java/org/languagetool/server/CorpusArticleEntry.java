@@ -27,13 +27,15 @@ public class CorpusArticleEntry {
   private Integer id;
   private final String title;
   private final Integer revision;
-  private final String text;
+  private final String wikitext;
+  private final String anonymizedHtml;
 
-  public CorpusArticleEntry(Integer id, String title, Integer revision, String text) {
+  public CorpusArticleEntry(Integer id, String title, Integer revision, String wikiText, String anonymizedHtml) {
     this.id = id;
     this.title = title;
     this.revision = revision;
-    this.text = text;
+    this.wikitext = wikiText;
+    this.anonymizedHtml = anonymizedHtml;
   }
 
   public Integer getId() {
@@ -48,7 +50,11 @@ public class CorpusArticleEntry {
     return revision;
   }
 
-  public String getText() {
-    return text;
+  public String getAnonymizedHtml() {
+    return anonymizedHtml;
+  }
+
+  public String getWikitext() {
+    return wikitext;
   }
 }

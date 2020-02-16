@@ -103,8 +103,8 @@ abstract class DatabaseHandler extends ResultHandler {
 
       try {
         insertCorpusArticleSt = conn.prepareStatement("" +
-          " INSERT INTO corpus_article (title, revision, text)" +
-          " VALUES (?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
+          " INSERT INTO corpus_article (title, revision, wikitext, anonymized_html)" +
+          " VALUES (?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
         insertCorpusMatchSt = conn.prepareStatement("" +
           " INSERT INTO corpus_match (article_id, version, language_code, ruleid, rule_category, rule_subid, rule_description, message, error_context, small_error_context, corpus_date, check_date, source_type, replacement_suggestion, is_visible)" +
           " VALUES (?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)");
@@ -167,7 +167,8 @@ abstract class DatabaseHandler extends ResultHandler {
       if (processedAnonymizedArticles != null && !processedAnonymizedArticles.contains(urlWithoutRevision)) {
         insertCorpusArticleSt.setString(1, anonymizer.getTitle());
         insertCorpusArticleSt.setInt(2, revision);
-        insertCorpusArticleSt.setString(3, anonymizer.getAnonymizedHtml());
+        insertCorpusArticleSt.setString(3, anonymizer.getWikitext());
+        insertCorpusArticleSt.setString(4, anonymizer.getAnonymizedHtml());
 
         if (insertCorpusArticleSt.executeUpdate() == 0) {
           throw new SQLException("Creating user failed, no rows affected.");
@@ -200,8 +201,8 @@ abstract class DatabaseHandler extends ResultHandler {
             insertHtmlAttributeSt.setInt(2, attribute.getParentId());
           }
           insertHtmlAttributeSt.setInt(3, attribute.getChildIndex());
-          insertHtmlAttributeSt.setString(4, attribute.getName());
-          insertHtmlAttributeSt.setString(5, attribute.getValue());
+          insertHtmlAttributeSt.setString(4, attribute.getAttributeName());
+          insertHtmlAttributeSt.setString(5, attribute.getAttributeValue());
           insertHtmlAttributeSt.addBatch();
         }
         processedAnonymizedArticles.add(urlWithoutRevision);
