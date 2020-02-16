@@ -93,6 +93,9 @@ class ApiV2 {
       case "wikipedia/suggestions":
         handleWikipediaSuggestionRequest(httpExchange);
         break;
+      case "wikipedia/suggestion":
+        handleWikipediaSuggestionDetailsRequest(httpExchange, parameters);
+        break;
       case "wikipedia/fix":
         handleWikipediaFixRequest(httpExchange, parameters);
         break;
@@ -191,36 +194,52 @@ class ApiV2 {
     ensureGetMethod(httpExchange, "/wikipedia/suggestions");
     DatabaseAccess db = DatabaseAccess.getInstance();
     List<CorpusMatchEntry> suggestions = db.getCorpusMatches(10);
-    writeCorpusMatchResponse("suggestions", suggestions, httpExchange);
+    writeCorpusMatchListResponse("suggestions", suggestions, httpExchange);
+  }
+
+  private void handleWikipediaSuggestionDetailsRequest(HttpExchange httpExchange, Map<String, String> parameters) throws IOException {
+    ensureGetMethod(httpExchange, "/wikipedia/suggestion");
+    int suggestionId = Integer.parseInt(parameters.get("suggestion_id"));
+    List<String> originalAndSuggestedWikitext = getOriginalAndSuggestedWikitext(suggestionId);
+
+    writeSuggestionDetailsResponse("suggestion", originalAndSuggestedWikitext, httpExchange);
   }
 
   private void handleWikipediaFixRequest(HttpExchange httpExchange, Map<String, String> parameters) throws Exception {
     ensurePostMethod(httpExchange, "/wikipedia/fix");
     int suggestionId = Integer.parseInt(parameters.get("suggestion_id"));
+    List<String> originalAndSuggestedWikitext = getOriginalAndSuggestedWikitext(suggestionId);
+
+    writeResponse("wikiText", originalAndSuggestedWikitext.get(1), httpExchange);
+  }
+
+  private List<String> getOriginalAndSuggestedWikitext(int suggestionId) {
     DatabaseAccess db = DatabaseAccess.getInstance();
     CorpusMatchEntry suggestion = db.getCorpusMatch(suggestionId);
-    if (suggestion != null) {
-      CorpusArticleEntry article = db.getCorpusArticle(suggestion.getArticleId());
-      List<HtmlNode> htmlNodes = db.getHtmlNodes(suggestion.getArticleId());
-      List<HtmlAttribute> htmlAttributes = db.getHtmlAttributes(suggestion.getArticleId());
-
-      ParsoidWikipediaTextParser parser = new ParsoidWikipediaTextParser();
-      String anonymizedHtml = article.getAnonymizedHtml();
-      String anonymizedHtmlWithReplacement = anonymizedHtml.replace(
-        suggestion.getErrorContext().replaceAll("<err>(.+?)</err>", "$1"),
-        suggestion.getErrorContext().replaceAll("<err>.+?</err>", suggestion.getReplacementSuggestion())
-      );
-      HtmlTools.HtmlAnonymizer anonymizer = createFromAnonymized(anonymizedHtmlWithReplacement, htmlNodes, htmlAttributes);
-      try {
-        anonymizer.deanonymize();
-      } catch (ParserConfigurationException | SAXException | IOException e) {
-        throw new RuntimeException("Something went wrong when de-anonymizing the article " + article.getTitle() + " : " + e.getMessage());
-      }
-      String originalHtml = anonymizer.getOriginalHtml();
-      String wikiText = parser.convertHtmlToWikitext(originalHtml);
-
-      writeResponse("wikiText", wikiText, httpExchange);
+    if (suggestion == null) {
+      throw new IllegalArgumentException("Suggestion not found : " + suggestionId);
     }
+
+    CorpusArticleEntry article = db.getCorpusArticle(suggestion.getArticleId());
+    List<HtmlNode> htmlNodes = db.getHtmlNodes(suggestion.getArticleId());
+    List<HtmlAttribute> htmlAttributes = db.getHtmlAttributes(suggestion.getArticleId());
+
+    String anonymizedHtml = article.getAnonymizedHtml();
+    String anonymizedHtmlWithReplacement = anonymizedHtml.replace(
+      suggestion.getErrorContext().replaceAll("<err>(.+?)</err>", "$1"),
+      suggestion.getErrorContext().replaceAll("<err>.+?</err>", suggestion.getReplacementSuggestion())
+    );
+    HtmlTools.HtmlAnonymizer anonymizer = createFromAnonymized(anonymizedHtmlWithReplacement, htmlNodes, htmlAttributes);
+    try {
+      anonymizer.deanonymize();
+    } catch (ParserConfigurationException | SAXException | IOException e) {
+      throw new RuntimeException("Something went wrong when de-anonymizing the article " + article.getTitle() + " : " + e.getMessage());
+    }
+
+    ParsoidWikipediaTextParser parser = new ParsoidWikipediaTextParser();
+    String suggestedWikiText = parser.convertHtmlToWikitext(anonymizer.getOriginalHtml());
+
+    return Arrays.asList(article.getWikitext(), suggestedWikiText);
   }
 
   private void handleRuleExamplesRequest(HttpExchange httpExchange, Map<String, String> params) throws Exception {
@@ -320,7 +339,7 @@ class ApiV2 {
     sendJson(httpExchange, sw);
   }
 
-  private void writeCorpusMatchResponse(String fieldName, List<CorpusMatchEntry> corpusMatchEntries, HttpExchange httpExchange) throws IOException {
+  private void writeCorpusMatchListResponse(String fieldName, List<CorpusMatchEntry> corpusMatchEntries, HttpExchange httpExchange) throws IOException {
     StringWriter sw = new StringWriter();
     try (JsonGenerator g = factory.createGenerator(sw)) {
       g.setCodec(new ObjectMapper());
@@ -330,6 +349,18 @@ class ApiV2 {
         g.writeObject(corpusMatchEntry);
       }
       g.writeEndArray();
+      g.writeEndObject();
+    }
+    sendJson(httpExchange, sw);
+  }
+
+  private void writeSuggestionDetailsResponse(String fieldName, List<String> originalAndSuggestedWikitext, HttpExchange httpExchange) throws IOException {
+    StringWriter sw = new StringWriter();
+    try (JsonGenerator g = factory.createGenerator(sw)) {
+      g.setCodec(new ObjectMapper());
+      g.writeStartObject();
+      g.writeStringField("originalWikitext", originalAndSuggestedWikitext.get(0));
+      g.writeStringField("suggestedWikitext", originalAndSuggestedWikitext.get(1));
       g.writeEndObject();
     }
     sendJson(httpExchange, sw);
