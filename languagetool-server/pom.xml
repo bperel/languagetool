@@ -153,6 +153,12 @@
             <version>2.5.0</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.languagetool</groupId>
+            <artifactId>languagetool-wikipedia</artifactId>
+            <version>4.9-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
     
 </project>

@@ -31,21 +31,45 @@ import java.util.HashMap;
 import java.util.zip.GZIPInputStream;
 
 /**
- * Convert Wikipedia syntax to HTML using Parsoid.
+ * Convert Wikipedia syntax to HTML (or the other way around) using Parsoid.
  */
 public class ParsoidWikipediaTextParser {
 
   public ParsoidWikipediaTextParser() {
   }
 
-  public HtmlTools.HtmlAnonymizer convert(String title, String wikiText, String articleUrl) {
+  public HtmlTools.HtmlAnonymizer convertWikitextToHtml(String title, String wikiText) {
+    try {
+      String html = callParsoid("wikitext", "html", wikiText);
+      if (html == null) {
+        return null;
+      }
+      HtmlTools.HtmlAnonymizer htmlAnonymizer = HtmlTools.HtmlAnonymizer.createFromHtml(title, wikiText, html);
+      htmlAnonymizer.anonymize();
+
+      return htmlAnonymizer;
+    } catch (IOException | ParserConfigurationException | SAXException e) {
+      e.printStackTrace();
+      return null;
+    }
+  }
+
+  public String convertHtmlToWikitext(String html) {
+    String wikitext = callParsoid("html", "wikitext", html);
+    if (wikitext != null) {
+      wikitext = wikitext.replaceFirst("(?s)^.+?</title>", "");
+    }
+    return wikitext;
+  }
+
+  private String callParsoid(String fromFormat, String toFormat, String inputText) {
     URL url;
     try {
-      url = new URL("http://localhost:8024/wikipedia_fr/v3/transform/wikitext/to/html");
+      url = new URL("http://localhost:8026/wikipedia_fr/v3/transform/"+fromFormat+"/to/"+toFormat);
       HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 
       HashMap<String, String> params = new HashMap<>();
-      params.put("wikitext", wikiText);
+      params.put(fromFormat, inputText);
       String requestBody = new ObjectMapper().writeValueAsString(params);
 
       conn.setDoInput(true);
@@ -66,7 +90,7 @@ public class ParsoidWikipediaTextParser {
         reader = new InputStreamReader(new GZIPInputStream(conn.getInputStream()));
       }
       else {
-        reader = new InputStreamReader(conn.getInputStream());
+        reader = new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8);
       }
 
       BufferedReader bufferedReader = new BufferedReader(reader);
@@ -77,13 +101,8 @@ public class ParsoidWikipediaTextParser {
       }
       bufferedReader.close();
 
-      String html = sb.toString();
-
-      HtmlTools.HtmlAnonymizer htmlAnonymizer = HtmlTools.HtmlAnonymizer.createFromHtml(title, html);
-      htmlAnonymizer.anonymize();
-
-      return htmlAnonymizer;
-    } catch (IOException | ParserConfigurationException | SAXException e) {
+      return sb.toString();
+    } catch (IOException e) {
       e.printStackTrace();
       return null;
     }

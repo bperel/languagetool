@@ -201,7 +201,7 @@ public class WikipediaSentenceSource extends SentenceSource {
         anonymizer = anonymizedArticles.get(articleUrl);
       }
       else {
-        anonymizer = textFilter.convert(title, text, articleUrl);
+        anonymizer = textFilter.convertWikitextToHtml(title, text);
         anonymizedArticles.put(articleUrl, anonymizer);
       }
 

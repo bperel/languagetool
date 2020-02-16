@@ -29,6 +29,7 @@ import org.apache.ibatis.session.RowBounds;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
+import org.languagetool.tools.HtmlTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,8 +44,6 @@ import java.sql.Statement;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-
-import static org.languagetool.server.ServerTools.print;
 
 /**
  * Encapsulate database access. Will do nothing if database access is not configured.
@@ -158,6 +157,50 @@ class DatabaseAccess {
     }
     try (SqlSession session = sqlSessionFactory.openSession(true)) {
       return session.selectList("org.languagetool.server.WikipediaMapper.selectWikipediaSuggestions", new HashMap<>(), new RowBounds(0, limit));
+    }
+  }
+
+  CorpusArticleEntry getCorpusArticle(Integer articleId) {
+    if (sqlSessionFactory == null) {
+      return null;
+    }
+    try (SqlSession session = sqlSessionFactory.openSession(true)) {
+      Map<Object, Object> map = new HashMap<>();
+      map.put("id", articleId);
+      return session.selectOne("org.languagetool.server.WikipediaMapper.selectWikipediaArticle", map);
+    }
+  }
+
+  List<HtmlTools.HtmlAnonymizer.HtmlNode> getHtmlNodes(Integer articleId) {
+    if (sqlSessionFactory == null) {
+      return new ArrayList<>();
+    }
+    try (SqlSession session = sqlSessionFactory.openSession(true)) {
+      Map<Object, Object> map = new HashMap<>();
+      map.put("articleId", articleId);
+      return session.selectList("org.languagetool.server.WikipediaMapper.selectWikipediaHtmlNodes", map);
+    }
+  }
+
+  List<HtmlTools.HtmlAnonymizer.HtmlAttribute> getHtmlAttributes(Integer articleId) {
+    if (sqlSessionFactory == null) {
+      return new ArrayList<>();
+    }
+    try (SqlSession session = sqlSessionFactory.openSession(true)) {
+      Map<Object, Object> map = new HashMap<>();
+      map.put("articleId", articleId);
+      return session.selectList("org.languagetool.server.WikipediaMapper.selectWikipediaHtmlAttributes", map);
+    }
+  }
+
+  CorpusMatchEntry getCorpusMatch(int suggestionId) {
+    if (sqlSessionFactory == null) {
+      return null;
+    }
+    try (SqlSession session = sqlSessionFactory.openSession(true)) {
+      Map<Object, Object> map = new HashMap<>();
+      map.put("id", suggestionId);
+      return session.selectOne("org.languagetool.server.WikipediaMapper.selectWikipediaSuggestion", map);
     }
   }
   

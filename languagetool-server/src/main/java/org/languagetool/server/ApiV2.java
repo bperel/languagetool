@@ -27,19 +27,26 @@ import org.jetbrains.annotations.NotNull;
 import org.languagetool.JLanguageTool;
 import org.languagetool.Language;
 import org.languagetool.Languages;
+import org.languagetool.dev.wikipedia.ParsoidWikipediaTextParser;
 import org.languagetool.markup.AnnotatedText;
 import org.languagetool.markup.AnnotatedTextBuilder;
 import org.languagetool.rules.CorrectExample;
 import org.languagetool.rules.IncorrectExample;
 import org.languagetool.rules.Rule;
 import org.languagetool.rules.TextLevelRule;
+import org.languagetool.tools.HtmlTools;
+import org.languagetool.tools.HtmlTools.HtmlAnonymizer.HtmlAttribute;
+import org.languagetool.tools.HtmlTools.HtmlAnonymizer.HtmlNode;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.net.HttpURLConnection;
 import java.util.*;
 
 import static org.languagetool.server.LanguageToolHttpHandler.API_DOC_URL;
+import static org.languagetool.tools.HtmlTools.HtmlAnonymizer.createFromAnonymized;
 
 /**
  * Handle requests to {@code /v2/} of the HTTP API. 
@@ -85,6 +92,9 @@ class ApiV2 {
         break;
       case "wikipedia/suggestions":
         handleWikipediaSuggestionRequest(httpExchange);
+        break;
+      case "wikipedia/fix":
+        handleWikipediaFixRequest(httpExchange, parameters);
         break;
       case "rule/examples":
         // private (i.e. undocumented) API for our own use only
@@ -184,6 +194,35 @@ class ApiV2 {
     writeCorpusMatchResponse("suggestions", suggestions, httpExchange);
   }
 
+  private void handleWikipediaFixRequest(HttpExchange httpExchange, Map<String, String> parameters) throws Exception {
+    ensurePostMethod(httpExchange, "/wikipedia/fix");
+    int suggestionId = Integer.parseInt(parameters.get("suggestion_id"));
+    DatabaseAccess db = DatabaseAccess.getInstance();
+    CorpusMatchEntry suggestion = db.getCorpusMatch(suggestionId);
+    if (suggestion != null) {
+      CorpusArticleEntry article = db.getCorpusArticle(suggestion.getArticleId());
+      List<HtmlNode> htmlNodes = db.getHtmlNodes(suggestion.getArticleId());
+      List<HtmlAttribute> htmlAttributes = db.getHtmlAttributes(suggestion.getArticleId());
+
+      ParsoidWikipediaTextParser parser = new ParsoidWikipediaTextParser();
+      String anonymizedHtml = article.getAnonymizedHtml();
+      String anonymizedHtmlWithReplacement = anonymizedHtml.replace(
+        suggestion.getErrorContext().replaceAll("<err>(.+?)</err>", "$1"),
+        suggestion.getErrorContext().replaceAll("<err>.+?</err>", suggestion.getReplacementSuggestion())
+      );
+      HtmlTools.HtmlAnonymizer anonymizer = createFromAnonymized(anonymizedHtmlWithReplacement, htmlNodes, htmlAttributes);
+      try {
+        anonymizer.deanonymize();
+      } catch (ParserConfigurationException | SAXException | IOException e) {
+        throw new RuntimeException("Something went wrong when de-anonymizing the article " + article.getTitle() + " : " + e.getMessage());
+      }
+      String originalHtml = anonymizer.getOriginalHtml();
+      String wikiText = parser.convertHtmlToWikitext(originalHtml);
+
+      writeResponse("wikiText", wikiText, httpExchange);
+    }
+  }
+
   private void handleRuleExamplesRequest(HttpExchange httpExchange, Map<String, String> params) throws Exception {
     ensureGetMethod(httpExchange, "/rule/examples");
     if (params.get("lang") == null) {
@@ -271,15 +310,11 @@ class ApiV2 {
     sendJson(httpExchange, sw);
   }
 
-  private void writeResponse(String fieldName, List<CorpusMatchEntry> corpusMatchEntries, HttpExchange httpExchange) throws IOException {
+  private void writeResponse(String fieldName, String value, HttpExchange httpExchange) throws IOException {
     StringWriter sw = new StringWriter();
     try (JsonGenerator g = factory.createGenerator(sw)) {
       g.writeStartObject();
-      g.writeArrayFieldStart(fieldName);
-      for (CorpusMatchEntry corpusMatchEntry : corpusMatchEntries) {
-        g.writeString(corpusMatchEntry.getReplacementSuggestion());
-      }
-      g.writeEndArray();
+      g.writeStringField(fieldName, value);
       g.writeEndObject();
     }
     sendJson(httpExchange, sw);
