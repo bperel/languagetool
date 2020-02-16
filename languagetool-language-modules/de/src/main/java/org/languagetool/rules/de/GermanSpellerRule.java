@@ -508,6 +508,8 @@ public class GermanSpellerRule extends CompoundAwareHunspellRule {
     put("[vV]orgensweise", "Vorgehensweise");
     put("[kK]autsch", "Couch");
     put("guterletzt", "guter Letzt");
+    put("Wi[Ff]i-Router", "Wi-Fi-Router");
+    putRepl("[Ll]ilane[srm]?", "ilane[srm]?", "ila");
     putRepl("[zZ]uguterletzt", "guterletzt", " guter Letzt");
     putRepl("Nootbooks?", "Noot", "Note");
     putRepl("[vV]ersendlich(e[mnrs]?)?", "send", "sehent");
@@ -751,10 +753,13 @@ public class GermanSpellerRule extends CompoundAwareHunspellRule {
     put("Fr-So", "Fr.–So.");
     put("Sa-So", "Sa.–So.");
     put("E-mail", "E-Mail");
+    put("geleased", "geleast");
+    put("released", "releast");
     putRepl("Saudiarabiens?", "Saudiarabien", "Saudi-Arabien");
     putRepl("eMail-Adressen?", "eMail-", "E-Mail-");
     putRepl("[hH]ats", "ats", "at es");
     putRepl("[Ww]ieviele?", "ieviel", "ie viel");
+    putRepl("[Aa]dhoc", "dhoc", "d hoc");
     put("As", "Ass");
     put("[bB]i[sß](s?[ij]|ch)en", "bisschen");
     putRepl("Todos?", "Todo", "To-do");

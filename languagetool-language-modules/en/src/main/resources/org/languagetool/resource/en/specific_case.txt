@@ -506,6 +506,9 @@ Stinson Beach
 Redwood City
 Half Moon Bay
 Daly City
+Daly College
+Daly County
+Daly River
 Garden City
 Staten Island
 White Plains
@@ -722,17 +725,6 @@ John Lennon
 Sam Hunt
 Gordon Brown
 Brown University
-German Shepherds
-Labrador Retriever
-Labrador Retrievers
-Golden Retriever
-Golden Retrievers
-French Bulldog
-French Bulldogs
-Yorkshire Terrier
-Yorkshire Terriers
-German Shorthaired Pointer
-German Shorthaired Pointers
 Hong Kong
 French Guiana
 French Polynesia
@@ -1035,7 +1027,6 @@ T. S. Eliot
 Xi Jinping
 Vietnam War
 One Thousand and One Nights
-2014 FIFA World Cup
 Anne Frank
 Ho Chi Minh
 Alexander Graham Bell
@@ -1045,7 +1036,6 @@ International System of Units
 Commonwealth of Nations
 #The Doors
 Port Louis
-2018 FIFA World Cup
 German Democratic Republic
 Northern Mariana Islands
 West Bengal
@@ -1063,7 +1053,6 @@ Gaza Strip
 Persian Gulf
 First Industrial Revolution
 Bradley Cooper
-2010 FIFA World Cup
 Common Ostrich
 Martin Van Buren
 Bronze Age
@@ -1285,7 +1274,6 @@ European Parliament
 Republic of Mordovia
 #The Godfather
 Human Development Index
-2006 FIFA World Cup
 West Bank
 Nobel Peace Prize
 Sea of Marmara
@@ -1418,7 +1406,7 @@ International Organization for Standardization
 Ayn Rand
 Federal University of Minas Gerais
 #Google Search
-#The Big Bang Theory
+Big Bang Theory
 John Galsworthy
 Ivan IV Vasilyevich
 Isaac Bashevis Singer
@@ -1435,6 +1423,7 @@ Upper Austria
 Rosa Parks
 Sea of Okhotsk
 Selassie I Haile
+Roman numeral
 Roman numerals
 Mehmed the Conqueror
 Jefferson City
@@ -2079,6 +2068,7 @@ Chula Vista
 Moreno Valley
 Huntington Beach
 Santa Ana
+Santa Ana River
 Santa Clarita
 Garden Grove
 Santa Rosa
@@ -2100,3 +2090,251 @@ Buena Vista County
 Radisson Blu
 Mohammed bin Salman
 Villa Rica
+Blake Lively
+Learn’d Astronomer
+Learn'd Astronomer
+Rutgers Law School
+Clermont County
+P. Diddy
+Encyclopædia Britannica
+Mike Bloomberg
+Palo Cedro
+Palo Pinto
+Palo Pinto County
+Matt Damon
+Demi Lovato
+Laguna Beach
+Laguna Niguel
+Magna Graecia
+Den Haag
+Charles de Gaulle
+Alfa Romeo
+Rancho Cucamonga
+Rancho Cordova
+Rancho Mirage
+Rancho Santa Margarita
+Rancho Santa Fe
+Santa Fe
+Rancho Palos Verdes
+Rancho Peñasquitos
+Jacinto City
+Grayson County
+Apollo 1
+Apollo 10
+Apollo 11
+Apollo 15
+Apollo 17
+Apollo 8
+Apollo 12
+Chaves County
+Bel Ami
+Bel Canto
+Bel Group
+Eau Claire
+Campo Grande
+Loch Ness
+Angelina Jolie
+Ellicott City
+West Sussex
+East Sussex
+Holladay House
+Holladay Park
+Carleton University
+Carleton College
+Bastrop County
+Woodson County
+Moulin Rouge
+Edmonson County
+Claremont McKenna College
+Caledonian Canal
+Addison County
+Winslow Township
+Townshend State Park
+Painesville Township
+Latah County
+Latah Creek
+Spokane County
+Whitman County
+Stevens County
+Greenbrier County
+Warrick County
+North Glengarry
+Spotsylvania County
+Bergen County
+Wittenberg University
+Whittaker Chambers
+Stockport County
+Sawtooth National Forest
+Sawtooth National Recreation Area
+Sawtooth Wilderness
+Minden Hills
+Haliburton County
+Kearney County
+Laurens County
+Forsyth County
+Icefall Peak
+Canadian Rockies
+Canadian Rocky Mountains
+British Columbia
+Fort Victoria
+Broadview Heights
+Beachwood Canyon
+Shrewsbury Abbey
+Shrewsbury Township
+Pelham Bay Park
+Michael Bay
+Vin Diesel
+Joaquín Phoenix
+Hang Seng Index
+Hang Seng
+Sand Hill Road
+Hang Seng Index
+SSE Composite Index
+SSE Composite
+Shanghai Composite
+Bank of China
+Kruger National Park
+Orchard Beach
+Rodman's Neck
+Rodman’s Neck
+Eastchester Bay
+Saybrook University
+Saybrook College
+Whitney Avenue
+American Apparel
+Custer County
+Nye County
+Gasconade County
+Boeuf River
+Boeuf Township
+Gasconade River
+Dauphin County
+LaGuardia Airport
+Lightroom
+Peppa Pig
+Monash Freeway
+Monash University
+Gatwick Airport
+Heathrow Airport
+Farnsworth House
+Crenshaw County
+Cambria County
+Bollinger County
+Stillwater County
+Schrader Creek
+Bradford County
+Sullivan County
+Lycoming County
+Northumberland County
+Wyoming County
+Luzerne County
+Columbia County
+Rensselaer County
+Overton Park
+Alachua County
+Lithia Springs
+Finney County
+Castle Biosciences
+Avril Lavigne
+Margate City
+Lowndes County
+Ligurian Sea
+Iredell County
+Doylestown Central Park
+Doylestown Township
+Cockburn Town
+Cabell County
+Thurston County
+Skagit County
+Otero County
+Wolfram Mathematica
+Wolfram Research
+Wolfram Alpha
+Kenilworth Road
+Anfield Road
+Haverford College
+Grainger College
+Grainger County
+Colchester United
+Watford City
+Switzer Canyon
+Swartz Creek
+Seabrook Island
+Boone County
+Ray County
+Ray Charles
+Ray Lewis
+Electronic Arts
+Humpty Dumpty
+Butler County
+Renville County
+Ballon d'Or
+Ballon d’Or
+FIFA Club World Cup
+UEFA Super Cup
+UEFA Europa League
+Serie A
+Serie B
+Pulaski County
+Albemarle County
+Nelson County
+Elkhart County
+LaGrange County
+Menard County
+Mayne Island
+Mayne Coaches
+Mayne Group
+Mariposa County
+Amador County
+Glenn County
+Belmont County
+Hempstead County
+Hackensack River
+Damietta University
+Cullman County
+Carteret County
+Chaffee County
+Calloway County
+Bitterroot River
+Bitterroot Mountains
+University of Louisville
+The Kansas City Star
+Winston-Salem State University
+Sauratown Mountains
+General Public License
+GNU General Public License
+Monterey County
+Dinwiddie County
+Peoria County
+Washington County
+Leelanau County
+Tuscola County
+Chippewa County
+Granville County
+Rutherford County
+Anderson County
+Gwyneth Paltrow
+Tour de France
+La Quinta
+Sunday Telegraph
+Dorchester County
+Reynolds County
+Pickens County
+Pendleton County
+Lumpkin County
+Lockhart Stadium
+Hernando County
+La Crosse
+Plaquemines Parish
+Saint Croix
+St. Croix County
+Mackinac County
+Río de Janeiro
+Rio de Janeiro
+Chester County
+Latimer County
+Knox County
+LaRue County
+Corona Borealis
+Boca Juniors
+Pleasants County

@@ -72,6 +72,7 @@ Peugeot
 Porsche
 Oracle
 ❤️
+✔️
 GitHub
 Magento
 Analytics
@@ -84,3 +85,30 @@ Matomo
 Salesforce
 Bitdefender
 Deadpool
+BitLocker
+Warcraft
+Moulin Rouge
+IKEA
+languagetool.org
+languagetoolplus.com
+languagetool.com
+SurveyMonkey
+Mailchimp
+OpenAI
+Flickr
+Bitcoin
+Ethereum
+AstraZeneca
+Toyota Prius
+Buttigieg
+Quora
+OpenStreetMap
+WeChat
+Winfield
+Expedia
+Tour de France
+Symantec
+BBC
+CNN
+BuzzFeed
+BlaBlaCar

@@ -43,6 +43,11 @@ cimitarra
 cimitarras
 CISC
 Commodore
+cosupervisão
+cosupervisor
+cosupervisores
+cosupervisora
+cosupervisoras
 criamo-lo
 criamo-los
 criámo-lo
@@ -137,6 +142,8 @@ SSL
 Suméria
 supervisionamento
 supervisionamentos
+terabyte
+terabytes
 TortoiseSVN
 Totta
 Transifex
@@ -8900,11 +8907,17 @@ Wado-ryu
 Wado-Ryu
 # PEOPLE/PROPER NAMES
 Angelina
+Bahia
 Constantina
 Érico
+Glenn
+Goes
+Jaban
 Jovino
+Luiz
 Nélio
 Seiceira
+Steckling
 Vítor
 # ALPHABET LETTERS
 a

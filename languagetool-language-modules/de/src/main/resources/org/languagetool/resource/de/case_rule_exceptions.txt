@@ -27,6 +27,7 @@ AutoCAD Plant
 Backends?
 Back Logs?
 Bad Kleinen
+Bad Man
 Badische[nr]? Anilin|Neuesten?|Zeitung
 Bares ist Wahres
 Berufliches? Gymnasium
@@ -84,7 +85,7 @@ Erste[rn]? Mai|Liga
 Erste[rnm]? (Weltkriege?s?|Bürgermeisters?|Offizier[es]?)
 Erste[rnm]?|Zweite[rnm]?|Dritten[rnm]?|Vierte[rnm]? Kreuzzug(es|s)?
 Essener
-Europäische[mnrs]? Fonds|(Atomg|G)emeinschaft|Parlamente?s?|Union|Gerichtshof(es|s)?|Patentamt(es|s)?|Wirtschaftsgemeinschaft|Wirtschaftsraum(es|s)?|Kommission|Rat(es|s)?|Zentralbank|Freiwilligendienst|Menschenrechtskonvention|Agentur|Arzneimittel-?[aA]gentur|Volkspartei|Haftbefehls?|Kulturhauptstadt|Währungsunion|Währungsfonds
+Europäische[mnrs]? Fonds|(Atomg|G)emeinschaft|Parlamente?s?|Union|Gerichtshof(es|s)?|Patentamt(es|s)?|Weltraumagentur|Wirtschaftsgemeinschaft|Wirtschaftsraum(es|s)?|Kommission|Rat(es|s)?|Zentralbank|Freiwilligendienst|Menschenrechtskonvention|Agentur|Arzneimittel-?[aA]gentur|Volkspartei|Haftbefehls?|Kulturhauptstadt|Währungsunion|Währungsfonds
 Evangelischen? Hochschule Berlin
 Ewige[rn]? Stadt
 Exxon Mobils?
@@ -95,6 +96,7 @@ Familienangehörigen
 Fantastischen (Vier|4)
 Fast Food
 Ferne[rn]? Ostens?
+Final Fantasy
 Fleißige[ns]? Lieschens?
 Forum Junger? (Anwälte|Anwaltschaft|Künstler|Chirurgen|Christen)
 Französischen? Re(volution|publik)
@@ -182,6 +184,7 @@ Japanische[ns]? Alpen|Meer(s|es)?
 Joachim Sauer
 Jugend Forscht
 Jung und Alt
+Jung oder Alt
 Jung Hoseok
 Jungen? Digitalen? Wirtschafts?
 Jüdischen? Gemeinde
@@ -190,8 +193,10 @@ Kaps? der Guten Hoffnung
 Kalte[mnr]? Krieg(e?s)?
 Kanzler Kurz
 Katholischen? Liga|Universität
+Kaufmännischer Verband .*
 Kaukasische[nr]? Kreidekreis
 kaum Neues
+Kitchen Impossible
 Kleinen? Antillen|Anfragen?|Zeitung|Belts?
 Kleine[nr]? (Bär|Tiergarten)
 Kleiner Perkins
@@ -210,6 +215,7 @@ Märkischen? Straße
 Märkische[rn]? Kreis
 Medizinischen? Diensts?|Hochschule|Fakultät
 Militärische[rn]? Abschirmdiensts?
+Mission Impossible
 Mittlere[nr]? Ostens?|R(ings?|eife)|Geschichte|Westens?|Altmarks?
 Mitteleuropäische Zeit
 Moby Dick
@@ -236,7 +242,7 @@ of Modern
 Olympische[ns]? Komitees?|Dorf(e?s)?|Sommerspielen?|Flagge|Winterspielen?|Spielen
 Olympische[nr]? Spiele|Sportbunds?
 Osmanischen? Reich(es|s)?
-Österreichische[mnrs]? Klimaschutzpreis|Nationalbibliothek|Rundfunks?|Volkspartei|Post
+Österreichische[mnrs]? Klimaschutzpreis|Nationalbibliothek|Rundfunks?|Volkspartei|Post|Ärztekammer|Ärztekammertag
 Pädagogischen? Hochschulen?
 Palästinensischen? Autonomie.+
 Parlamentarische[rn]? Rats?|Rates|Kontrollgremiums?|Untersuchungsausschuss(es)?
@@ -246,7 +252,7 @@ Preußisch-[A-Za-zÄÖÜäöüß]+
 Private (Part(y|ies)|Equity|Practice)
 Progressive Web Apps?
 Rapid
-Real Bamako|Madrid|Estate|Time
+Real Bamako|Madrid|Estate|Time|Sociedad
 Regierenden Bürgermeisters
 Regierende[mnr]? Bürgermeister(in)?
 Regular Fit
@@ -299,6 +305,7 @@ Süddeutsche[nr]? (Zeitung|Verlags?|Rundfunks?)
 Südlichen? Kalkalpen
 Süßes oder Saures
 Superman
+Super Tuesdays?
 Syrischen? Beobachtungsstelle
 Technische[ns]? Hilfswerks?
 Technischen? (Fachh|H)ochschulen?|Universität(en)?

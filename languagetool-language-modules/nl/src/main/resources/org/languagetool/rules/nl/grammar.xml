@@ -7018,7 +7018,7 @@ onwaarschijnlijk
             <rule>
                 <pattern>
 					<token>terug</token>
-                    <token postag="BNW:STL:ONV"><exception regexp="yes">naar|na|net|waar</exception></token>
+                    <token postag="BNW:STL:ONV"><exception regexp="yes">naar|na|net|waar|waardoor</exception></token>
 				</pattern>
 				<message>In Nederland is <suggestion>weer \2</suggestion> of <suggestion>opnieuw \2</suggestion> gebruikelijk.</message>
                 <example correction="weer vrij|opnieuw vrij">Hij is <marker>terug vrij</marker>.</example>
@@ -8307,14 +8307,14 @@ onwaarschijnlijk
                     <token regexp="yes">^\P{M}{20,29}$<exception postag="UNKNOWN"/></token>
                 </pattern>
                 <message>Lange woorden kunnen een tekst lastig maken. Kan het niet eenvoudiger?</message>
-                <example type="incorrect">Ander woord voor <marker>producentenaansprakelijkheid</marker>.</example>
+                <example type="incorrect">Ander woord voor <marker>speendesinfectiemiddel</marker>.</example>
             </rule>
         </rulegroup>
         <rulegroup id="ERG_LANG_WOORD" name="Lang woord">
             <!-- TODO uitzonderingen voor websites en urls -->
             <rule>
                 <pattern>
-                    <token regexp="yes">^\p{L}{30,}$<exception postag="UNKNOWN"/></token>
+                    <token regexp="yes">^\p{L}{30,}$</token>
                 </pattern>
                 <message>Lange woorden kunnen een tekst lastig maken. Kan het niet eenvoudiger?</message>
                 <example type="incorrect">Dit conform de <marker>producentenaansprakelijkheidsverplichtingen</marker>.</example>
@@ -11781,7 +11781,7 @@ onwaarschijnlijk
             <rule>
                 <pattern case_sensitive="yes">
                     <token regexp="yes">06|[A-Z]{2,4}<exception regexp="yes">JIJ|ZIJN|ONZE|IK|RVS|GB|MB|MS|BV|GEEN|HBO|VMBO|MBO|VWO|NA|IN|MOET|EK|WK|DE|ALLE|EN|DIE|ELKE|MET|MIJN</exception></token>
-                    <token postag=".*ZNW.*" postag_regexp="yes"><exception postag=".*WKW.*|.*BNW.*|UNKNOWN" postag_regexp="yes"/><exception regexp="yes">zit|moet|wel|wil|kan|is|uur|nee|alweer|nu|eenmaal|over|van|twee|achteruit|alles|u|haar|iets|GB|MB|[A-Z].*|bent|heeft|waar|ja|bij|II|III|X|een|zult|\.|hoe|voor|na|wat|weinig|ons|meer|hun</exception></token>
+                    <token postag=".*ZNW.*" postag_regexp="yes"><exception postag=".*WKW.*|.*BNW.*|UNKNOWN" postag_regexp="yes"/><exception regexp="yes">zit|moet|wel|wil|kan|is|uur|nee|alweer|nu|eenmaal|over|van|twee|achteruit|alles|u|haar|iets|GB|MB|[A-Z].*|bent|heeft|waar|ja|bij|II|III|X|een|zult|\.|hoe|voor|na|wat|weinig|ons|meer|hun|middels</exception></token>
                 </pattern>
                 <message>Als <match no="1"/> en <match no="2"/> samen één (Nederlandstalig) begrip zijn, dan is het: <suggestion><match no="1"/>-<match no="2"/></suggestion></message>
                 <short>06-~</short>
@@ -13292,7 +13292,7 @@ onwaarschijnlijk
                 <example correction="achtduizend vijfhonderd">Het heeft een richtprijs van <marker>achtduizendvijfhonderd</marker> euro, excl. BTW en installatie.</example>
             </rule>
         </rulegroup>
-        <rulegroup id="GETALLEN_0_20_OF_ROND" name="Getallen onder 20 en ronde getallen uitschrijven">
+        <rulegroup id="GETALLEN_0_20_OF_ROND" name="Getallen onder 20 en ronde getallen uitschrijven"><!-- picky -->
             <rule>
                 <antipattern><token regexp="yes">[A-Z][a-z].*(straat|weg|plein|steeg|dreef|boulevard)|[€.,/-]|lid|artikel|jaar|jaren|figuur|sub|stap|tabel|ISO'</token><token regexp="yes">[0-9]|[1][0-9]|[1-9]0|[1-9][0-9]00|[1-9]00</token><token/></antipattern>
                 <antipattern><token/><token regexp="yes">[0-9]|[1][0-9]|[1-9]0|[1-9][0-9]00|[1-9]00</token><token regexp="yes">.{4,50}|[%.,/-]|GB|u|uur|(jan|feb|maa|apr|mei|jun|jul|aug|okt|nov|dec).*|º|mg|kg|dl|ml|m|mm|cm|km|kHz|TB</token>
@@ -30613,7 +30613,7 @@ steenwijk;Steenwijk
                 <example type="incorrect"><marker>Men</marker> is niemand.</example>
             </rule>
         </rulegroup>
-        <rulegroup id="INSPECIFIEK" name="vage aanduiding hoeveelheid">
+		<rulegroup id="INSPECIFIEK" name="vage aanduiding hoeveelheid"><!-- picky -->
             <rule>
                 <antipattern><token>zoveel</token><token>mogelijk</token></antipattern>
                 <antipattern><token>zo</token><token postag="BNW:STL:VRB"/><token>mogelijk</token></antipattern>
@@ -30675,9 +30675,9 @@ steenwijk;Steenwijk
         <rulegroup id="OVERDRIJVING" name="mogelijke overdrijving">
             <rule>
                 <pattern>
-					<token regexp="yes">(giga|mega|super|ultra)...*<exception regexp="yes">^(giga|mega)(pixels?|-annum|ster|stal|stallen|ampère|becquerel|bit|byte|calorie|candela|coulomb|farad|gram|gray|henry|hertz|joule|katal|kelvin|liter|lumen|lux|meter|mol|newton|ohm|parsec|pascal|seconde|siemens|sievert|tesla|volt|voltampère|watt|wattuur|weber)|^super(computer.*|macht.*|latief|latieven|held|helden.*|markt.*|visie|nova.*)|superieure?n?|superior.*|ultraviolet|Superman|ultrasoon|ultrasone|megafoon|megaloma.*|superster|ultraviolet.*|Megane?|supefoods?|supervisors?|superbe?|superso(on|ne)|ultrageluid|supersets?|megapixel.*</exception><exception postag="UNKNOWN"/></token>
+					<token regexp="yes">(giga|mega|super|ultra|über)...*<exception regexp="yes">^(giga|mega)(überhaupt|pixels?|-annum|ster|stal|stallen|ampère|becquerel|bit|byte|calorie|candela|coulomb|farad|gram|gray|henry|hertz|joule|katal|kelvin|liter|lumen|lux|meter|mol|newton|ohm|parsec|pascal|seconde|siemens|sievert|tesla|volt|voltampère|watt|wattuur|weber)|^super(computer.*|macht.*|latief|latieven|held|helden.*|markt.*|visie|nova.*)|superieure?n?|superior.*|ultraviolet|Superman|ultrasoon|ultrasone|megafoon|megaloma.*|superster|ultraviolet.*|Megane?|superfoods?|supervisors?|superbe?|superso(on|ne)|ultrageluid|supersets?|megapixel.*|übermensch.*</exception><exception postag="UNKNOWN"/></token>
                 </pattern>
-                <message>Dit lijkt wat overdreven. Is <suggestion><match no="1" regexp_match="^(giga|mega|super|ultra)-?" regexp_replace=""/></suggestion> niet genoeg?</message>
+                <message>Dit lijkt wat overdreven. Is <suggestion><match no="1" regexp_match="^(giga|mega|super|ultra|über)-?" regexp_replace=""/></suggestion> niet genoeg?</message>
                 <example correction="slim">Ze is <marker>superslim</marker>.</example>
                 <example>Het apparaat heeft een opslagcapaciteit van maar 1 <marker>megabyte</marker>.</example>
                 <example>Ze gebruiken ongeveer 10 <marker>gigawattuur</marker> aan stroom per maand.</example>
@@ -32068,7 +32068,7 @@ steenwijk;Steenwijk
     </category>
     <category id="CONFUSED_WORDS" name="Woordverwarring">
 
-		<rulegroup id="OVALEN" name="ovalen / ovale">
+        <rulegroup id="OVALEN" name="ovalen / ovale">
             <rule>
                 <pattern>
                     <marker>
@@ -35097,7 +35097,7 @@ steenwijk;Steenwijk
                 <example correction="taak is volbracht">Mijn <marker>taak is voldaan</marker>.</example>
             </rule>
         </rulegroup>
-        <rulegroup id="WIJ_ZIJ_MIJ" name="Wij, zij, jij , jouw → we, ze, je, me">
+        <rulegroup id="WIJ_ZIJ_MIJ" name="Wij, zij, jij , jouw → we, ze, je, me"><!-- picky -->
             <rule>
 				<antipattern><token postag="SENT_START"/><token regexp="yes">Wij|Zij|Jij</token><token regexp="yes">van|en|als</token></antipattern>
 				<antipattern><token regexp="yes">volgens|voor</token><token>mij</token></antipattern>
@@ -37307,6 +37307,9 @@ steenwijk;Steenwijk
 				<message>Het woord na 'de' is onverwacht. Kijk eens goed of er geen spatie te veel staat, 'de' 'te' of 'het' moet zijn, of nog iets anders. </message>
 				<example type="incorrect"><marker>de het</marker></example>
                 <example>Bij de overheadpass zijn beide handen aan de bal.</example> <!-- false alarm 15-12-2019 -->
+                <example>Bij de opgestane Jezus.</example> <!-- false alarm-->
+                <example>Bij de kartuizers.</example> <!-- false alarm-->
+                <example>Bij de princeps.</example> <!-- false alarm-->
 			</rule>
 		</rulegroup>
 		
@@ -37342,10 +37345,10 @@ steenwijk;Steenwijk
                 <antipattern><token postag_regexp="yes" postag="BNW:.*:IET"/><token regexp="yes">en|of</token><token postag_regexp="yes" postag="BNW:.*:IET"/></antipattern>
 				<pattern case_sensitive="yes">
 					<token/>
-					<token postag_regexp="yes" postag="BNW:.*:IET"><exception negate_pos="yes" postag_regexp="yes" postag="BNW:.*:IET"/><exception>anders</exception></token>
+                    <token postag_regexp="yes" postag="BNW:.*:IET"><exception postag_regexp="yes" postag="ZNW.*|BYW|WKW.*|BNW:.*:(ONV|VRB)"/><exception regexp="yes">slechts|nieuws|langs|wees|straks|limes|anders</exception></token>
 				</pattern>
 				<message>Gebruikelijk is 'iets kleins', maar klopt wat hier staat wel?</message>
-				<example type="incorrect"><marker>het kleins</marker>.</example>		
+				<example type="incorrect"><marker>blijven kleins</marker>.</example>		
 			</rule>
 		</rulegroup>
 	</category>	

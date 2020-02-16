@@ -89,6 +89,11 @@ public class AgreementRule extends Rule {
   private static final AnalyzedToken[] ZUR_REPLACEMENT = {new AnalyzedToken("der", "ART:DEF:DAT:SIN:FEM", "der")};
 
   private static final List<List<PatternToken>> ANTI_PATTERNS = Arrays.asList(
+    Arrays.asList(  // "jenes Weges, den die Tausenden Juden 1945 ..."
+      token("die"),
+      token("Tausenden"),
+      posRegex("SUB:.*PLU.*")
+    ),
     Arrays.asList(  // "was sein Klient für ein Mensch sei"
       new PatternTokenBuilder().token("was").setSkip(2).build(),
       token("für"),
@@ -199,6 +204,10 @@ public class AgreementRule extends Rule {
       posRegex("SUB:.*"),
       posRegex("PKT|KON:NEB|ZUS")// "Ist das Kunst?" / "Ist das Kunst oder Abfall?" / "Sind das Eier aus Bodenhaltung"
     ),
+    Arrays.asList( // Die Präsent AG
+      tokenRegex("Präsent|Windhorst"),
+      token("AG")
+    ),
     Arrays.asList(
       pos(JLanguageTool.SENTENCE_START_TAGNAME),
       tokenRegex("Meist(ens)?|Oft(mals)?|Häufig|Selten"),
@@ -218,6 +227,10 @@ public class AgreementRule extends Rule {
       token("des"),
       token("Lied"),
       token("ich") // Wes Brot ich ess, des Lied ich sing
+    ),
+    Arrays.asList( // Es ist einige Grad kälter (see example on https://www.duden.de/rechtschreibung/Grad)
+      token("einige"),
+      token("Grad")
     ),
     Arrays.asList(
       pos(JLanguageTool.SENTENCE_START_TAGNAME),
@@ -516,9 +529,34 @@ public class AgreementRule extends Rule {
       csToken("Ruhr"),
       csToken("Nachrichten")
     ),
+    Arrays.asList(
+      csToken("Joint"),
+      tokenRegex("Ventures?|Cares?")
+    ),
+    Arrays.asList(
+      csToken("Premier"),
+      csToken("League")
+    ),
+    Arrays.asList(
+      csToken("Sales"),
+      tokenRegex("Agent")
+    ),
+    Arrays.asList(
+      csToken("Hammer"),
+      tokenRegex("Stra(ß|ss)e")
+    ),
+    Arrays.asList( // https://www.duden.de/rechtschreibung/Personal_Trainer
+      csToken("Personal"),
+      tokenRegex("Trainers?")
+    ),
     Arrays.asList( // Ich wollte erstmal allen Hallo sagen.
       token("Hallo"),
       new PatternTokenBuilder().csToken("sagen").matchInflectedForms().build()
+    ),
+    Arrays.asList( // "ob die Deutsch sprechen"
+      token("die"),
+      tokenRegex("Deutsch|Englisch|Spanisch|Französisch|Russisch|Polnisch|Holländisch|Niederländisch|Portugiesisch"),
+      new PatternTokenBuilder().csToken("sprechen").matchInflectedForms().build()
     )
   );
 
@@ -587,12 +625,18 @@ public class AgreementRule extends Rule {
     "Prozent",   // Plural "Prozente", trotzdem ist "mehrere Prozent" korrekt
     "Gramm",
     "Kilogramm",
+    "Chief", // Chief Excutive Officer
     "Carina", // Name
     "Meter", // Das Meter (Objekt zum Messen)
     "Boots", // "Die neuen Boots" (englisch Stiefel)
     "Taxameter", // Beides erlaubt "Das" und "Die"
     "Bild", // die Bild (Zeitung)
-    "Uhr"   // "um ein Uhr"
+    "Emirates", // "Mit einem Flug der Emirates" (Fluggesellschaft)
+    "Uhr",   // "um ein Uhr"
+    "cm", // "Die letzten cm" können
+    "km",
+    "Nr",
+    "RP" // "Die RP (Rheinische Post)"
   ));
 
   public AgreementRule(ResourceBundle messages, German language) {
@@ -775,7 +819,7 @@ public class AgreementRule extends Rule {
       // avoid false alarm: "Der Mann, in dem quadratische Fische schwammen."
       // or: "Die Polizei erwischte die Diebin, weil diese Ausweis und Visitenkarte hinterließ."
       comma = tokens[pos-2].getToken().equals(",");
-      if(comma) {
+      if (comma) {
         boolean prep = tokens[pos-1].hasPosTagStartingWith("PRP:");
         relPronoun = tokens[pos].hasAnyLemma(REL_PRONOUN_LEMMAS);
         return prep && relPronoun || (tokens[pos-1].hasPosTag("KON:UNT") && (tokens[pos].hasLemma("jen") || tokens[pos].hasLemma("dies")));
@@ -813,9 +857,9 @@ public class AgreementRule extends Rule {
       List<String> errorCategories = getCategoriesCausingError(token1, token2);
       String errorDetails = errorCategories.isEmpty() ?
             "Kasus, Genus oder Numerus" : String.join(" und ", errorCategories);
-      String msg = "Möglicherweise fehlende grammatische Übereinstimmung zwischen Artikel und Nomen " +
-            "bezüglich " + errorDetails + ".";
-      String shortMsg = "Möglicherweise keine Übereinstimmung bezüglich " + errorDetails;
+      String msg = "Möglicherweise fehlende grammatische Übereinstimmung " +
+            "des " + errorDetails + ".";
+      String shortMsg = "Möglicherweise keine Übereinstimmung des " + errorDetails;
       ruleMatch = new RuleMatch(this, sentence, token1.getStartPos(),
               token2.getEndPos(), msg, shortMsg);
       /*try {
@@ -838,9 +882,10 @@ public class AgreementRule extends Rule {
       AnalyzedTokenReadings nextToken = sentence.getTokensWithoutWhitespace()[tokenPos + 2];
       if (StringTools.startsWithUppercase(nextToken.getToken())) {
         String potentialCompound = token2.getToken() + StringTools.lowercaseFirstChar(nextToken.getToken());
-        String testPhrase = token1.getToken() + " " + potentialCompound;
+        String origToken1 = sentence.getTokensWithoutWhitespace()[tokenPos].getToken();  // before 'ins' etc. replacement
+        String testPhrase = origToken1 + " " + potentialCompound;
         String hyphenPotentialCompound = token2.getToken() + "-" + nextToken.getToken();
-        String hyphenTestPhrase = token1.getToken() + " " + hyphenPotentialCompound;
+        String hyphenTestPhrase = origToken1 + " " + hyphenPotentialCompound;
         return getRuleMatch(token1, sentence, nextToken, testPhrase, hyphenTestPhrase);
       }
     }
@@ -855,9 +900,10 @@ public class AgreementRule extends Rule {
       AnalyzedTokenReadings nextToken = sentence.getTokensWithoutWhitespace()[tokenPos + 3];
       if (StringTools.startsWithUppercase(nextToken.getToken())) {
         String potentialCompound = token3.getToken() + StringTools.lowercaseFirstChar(nextToken.getToken());
-        String testPhrase = token1.getToken() + " " + token2.getToken() + " " + potentialCompound;
+        String origToken1 = sentence.getTokensWithoutWhitespace()[tokenPos].getToken();  // before 'ins' etc. replacement
+        String testPhrase = origToken1 + " " + token2.getToken() + " " + potentialCompound;
         String hyphenPotentialCompound = token3.getToken() + "-" + nextToken.getToken();
-        String hyphenTestPhrase = token1.getToken() + " " + token2.getToken() + " " + hyphenPotentialCompound;
+        String hyphenTestPhrase = origToken1 + " " + token2.getToken() + " " + hyphenPotentialCompound;
         return getRuleMatch(token1, sentence, nextToken, testPhrase, hyphenTestPhrase);
       }
     }
@@ -918,21 +964,27 @@ public class AgreementRule extends Rule {
       AnalyzedTokenReadings token2, AnalyzedTokenReadings token3, AnalyzedSentence sentence, int tokenPos) {
     // TODO: remove (token3 == null || token3.getToken().length() < 2)
     // see Daniel's comment from 20.12.2016 at https://github.com/languagetool-org/languagetool/issues/635
-    if(token3 == null || token3.getToken().length() < 2) {
+    if (token3 == null || token3.getToken().length() < 2) {
       return null;
     }
     Set<String> set = retainCommonCategories(token1, token2, token3);
     RuleMatch ruleMatch = null;
     if (set.isEmpty()) {
+      if (token3.getToken().matches("Herr|Frau") && tokenPos + 3 < sentence.getTokensWithoutWhitespace().length) {
+        AnalyzedTokenReadings token4 = sentence.getTokensWithoutWhitespace()[tokenPos + 3];
+        if (!token4.isTagged() || token4.hasPosTagStartingWith("EIG:")) {
+          // 'Aber das ignorierte Herr Grey bewusst.'
+          return null;
+        }
+      }
       RuleMatch compoundMatch = getCompoundError(token1, token2, token3, tokenPos, sentence);
       if (compoundMatch != null) {
         return compoundMatch;
       }
-      // TODO: more detailed error message:
-      String msg = "Möglicherweise fehlende grammatische Übereinstimmung zwischen Artikel, Adjektiv und " +
-            "Nomen bezüglich Kasus, Numerus oder Genus. Beispiel: 'mein kleiner Haus' " +
+      String msg = "Möglicherweise fehlende grammatische Übereinstimmung " +
+            "von Kasus, Numerus oder Genus. Beispiel: 'mein kleiner Haus' " +
             "statt 'mein kleines Haus'";
-      String shortMsg = "Möglicherweise keine Übereinstimmung bezüglich Kasus, Numerus oder Genus";
+      String shortMsg = "Möglicherweise keine Übereinstimmung von Kasus, Numerus oder Genus";
       ruleMatch = new RuleMatch(this, sentence, token1.getStartPos(), token3.getEndPos(), msg, shortMsg);
     }
     return ruleMatch;

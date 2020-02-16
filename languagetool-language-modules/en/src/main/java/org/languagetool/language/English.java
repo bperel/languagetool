@@ -277,6 +277,7 @@ public class English extends Language implements AutoCloseable {
       case "WRONG_APOSTROPHE":          return 5;
       case "LIGATURES":                 return 1;   // prefer over spell checker
       case "APPSTORE":                  return 1;   // prefer over spell checker
+      case "INCORRECT_CONTRACTIONS":    return 1;   // prefer over EN_CONTRACTION_SPELLING
       case "DONT_T":                    return 1;   // prefer over EN_CONTRACTION_SPELLING
       case "WHATS_APP":                 return 1;   // prefer over EN_CONTRACTION_SPELLING
       case "NON_STANDARD_COMMA":        return 1;   // prefer over spell checker
@@ -286,29 +287,33 @@ public class English extends Language implements AutoCloseable {
       case "RUDE_SARCASTIC":            return 6;   // prefer over spell checker
       case "CHILDISH_LANGUAGE":         return 8;   // prefer over spell checker
       case "EN_DIACRITICS_REPLACE":     return 9;   // prefer over spell checker
+      case "IT_ITS":                    return -1;  // prefer other more specific rules
+      case "ENGLISH_WORD_REPEAT_RULE":  return -1;  // prefer other more specific rules (e.g. IT_IT)
       case "PRP_MD_NN":                 return -1;  // prefer other more specific rules (e.g. MD_ABLE, WONT_WANT)
       case "NON_ANTI_PRE_JJ":           return -1;  // prefer other more specific rules
       case "DT_JJ_NO_NOUN":             return -1;  // prefer other more specific rules (e.g. THIRD_PARTY)
       case "AGREEMENT_SENT_START":      return -1;  // prefer other more specific rules
       case "HAVE_PART_AGREEMENT":       return -1;  // prefer other more specific rules
       case "PREPOSITION_VERB":          return -1;  // prefer other more specific rules
-      case "PRP_VBG":                   return -1;  // prefer other more specific rules (with suggestions, prefer over HE_VERB_AGR)
-      case "PRP_VB":                    return -1;  // prefer other more specific rules (with suggestions)
       case "EN_A_VS_AN":                return -1;  // prefer other more specific rules (with suggestions, e.g. AN_ALSO)
       case "CD_NN":                     return -1;  // prefer other more specific rules (with suggestions)
       case "ATD_VERBS_TO_COLLOCATION":  return -1;  // prefer other more specific rules (with suggestions)
       case "ADVERB_OR_HYPHENATED_ADJECTIVE": return -1; // prefer other more specific rules (with suggestions)
       case "MISSING_PREPOSITION":       return -1;  // prefer other more specific rules (with suggestions)
-      case "PRP_RB_NO_VB":              return -1;  // prefer other more specific rules (with suggestions)
       case "BE_TO_VBG":                 return -1;  // prefer other more specific rules (with suggestions)
       case "NON3PRS_VERB":              return -1;  // prefer other more specific rules (with suggestions)
       case "DID_FOUND_AMBIGUOUS":       return -1;  // prefer other more specific rules (e.g. TWO_CONNECTED_MODAL_VERBS)
       case "BE_I_BE_GERUND":            return -1;  // prefer other more specific rules (with suggestions)
-      case "BEEN_PART_AGREEMENT":       return -2;  // prefer other more specific rules (e.g. VARY_VERY, VB_NN)
-      case "A_INFINITIVE":              return -2;  // prefer other more specific rules (with suggestions, e.g. PREPOSITION_VERB)
-      case "I_MOVING":                  return -2;  // prefer other more specific rules (e.g. PRP_VBG)
-      case "HE_VERB_AGR":               return -2;  // prefer other more specific rules (e.g. PRP_VBG)
-      case "PRONOUN_NOUN":              return -2;  // prefer other rules (e.g. PRP_VB)
+      case "VBZ_VBD":                   return -1;  // prefer other more specific rules (e.g. IS_WAS)
+      case "PRP_RB_NO_VB":              return -2;  // prefer other more specific rules (with suggestions)
+      case "PRP_VBG":                   return -2;  // prefer other more specific rules (with suggestions, prefer over HE_VERB_AGR)
+      case "PRP_VBZ":                   return -2;  // prefer other more specific rules (with suggestions)
+      case "PRP_VB":                    return -2;  // prefer other more specific rules (with suggestions)
+      case "BEEN_PART_AGREEMENT":       return -3;  // prefer other more specific rules (e.g. VARY_VERY, VB_NN)
+      case "A_INFINITIVE":              return -3;  // prefer other more specific rules (with suggestions, e.g. PREPOSITION_VERB)
+      case "HE_VERB_AGR":               return -3;  // prefer other more specific rules (e.g. PRP_VBG)
+      case "PRP_JJ":                    return -3;  // prefer other rules (e.g. PRP_VBG, IT_IT and ADJECTIVE_ADVERB)
+      case "PRONOUN_NOUN":              return -3;  // prefer other rules (e.g. PRP_VB, PRP_JJ)
       case "MORFOLOGIK_RULE_EN_US":     return -10;  // more specific rules (e.g. L2 rules) have priority
       case "MORFOLOGIK_RULE_EN_GB":     return -10;  // more specific rules (e.g. L2 rules) have priority
       case "MORFOLOGIK_RULE_EN_CA":     return -10;  // more specific rules (e.g. L2 rules) have priority

@@ -12,6 +12,9 @@
 # plug-in;plugin hyphenated form is also an adjective: www.lexico.com/en/definition/plug-in
 # prise;prize: in BrE, both spellings are possible for the verb, but the noun is prize.
 # whiskey;whisky. https://www.collinsdictionary.com/dictionary/english/whiskey
+#co-operation;cooperation
+#onward;onwards
+#southward;southwards
 absolutisation;absolutization
 absolutise;absolutize
 academise;academize
@@ -250,6 +253,7 @@ capsulise;capsulize
 carabiner;karabiner
 caramelisation;caramelization
 caramelise;caramelize
+caraway;carraway
 carbolise;carbolize
 carbonisable;carbonizable
 carbonisation;carbonization
@@ -309,6 +313,7 @@ cicatrise;cicatrize
 cicatriser;cicatrizer
 cinchonisation;cinchonization
 cinchonise;cinchonize
+cypher;cipher
 circularisation;circularization
 circularise;circularize
 citizenise;citizenize
@@ -331,10 +336,13 @@ cognisably;cognizably
 cognisance;cognizance
 cognisant;cognizant
 cognise;cognize
+co-invest;coinvest
 collateralise;collateralize
 collectable;collectible
 collectivisation;collectivization
 collectivise;collectivize
+collectable;collectible
+collectables;collectibles
 colloquise;colloquize
 colonialise;colonialize
 colonisable;colonizable
@@ -383,11 +391,11 @@ contextualisation;contextualization
 contextualise;contextualize
 convener;convenor
 conventionalise;conventionalize
+converter;convertor
+converters;convertors
 conveyorisation;conveyorization
 conveyorise;conveyorize
-co-invest;coinvest
 co-operate;cooperate
-#co-operation;cooperation
 co-ordinate;coordinate
 co-pilot;copilot
 copolymerisation;copolymerization
@@ -398,6 +406,8 @@ corporatise;corporatize
 corporealise;corporealize
 cosmeticise;cosmeticize
 cosmetise;cosmetize
+councillor;councilor
+councillorship;councilorship
 counter-attack;counterattack
 counter-clockwise;counterclockwise
 counter-intuitive;counterintuitive
@@ -883,6 +893,7 @@ gourmandize;gormandize
 governmentalise;governmentalize
 grammaticalise;grammaticalize
 grammaticise;grammaticize
+grandad;granddad
 grangerisation;grangerization
 grangerise;grangerize
 grangeriser;grangerizer
@@ -899,6 +910,7 @@ griffin;griffon
 griffin;gryphon
 griffon;gryphon
 grotesquerie;grotesquery
+guerrilla;guerilla
 gutturalisation;gutturalization
 gutturalise;gutturalize
 gyrostabiliser;gyrostabilizer
@@ -1038,6 +1050,7 @@ initialisation;initialization
 initialise;initialize
 institutionalisation;institutionalization
 institutionalise;institutionalize
+instrumentalisation;instrumentalization
 instrumentalise;instrumentalize
 intellectualisation;intellectualization
 intellectualise;intellectualize
@@ -1217,6 +1230,7 @@ memorisable;memorizable
 memorisation;memorization
 memorise;memorize
 memoriser;memorizer
+mentalisation;mentalization
 mentalise;mentalize
 mercerisation;mercerization
 mercerise;mercerize
@@ -1389,7 +1403,6 @@ officialise;officialize
 oligomerise;oligomerize
 on-screen;onscreen
 ontologise;ontologize
-#onward;onwards
 oophorectomise;oophorectomize
 opalise;opalize
 operationalisable;operationalizable
@@ -1513,6 +1526,7 @@ pelletise;pelletize
 pelletiser;pelletizer
 penalisation;penalization
 penalise;penalize
+peperoni;pepperoni
 peptisable;peptizable
 peptisation;peptization
 peptise;peptize
@@ -1559,6 +1573,7 @@ pidginise;pidginize
 pilgrimise;pilgrimize
 pinealectomise;pinealectomize
 pisé;pise
+pixilated;pixillated
 plagiarisation;plagiarization
 plagiarise;plagiarize
 plagiariser;plagiarizer
@@ -1606,30 +1621,36 @@ pragmatise;pragmatize
 pre-approve;preapprove
 pre-authorize;pre-authorize
 pre-book;prebook
+pre-college;precollege
 pre-configure;preconfigure
 preconisation;preconization
 preconise;preconize
 pre-emptively;preemptively
 pre-establish;preestablish
-pre-existing;preexisting
 pre-existence;preexistence
 pre-existent;preexistent
+pre-existing;preexisting
 pre-fill;prefill
 pre-filled;prefilled
 pre-format;preformat
 pre-install;preinstall
 pre-installation;preinstallation
+pre-market;premarket
 premiumise;premiumize
+pre-operational;preoperational
+pre-production;preproduction
 pre-qualify;prequalify
 pre-record;prerecord
 pre-recorded;prerecorded
 pre-sale;presale
+pre-season;preseason
 presidium;praesidium
 pressurisation;pressurization
 pressurise;pressurize
 pressuriser;pressurizer
 pretence;pretense
-pre-season;preseason
+pre-treatment;pretreatment
+pre-train;pretrain
 pre-travel;pretravel
 pre-trial;pretrial
 preventable;preventible
@@ -1713,6 +1734,7 @@ realisably;realizably
 realisation;realization
 realise;realize
 realiser;realizer
+re-attend;reattend
 reauthorise;reauthorize
 recanalisation;recanalization
 recanalise;recanalize
@@ -1732,7 +1754,6 @@ reconceptualise;reconceptualize
 recontextualise;recontextualize
 recrystallisation;recrystallization
 recrystallise;recrystallize
-re-attend;reattend
 re-educate;reeducate
 re-elect;reelect
 re-energise;re-energize
@@ -1817,6 +1838,7 @@ rivalise;rivalize
 robotisation;robotization
 robotise;robotize
 role-play;roleplay
+roll-out;rollout
 romanisation;romanization
 romanise;romanize
 romaniser;romanizer
@@ -1855,6 +1877,7 @@ scandalisation;scandalization
 scandalise;scandalize
 scandaliser;scandalizer
 scenarise;scenarize
+scenographic;scenographical
 schematisation;schematization
 schematise;schematize
 schismatise;schismatize
@@ -1941,7 +1964,6 @@ solonisation;solonization
 solubilisation;solubilization
 solubilise;solubilize
 somatise;somatize
-#southward;southwards
 sovietisation;sovietization
 sovietise;sovietize
 spatialise;spatialize
@@ -2016,6 +2038,7 @@ symboliser;symbolizer
 symmetrisation;symmetrization
 symmetrise;symmetrize
 sympathise;sympathize
+sync;synch
 synchronisation;synchronization
 synchronise;synchronize
 synchroniser;synchronizer
@@ -2129,6 +2152,8 @@ underemphasise;underemphasize
 underutilisation;underutilization
 underutilise;underutilize
 unfeudalise;unfeudalize
+uniformisation;uniformization
+uniformise;uniformize
 unionisation;unionization
 unionise;unionize
 unioniser;unionizer
@@ -2164,6 +2189,7 @@ uralitise;uralitize
 urbanisation;urbanization
 urbanise;urbanize
 urbanised;urbanized
+usable;useable
 utilisable;utilizable
 utilisation;utilization
 utilise;utilize

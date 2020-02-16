@@ -27,6 +27,7 @@ import org.languagetool.rules.RuleMatch;
 import org.languagetool.rules.SuggestedReplacement;
 import org.languagetool.rules.spelling.morfologik.MorfologikSpellerRule;
 import org.languagetool.synthesis.en.EnglishSynthesizer;
+import org.languagetool.tools.StringTools;
 
 import java.io.IOException;
 import java.util.*;
@@ -61,7 +62,7 @@ public abstract class AbstractEnglishSpellerRule extends MorfologikSpellerRule {
       if (parts.length != 2) {
         throw new RuntimeException("Unexpected format in " + path + ": " + line + " - expected two parts delimited by ';'");
       }
-      words.put(parts[column], parts[column == 1 ? 0 : 1]);
+      words.put(parts[column].toLowerCase(), parts[column == 1 ? 0 : 1]);
     }
     return words;
   }
@@ -112,7 +113,9 @@ public abstract class AbstractEnglishSpellerRule extends MorfologikSpellerRule {
         VariantInfo variantInfo = isValidInOtherVariant(word);
         if (variantInfo != null) {
           String message = "Possible spelling mistake. '" + word + "' is " + variantInfo.getVariantName() + ".";
-          replaceFormsOfFirstMatch(message, sentence, ruleMatches, variantInfo.otherVariant());
+          String suggestion = StringTools.startsWithUppercase(word) ?
+              StringTools.uppercaseFirstChar(variantInfo.otherVariant()) : variantInfo.otherVariant();
+          replaceFormsOfFirstMatch(message, sentence, ruleMatches, suggestion);
         }
       }
     }
@@ -210,20 +213,28 @@ public abstract class AbstractEnglishSpellerRule extends MorfologikSpellerRule {
       return Arrays.asList("A lot");
     } else if ("alot".equals(word)) {
       return Arrays.asList("a lot");
+    } else if ("ad-hoc".equals(word) || "adhoc".equals(word)) {
+      return Arrays.asList("ad hoc");
+    } else if ("Ad-hoc".equals(word) || "Adhoc".equals(word)) {
+      return Arrays.asList("Ad hoc");
     } else if ("ad-on".equals(word)) {
       return Arrays.asList("add-on");
     } else if ("acc".equals(word)) {
       return Arrays.asList("account", "accusative");
     } else if ("Acc".equals(word)) {
       return Arrays.asList("Account", "Accusative");
+    } else if ("jus".equals(word)) {
+      return Arrays.asList("just", "juice");
+    } else if ("Jus".equals(word)) {
+      return Arrays.asList("Just", "Juice");
+    } else if ("sayed".equals(word)) {
+      return Arrays.asList("said");
+    } else if ("sess".equals(word)) {
+      return Arrays.asList("says", "session", "cess");
     } else if ("Addon".equals(word)) {
       return Arrays.asList("Add-on");
     } else if ("Addons".equals(word)) {
       return Arrays.asList("Add-ons");
-    } else if ("Adhoc".equals(word)) {
-      return Arrays.asList("Ad hoc");
-    } else if ("adhoc".equals(word)) {
-      return Arrays.asList("ad hoc");
     } else if ("ios".equals(word)) {
       return Arrays.asList("iOS");
     } else if ("yrs".equals(word)) {
@@ -332,6 +343,8 @@ public abstract class AbstractEnglishSpellerRule extends MorfologikSpellerRule {
       return Arrays.asList("here's");
     } else if ("Heres".equals(word)) {
       return Arrays.asList("Here's");
+    } else if ("aways".equals(word)) {
+      return Arrays.asList("always");
     } else if ("McDonalds".equals(word)) {
       return Arrays.asList("McDonald's");
     } else if ("ux".equals(word)) {
@@ -382,6 +395,18 @@ public abstract class AbstractEnglishSpellerRule extends MorfologikSpellerRule {
       return Arrays.asList("E-Book");
     } else if ("Ebooks".equals(word)) {
       return Arrays.asList("E-Books");
+    } else if ("sport".equals(word)) {
+      return Arrays.asList("e-sport");
+    } else if ("esports".equals(word)) {
+      return Arrays.asList("e-sports");
+    } else if ("eSport".equals(word)) {
+      return Arrays.asList("e-sport");
+    } else if ("eSports".equals(word)) {
+      return Arrays.asList("e-sport");
+    } else if ("Esport".equals(word)) {
+      return Arrays.asList("E-Sport");
+    } else if ("Esports".equals(word)) {
+      return Arrays.asList("E-Sport");
     } else if ("R&B".equals(word)) {
       return Arrays.asList("R & B", "R 'n' B");
     } else if ("ie".equals(word)) {
@@ -608,6 +633,10 @@ public abstract class AbstractEnglishSpellerRule extends MorfologikSpellerRule {
       return Arrays.asList("I'm going to", "I'm a");
     } else if ("dontcha".equals(word)) {
       return Arrays.asList("don't you");
+    } else if ("tobe".equals(word)) {
+      return Arrays.asList("to be");
+    } else if ("Gi".equals(word) || "Ji".equals(word)) {
+      return Arrays.asList("Hi");
     } else if ("Dontcha".equals(word)) {
       return Arrays.asList("don't you");
     } else if ("greatfruit".equals(word)) {

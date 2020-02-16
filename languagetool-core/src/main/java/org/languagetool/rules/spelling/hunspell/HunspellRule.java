@@ -99,22 +99,23 @@ public class HunspellRule extends SpellingCheckRule {
   /**
    * @since 4.3
    */
-   public HunspellRule(ResourceBundle messages, Language language, UserConfig userConfig, List<Language> altLanguages) {
-     this(messages, language, userConfig, altLanguages, null);
-   }
-   public HunspellRule(ResourceBundle messages, Language language, UserConfig userConfig, List<Language> altLanguages,
-                       LanguageModel languageModel) {
-     super(messages, language, userConfig, altLanguages, languageModel);
-     super.setCategory(Categories.TYPOS.getCategory(messages));
-     this.userConfig = userConfig;
-     this.monitorRules = System.getProperty("monitorActiveRules") != null;
-     if (SuggestionsChanges.isRunningExperiment("NewSuggestionsOrderer")) {
-       suggestionsOrderer = new SuggestionsOrdererFeatureExtractor(language, this.languageModel);
-       runningExperiment = true;
-     } else {
-       suggestionsOrderer = new XGBoostSuggestionsOrderer(language, languageModel);
-       runningExperiment = false;
-     }
+  public HunspellRule(ResourceBundle messages, Language language, UserConfig userConfig, List<Language> altLanguages) {
+    this(messages, language, userConfig, altLanguages, null);
+  }
+
+  public HunspellRule(ResourceBundle messages, Language language, UserConfig userConfig, List<Language> altLanguages,
+                      LanguageModel languageModel) {
+    super(messages, language, userConfig, altLanguages, languageModel);
+    super.setCategory(Categories.TYPOS.getCategory(messages));
+    this.userConfig = userConfig;
+    this.monitorRules = System.getProperty("monitorActiveRules") != null;
+    if (SuggestionsChanges.isRunningExperiment("NewSuggestionsOrderer")) {
+      suggestionsOrderer = new SuggestionsOrdererFeatureExtractor(language, this.languageModel);
+      runningExperiment = true;
+    } else {
+      suggestionsOrderer = new XGBoostSuggestionsOrderer(language, languageModel);
+      runningExperiment = false;
+    }
   }
 
   @Override
@@ -229,7 +230,7 @@ public class HunspellRule extends SpellingCheckRule {
             boolean isSpecialCase = cleanWord.matches(".+-[A-ZÖÄÜ].*");
             if (acceptingLanguage != null && !isSpecialCase) {
               if (isAcceptedWordFromLanguage(acceptingLanguage, cleanWord)) {
-                break;
+                continue;
               }
               // e.g. "Der Typ ist in UK echt famous" -> could be German 'famos'
               ruleMatch = new RuleMatch(this, sentence,

@@ -43,8 +43,6 @@ aerobicize;aerobicise
 aerobicized;aerobicised
 aerobicizes;aerobicises
 aerobicizing;aerobicising
-airfoil;aerofoil
-airfoils;aerofoils
 aerosolize;aerosolise
 aerosolized;aerosolised
 aerosolizes;aerosolises
@@ -67,6 +65,8 @@ agonized;agonised
 agonizes;agonises
 agonizing;agonising
 agonizingly;agonisingly
+airfoil;aerofoil
+airfoils;aerofoils
 airplane;aeroplane
 airplanes;aeroplanes
 alchemize;alchemise
@@ -120,6 +120,8 @@ amortize;amortise
 amortized;amortised
 amortizes;amortises
 amortizing;amortising
+amphitheater;amphitheatre
+amphitheaters;amphitheatres
 anagrammatize;anagrammatise
 anagrammatized;anagrammatised
 anagrammatizes;anagrammatises
@@ -144,6 +146,8 @@ anatomize;anatomise
 anatomized;anatomised
 anatomizes;anatomises
 anatomizing;anatomising
+anesthesia;anaesthesia
+anesthesias;anaesthesias
 androgenization;androgenisation
 androgenize;androgenise
 androgenized;androgenised
@@ -293,6 +297,7 @@ bacterize;bacterise
 bacterized;bacterised
 bacterizes;bacterises
 bacterizing;bacterising
+Balkanization;Balkanisation
 banalize;banalise
 banalized;banalised
 banalizes;banalises
@@ -312,6 +317,8 @@ bastardized;bastardised
 bastardizes;bastardises
 bastardizing;bastardising
 behavior;behaviour
+behavioral;behavioural
+behaviorally;behaviourally
 behaviors;behaviours
 bestialize;bestialise
 bestialized;bestialised
@@ -368,6 +375,8 @@ burnettize;burnettise
 burnettized;burnettised
 burnettizes;burnettises
 burnettizing;burnettising
+caliber;calibre
+calibers;calibres
 calipers;callipers
 calisthenics;callisthenics
 calorize;calorise
@@ -506,6 +515,7 @@ characterized;characterised
 characterizes;characterises
 characterizing;characterising
 check;cheque
+checks;cheques
 chemicalize;chemicalise
 chemicalized;chemicalised
 chemicalizes;chemicalises
@@ -605,6 +615,8 @@ colorized;colourized
 colorizes;colourizes
 colorizing;colourizing
 colors;colours
+colorway;colourway
+colorways;colourways
 commercialization;commercialisation
 commercialize;commercialise
 commercialized;commercialised
@@ -696,6 +708,12 @@ cosmeticize;cosmeticise
 cosmeticized;cosmeticised
 cosmeticizes;cosmeticises
 cosmeticizing;cosmeticising
+counselor;counsellor
+counselors;counsellors
+councilor;councillor
+councilors;councillors
+councilorship;councillorship
+councilorships;councillorships
 cozier;cosier
 cozies;cosies
 coziest;cosiest
@@ -725,6 +743,7 @@ curb;kerb
 curbs;kerbs
 customizable;customisable
 customization;customisation
+customizations;customisations
 customize;customise
 customized;customised
 customizes;customises
@@ -903,6 +922,7 @@ dematerialize;dematerialise
 dematerialized;dematerialised
 dematerializes;dematerialises
 dematerializing;dematerialising
+dematerialization;dematerialisation
 demilitarization;demilitarisation
 demilitarize;demilitarise
 demilitarized;demilitarised
@@ -1069,6 +1089,7 @@ diabolizing;diabolising
 diagonalizable;diagonalisable
 diagonalization;diagonalisation
 dialog;dialogue
+dialogs;dialogues
 dialyzable;dialysable
 dialyze;dialyse
 dialyzed;dialysed
@@ -1079,6 +1100,7 @@ diarized;diarised
 diarizes;diarises
 diarizing;diarising
 diarrhea;diarrhoea
+diarrheal;diarrhoeal
 diazotization;diazotisation
 dichotomize;dichotomise
 dichotomized;dichotomised
@@ -1112,6 +1134,12 @@ disharmonize;disharmonise
 disharmonized;disharmonised
 disharmonizes;disharmonises
 disharmonizing;disharmonising
+dishonor;dishonour
+dishonorably;dishonourably
+dishonorable;dishonourable
+dishonoring;dishonouring
+dishonored;dishonoured
+dishonors;dishonours
 disorganization;disorganisation
 disorganize;disorganise
 disorganized;disorganised
@@ -1133,10 +1161,14 @@ dolomitize;dolomitise
 dolomitized;dolomitised
 dolomitizes;dolomitises
 dolomitizing;dolomitising
+donut;doughnut
+donuts;doughnuts
 draft;draught
-drafts;draughts
 drafted;draughted
 drafting;draughting
+drafts;draughts
+draftman;draughtsman
+draftmen;draughtsmen
 dramatizable;dramatisable
 dramatization;dramatisation
 dramatizations;dramatisations
@@ -1207,6 +1239,10 @@ emphasizes;emphasises
 emphasizing;emphasising
 encyclopedia;encyclopaedia
 encyclopedias;encyclopaedias
+endeavor;endeavour
+endeavored;endeavoured
+endeavoring;endeavouring
+endeavors;endeavours
 energize;energise
 energized;energised
 energizes;energises
@@ -1217,6 +1253,8 @@ enrollment;enrolment
 enrollments;enrolments
 eon;aeon
 eons;aeons
+epicenter;epicentre
+epicenters;epicentres
 epithelialize;epithelialise
 epithelialized;epithelialised
 epithelializes;epithelialises
@@ -1251,6 +1289,7 @@ essentialize;essentialise
 essentialized;essentialised
 essentializes;essentialises
 essentializing;essentialising
+estrogen;oestrogen
 eternalize;eternalise
 eternalized;eternalised
 eternalizes;eternalises
@@ -1343,7 +1382,11 @@ fantasized;fantasised
 fantasizes;fantasises
 fantasizing;fantasising
 favor;favour
+favorable;favourable
+favors;favours
 favorite;favourite
+favorites;favourites
+feces;faeces
 federalization;federalisation
 federalize;federalise
 federalized;federalised
@@ -1377,6 +1420,8 @@ fetishizing;fetishising
 fetus;foetus
 fetuses;foetuses
 feudalization;feudalisation
+fiber;fibre
+fibers;fibres
 fictionalization;fictionalisation
 fictionalizations;fictionalisations
 fictionalize;fictionalise
@@ -1389,13 +1434,21 @@ finalized;finalised
 finalizes;finalises
 finalizing;finalising
 firetruck;fire engine
+firetrucks;fire engines
+flavor;flavour
+flavored;flavoured
+flavoring;flavouring
+flavorings;flavourings
+flavors;flavours
 fluidizer;fluidiser
 fluidizers;fluidisers
 focalize;focalise
 focalized;focalised
 focalizes;focalises
 focalizing;focalising
+focuses;focusses
 focusing;focussing
+fontanel;fontanelle
 formalizable;formalisable
 formalization;formalisation
 formalize;formalise
@@ -1440,6 +1493,7 @@ galvanizer;galvaniser
 galvanizers;galvanisers
 galvanizes;galvanises
 galvanizing;galvanising
+gastroesophageal;gastro-oesophageal
 gelatinize;gelatinise
 gelatinized;gelatinised
 gelatinizes;gelatinises
@@ -1501,6 +1555,9 @@ grayish;greyish
 grayscale;greyscale
 guaranties;guarantees
 guaranty;guarantee
+gypsy;gipsy
+harbor;harbour
+harbors;harbours
 harmonizable;harmonisable
 harmonization;harmonisation
 harmonize;harmonise
@@ -1546,6 +1603,8 @@ historicize;historicise
 historicized;historicised
 historicizes;historicises
 historicizing;historicising
+homeopathy;homoeopathy
+homeopathies;homoeopathies
 hominization;hominisation
 homogenization;homogenisation
 homogenize;homogenise
@@ -1689,6 +1748,7 @@ imperialize;imperialise
 imperialized;imperialised
 imperializes;imperialises
 imperializing;imperialising
+imperialization;imperialisation
 impersonalize;impersonalise
 impersonalized;impersonalised
 impersonalizes;impersonalises
@@ -1723,7 +1783,12 @@ initialize;initialise
 initialized;initialised
 initializes;initialises
 initializing;initialising
+inquire;enquire
+inquired;enquired
+inquires;enquires
+inquiring;enquiring
 inquiry;enquiry
+inquiries;enquiries
 installment;instalment
 installments;instalments
 instill;instil
@@ -1733,6 +1798,7 @@ institutionalize;institutionalise
 institutionalized;institutionalised
 institutionalizes;institutionalises
 institutionalizing;institutionalising
+instrumentalization;instrumentalisation
 instrumentalize;instrumentalise
 instrumentalized;instrumentalised
 instrumentalizes;instrumentalises
@@ -1803,6 +1869,7 @@ jeopardize;jeopardise
 jeopardized;jeopardised
 jeopardizes;jeopardises
 jeopardizing;jeopardising
+jeweler;jeweller
 jewelry;jewellery
 journalize;journalise
 journalized;journalised
@@ -1869,6 +1936,8 @@ lexicalize;lexicalise
 lexicalized;lexicalised
 lexicalizes;lexicalises
 lexicalizing;lexicalising
+libelous;libellous
+libelously;libellously
 liberalization;liberalisation
 liberalizations;liberalisations
 liberalize;liberalise
@@ -1879,8 +1948,10 @@ liberalizes;liberalises
 liberalizing;liberalising
 license;licence
 licenses;licences
+licensing;licencing
 licorice;liquorice
 licorices;liquorices
+likable;likeable
 linearization;linearisation
 linearize;linearise
 linearized;linearised
@@ -1908,6 +1979,7 @@ lobotomizing;lobotomising
 localizability;localisability
 localizable;localisable
 localization;localisation
+localizations;localisations
 localize;localise
 localized;localised
 localizer;localiser
@@ -2031,6 +2103,7 @@ memorizer;memoriser
 memorizers;memorisers
 memorizes;memorises
 memorizing;memorising
+mentalization;mentalisation
 mercerization;mercerisation
 mercerize;mercerise
 mercerized;mercerised
@@ -2068,6 +2141,8 @@ metathesize;metathesise
 metathesized;metathesised
 metathesizes;metathesises
 metathesizing;metathesising
+meter;metre
+meters;metres
 methodize;methodise
 methodized;methodised
 methodizes;methodises
@@ -2118,6 +2193,7 @@ minimizer;minimiser
 minimizers;minimisers
 minimizes;minimises
 minimizing;minimising
+misbehavior;misbehaviour
 mischaracterize;mischaracterise
 mischaracterized;mischaracterised
 mischaracterizes;mischaracterises
@@ -2146,9 +2222,12 @@ modernizing;modernising
 modularized;modularised
 moisturize;moisturise
 moisturized;moisturised
+moisturizer;moisturiser
+moisturizers;moisturisers
 moisturizes;moisturises
 moisturizing;moisturising
 mold;mould
+molding;moulding
 moldier;mouldier
 moldiest;mouldiest
 molds;moulds
@@ -2250,12 +2329,17 @@ necrotized;necrotised
 necrotizes;necrotises
 necrotizing;necrotising
 neighbor;neighbour
+neighbors;neighbours
+neighborhood;neighbourhood
+neighborhoods;neighbourhoods
 neighborly;neighbourly
 neologize;neologise
 neologized;neologised
 neologizes;neologises
 neologizing;neologising
 neovascularization;neovascularisation
+neuron;neurone
+neurons;neurones
 neutralization;neutralisation
 neutralize;neutralise
 neutralized;neutralised
@@ -2304,6 +2388,9 @@ odorizes;odorises
 odorizing;odorising
 odorless;odourless
 odors;odours
+esophagus;oesophagus
+esophagi;oesophagi
+esophaguses;oesophaguses
 officialize;officialise
 officialized;officialised
 officializes;officialises
@@ -2359,6 +2446,7 @@ orthogonalize;orthogonalise
 orthogonalized;orthogonalised
 orthogonalizes;orthogonalises
 orthogonalizing;orthogonalising
+orthopaedic;orthopedic
 ostracizable;ostracisable
 ostracization;ostracisation
 ostracize;ostracise
@@ -2413,6 +2501,8 @@ ozonizer;ozoniser
 ozonizers;ozonisers
 ozonizes;ozonises
 ozonizing;ozonising
+paedophile;pedophile
+paedophiles;pedophiles
 paganization;paganisation
 paganize;paganise
 paganized;paganised
@@ -2425,6 +2515,7 @@ palatalize;palatalise
 palatalized;palatalised
 palatalizes;palatalises
 palatalizing;palatalising
+paleoecology;palaeoecology
 palletization;palletisation
 palletize;palletise
 palletized;palletised
@@ -2561,6 +2652,7 @@ phonemicize;phonemicise
 phonemicized;phonemicised
 phonemicizes;phonemicises
 phonemicizing;phonemicising
+phony;phoney
 phosphatization;phosphatisation
 photoionization;photoionisation
 photoionize;photoionise
@@ -2624,6 +2716,7 @@ platinizes;platinises
 platinizing;platinising
 pled;pleaded
 plow;plough
+plowed;ploughed
 plows;ploughs
 pluralization;pluralisation
 pluralize;pluralise
@@ -2692,6 +2785,8 @@ potentizes;potentises
 potentizing;potentising
 practice;practise
 practices;practises
+practiced;practised
+practicing;practising
 preconization;preconisation
 preeminent;pre-eminent
 pressurization;pressurisation
@@ -2701,6 +2796,7 @@ pressurizer;pressuriser
 pressurizers;pressurisers
 pressurizes;pressurises
 pressurizing;pressurising
+preterit;preterite
 prioritization;prioritisation
 prioritize;prioritise
 prioritized;prioritised
@@ -3036,6 +3132,8 @@ rhapsodize;rhapsodise
 rhapsodized;rhapsodised
 rhapsodizes;rhapsodises
 rhapsodizing;rhapsodising
+rigor;rigour
+rigors;rigours
 ritualize;ritualise
 ritualized;ritualised
 ritualizes;ritualises
@@ -3058,6 +3156,7 @@ routinize;routinise
 routinized;routinised
 routinizes;routinises
 routinizing;routinising
+rumor;rumour
 rubberize;rubberise
 rubberized;rubberised
 rubberizes;rubberises
@@ -3114,6 +3213,8 @@ scenarize;scenarise
 scenarized;scenarised
 scenarizes;scenarises
 scenarizing;scenarising
+skeptical;sceptical
+skeptically;sceptically
 schematize;schematise
 schematized;schematised
 schematizes;schematises
@@ -3282,12 +3383,15 @@ spatialize;spatialise
 spatialized;spatialised
 spatializes;spatialises
 spatializing;spatialising
+specialty;speciality
+specialties;specialities
 specialization;specialisation
 specializations;specialisations
 specialize;specialise
 specialized;specialised
 specializes;specialises
 specializing;specialising
+specter;spectre
 spelled;spelt
 spheroidization;spheroidisation
 spheroidize;spheroidise
@@ -3311,6 +3415,7 @@ splenectomize;splenectomise
 splenectomized;splenectomised
 splenectomizes;splenectomises
 splenectomizing;splenectomising
+spoiled;spoilt
 stabilization;stabilisation
 stabilize;stabilise
 stabilized;stabilised
@@ -3577,6 +3682,12 @@ thermalizes;thermalises
 thermalizing;thermalising
 tire;tyre
 tires;tyres
+tokenize;tokenise
+tokenized;tokenised
+tokenizes;tokenises
+tokenizing;tokenising
+totaling;totalling
+totaled;totalled
 totalizator;totalisator
 totalizators;totalisators
 totalize;totalise
@@ -3596,6 +3707,8 @@ traumatized;traumatised
 traumatizes;traumatises
 traumatizing;traumatising
 traveled;travelled
+traveler;traveler
+travelers;travelers
 traveling;travelling
 trivialization;trivialisation
 trivialize;trivialise
@@ -3610,6 +3723,8 @@ tyrannize;tyrannise
 tyrannized;tyrannised
 tyrannizes;tyrannises
 tyrannizing;tyrannising
+tumor;tumour
+tumors;tumours
 unappetizing;unappetising
 unauthorized;unauthorised
 uncapitalized;uncapitalised
@@ -3621,7 +3736,13 @@ underemphasized;underemphasised
 underemphasizes;underemphasises
 underemphasizing;underemphasising
 underutilization;underutilisation
+unfavorable;unfavourable
 unflexible;inflexible
+uniformization;uniformisation
+uniformize;uniformise
+uniformized;uniformised
+uniformizes;uniformises
+uniformizing;uniformising
 unionization;unionisation
 unionize;unionise
 unionized;unionised
@@ -3635,6 +3756,7 @@ universalize;universalise
 universalized;universalised
 universalizes;universalises
 universalizing;universalising
+unlabeled;unlabelled
 unpolarizable;unpolarisable
 unrealizable;unrealisable
 unrecognizable;unrecognisable
@@ -3791,6 +3913,10 @@ vulgarize;vulgarise
 vulgarized;vulgarised
 vulgarizes;vulgarises
 vulgarizing;vulgarising
+watercolor;watercolour
+watercolors;watercolours
+watercolored;watercoloured
+watercoloring;watercolouring
 weaponize;weaponise
 weaponized;weaponised
 weaponizes;weaponises
@@ -3804,6 +3930,7 @@ westernize;westernise
 westernized;westernised
 westernizes;westernises
 westernizing;westernising
+whiskey;whisky
 willful;wilful
 willfully;wilfully
 willfulness;wilfulness
@@ -3813,12 +3940,17 @@ womanizer;womaniser
 womanizers;womanisers
 womanizes;womanises
 womanizing;womanising
+worshiping;worshipping
+worshiped;worshipped
+worshiper;worshipper
+worshipers;worshippers
 yoctogram;yoctogramme
 yoctograms;yoctogrammes
 yoctoliter;yoctolitre
 yoctoliters;yoctolitres
 yoctometer;yoctometre
 yoctometers;yoctometres
+yogurt;yoghurt
 yottagram;yottagramme
 yottagrams;yottagrammes
 yottaliter;yottalitre
