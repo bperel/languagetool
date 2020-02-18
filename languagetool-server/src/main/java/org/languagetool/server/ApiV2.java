@@ -68,47 +68,36 @@ class ApiV2 {
   }
 
   void handleRequest(String path, HttpExchange httpExchange, Map<String, String> parameters, ErrorRequestLimiter errorRequestLimiter, String remoteAddress, HTTPServerConfig config) throws Exception {
-    switch (path) {
-      case "languages":
-        handleLanguagesRequest(httpExchange);
-        break;
-      case "maxtextlength":
-        handleMaxTextLengthRequest(httpExchange, config);
-        break;
-      case "configinfo":
-        handleGetConfigurationInfoRequest(httpExchange, parameters, config);
-        break;
-      case "check":
-        handleCheckRequest(httpExchange, parameters, errorRequestLimiter, remoteAddress);
-        break;
-      case "words":
-        handleWordsRequest(httpExchange, parameters, config);
-        break;
-      case "words/add":
-        handleWordAddRequest(httpExchange, parameters, config);
-        break;
-      case "words/delete":
-        handleWordDeleteRequest(httpExchange, parameters, config);
-        break;
-      case "wikipedia/suggestions":
+    if (path.equals("languages")) {
+      handleLanguagesRequest(httpExchange);
+    } else if (path.equals("maxtextlength")) {
+      handleMaxTextLengthRequest(httpExchange, config);
+    } else if (path.equals("configinfo")) {
+      handleGetConfigurationInfoRequest(httpExchange, parameters, config);
+    } else if (path.equals("info")) {
+      handleSoftwareInfoRequest(httpExchange, parameters, config);
+    } else if (path.equals("check")) {
+      handleCheckRequest(httpExchange, parameters, errorRequestLimiter, remoteAddress);
+    } else if (path.equals("words")) {
+      handleWordsRequest(httpExchange, parameters, config);
+    } else if (path.equals("words/add")) {
+      handleWordAddRequest(httpExchange, parameters, config);
+    } else if (path.equals("words/delete")) {
+      handleWordDeleteRequest(httpExchange, parameters, config);
+    } else if (path.equals("wikipedia/suggestions")) {
         handleWikipediaSuggestionRequest(httpExchange);
-        break;
-      case "wikipedia/suggestion":
+    } else if (path.equals("wikipedia/suggestion")) {
         handleWikipediaSuggestionDetailsRequest(httpExchange, parameters);
-        break;
-      case "wikipedia/fix":
+    } else if (path.equals("wikipedia/fix")) {
         handleWikipediaFixRequest(httpExchange, parameters);
-        break;
-      case "rule/examples":
-        // private (i.e. undocumented) API for our own use only
-        handleRuleExamplesRequest(httpExchange, parameters);
-        break;
-      case "log":
-        // private (i.e. undocumented) API for our own use only
-        handleLogRequest(httpExchange, parameters);
-        break;
-      default:
-        throw new PathNotFoundException("Unsupported action: '" + path + "'. Please see " + API_DOC_URL);
+    } else if (path.equals("rule/examples")) {
+      // private (i.e. undocumented) API for our own use only
+      handleRuleExamplesRequest(httpExchange, parameters);
+    } else if (path.equals("log")) {
+      // private (i.e. undocumented) API for our own use only
+      handleLogRequest(httpExchange, parameters);
+    } else {
+      throw new PathNotFoundException("Unsupported action: '" + path + "'. Please see " + API_DOC_URL);
     }
   }
 
@@ -134,6 +123,14 @@ class ApiV2 {
     }
     Language lang = Languages.getLanguageForShortCode(parameters.get("language"));
     String response = getConfigurationInfo(lang, config);
+    ServerTools.setCommonHeaders(httpExchange, JSON_CONTENT_TYPE, allowOriginUrl);
+    httpExchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, response.getBytes(ENCODING).length);
+    httpExchange.getResponseBody().write(response.getBytes(ENCODING));
+    ServerMetricsCollector.getInstance().logResponse(HttpURLConnection.HTTP_OK);
+  }
+
+  private void handleSoftwareInfoRequest(HttpExchange httpExchange, Map<String, String> parameters, HTTPServerConfig config) throws IOException {
+    String response = getSoftwareInfo();
     ServerTools.setCommonHeaders(httpExchange, JSON_CONTENT_TYPE, allowOriginUrl);
     httpExchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, response.getBytes(ENCODING).length);
     httpExchange.getResponseBody().write(response.getBytes(ENCODING));
@@ -378,7 +375,7 @@ class ApiV2 {
     }
     sendJson(httpExchange, sw);
   }
-  
+
   private void writeListResponse(String fieldName, List<UserDictEntry> words, HttpExchange httpExchange) throws IOException {
     StringWriter sw = new StringWriter();
     try (JsonGenerator g = factory.createGenerator(sw)) {
@@ -477,6 +474,22 @@ class ApiV2 {
         g.writeEndObject();
       }
       g.writeEndArray();
+    }
+    return sw.toString();
+  }
+
+  String getSoftwareInfo() throws IOException {
+    StringWriter sw = new StringWriter();
+    try (JsonGenerator g = factory.createGenerator(sw)) {
+      g.writeStartObject();
+      g.writeObjectFieldStart("software");
+      g.writeStringField("name", "LanguageTool");
+      g.writeStringField("version", JLanguageTool.VERSION);
+      g.writeStringField("buildDate", JLanguageTool.BUILD_DATE);
+      g.writeStringField("commit", JLanguageTool.GIT_SHORT_ID);
+      g.writeBooleanField("premium", JLanguageTool.isPremiumVersion());
+      g.writeEndObject();
+      g.writeEndObject();
     }
     return sw.toString();
   }
