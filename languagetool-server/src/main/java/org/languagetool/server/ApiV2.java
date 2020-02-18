@@ -194,7 +194,12 @@ class ApiV2 {
     ensureGetMethod(httpExchange, "/wikipedia/suggestions");
     DatabaseAccess db = DatabaseAccess.getInstance();
     List<CorpusMatchEntry> suggestions = db.getCorpusMatches(10);
-    writeCorpusMatchListResponse("suggestions", suggestions, httpExchange);
+
+    HashMap<Integer, CorpusArticleEntry> articles = new HashMap<>();
+    for(CorpusMatchEntry suggestion : suggestions) {
+      articles.put(suggestion.getArticleId(), db.getCorpusArticle(suggestion.getArticleId()));
+    }
+    writeCorpusMatchListResponse("suggestions", suggestions, articles, httpExchange);
   }
 
   private void handleWikipediaSuggestionDetailsRequest(HttpExchange httpExchange, Map<String, String> parameters) throws IOException {
@@ -339,14 +344,22 @@ class ApiV2 {
     sendJson(httpExchange, sw);
   }
 
-  private void writeCorpusMatchListResponse(String fieldName, List<CorpusMatchEntry> corpusMatchEntries, HttpExchange httpExchange) throws IOException {
+  private void writeCorpusMatchListResponse(String fieldName, List<CorpusMatchEntry> corpusMatchEntries, HashMap<Integer, CorpusArticleEntry> articles, HttpExchange httpExchange) throws IOException {
     StringWriter sw = new StringWriter();
     try (JsonGenerator g = factory.createGenerator(sw)) {
       g.setCodec(new ObjectMapper());
       g.writeStartObject();
       g.writeArrayFieldStart(fieldName);
       for (CorpusMatchEntry corpusMatchEntry : corpusMatchEntries) {
-        g.writeObject(corpusMatchEntry);
+        g.writeStartObject();
+        g.writeObjectField("suggestion", corpusMatchEntry);
+
+        g.writeObjectFieldStart("article");
+        CorpusArticleEntry article = articles.get(corpusMatchEntry.getArticleId());
+        g.writeStringField("title", article.getTitle());
+        g.writeEndObject();
+
+        g.writeEndObject();
       }
       g.writeEndArray();
       g.writeEndObject();
