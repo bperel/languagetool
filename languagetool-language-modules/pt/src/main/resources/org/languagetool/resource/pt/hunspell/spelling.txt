@@ -31,6 +31,7 @@ basketball
 bayesiana
 bayesiano
 bin
+bottom-up
 Bryon
 cagueiro
 cagueiros
@@ -60,6 +61,7 @@ DALnet
 dan
 database
 databases
+default
 device
 devices
 diff
@@ -116,6 +118,7 @@ multiagente
 Multicare
 Nara
 Nathalia
+okay
 OpenPGP
 Ortins
 Outlook
@@ -132,6 +135,7 @@ Python
 raide
 raides
 René
+reset
 retail
 RISC
 Rolanda
@@ -8909,11 +8913,14 @@ Wado-Ryu
 Angelina
 Bahia
 Constantina
+Dijkstra
 Érico
+Gary
 Glenn
 Goes
 Jaban
 Jovino
+Kasparov
 Luiz
 Nélio
 Seiceira
@@ -8948,3 +8955,6 @@ y
 z
 # COMPUTER RELATED
 AI
+Fenix
+GUI
+Mathematica

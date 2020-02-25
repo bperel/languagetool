@@ -626,11 +626,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
         </rule>
         <rule id="SCHNELLE_RUND" name="'schnelle rund (schneller und)' etc.">
             <pattern>
-                <token postag="ADJ:.*" postag_regexp="yes" regexp="yes">.+e</token>
+                <token postag="ADJ:.*" postag_regexp="yes" regexp="yes">.+e<exception>weitere</exception></token>
                 <token>rund</token>
             </pattern>
             <message>Meinten Sie <suggestion>\1r und</suggestion>?</message>
             <example correction="schneller und">Reinigen Sie Außenflächen <marker>schnelle rund</marker> müheloser als mit dem Besen.</example>
+            <example>Das Netz soll um weitere rund 22 Kilometer ergänzt werden.</example>
         </rule>
         <rule id="NACHEILEN" name="Nacheile (Nachteile)">
             <pattern case_sensitive="yes">
@@ -7372,6 +7373,19 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
             <short>&getrennt;.</short>
             <example correction="WhatsApp">Wir schrieben per <marker>whats app</marker>.</example>
         </rule>
+        <rule id="VERONIKA_POOTH" name="Veronika (Verona) Pooth">
+            <antipattern case_sensitive="yes">
+                <token>Verona</token>
+                <token>Pooth</token>
+            </antipattern>
+            <pattern>
+                <token regexp="yes">verona|veroni[ck]a</token>
+                <token regexp="yes">poo?th?s?|feldbuschs?</token>
+            </pattern>
+            <message>Meinten Sie die Moderatorin bzw. das Model <suggestion>Verona <match regexp_match="(?i)poo?th?|feldbusch" regexp_replace="Pooth" no="2" /></suggestion>?</message>
+            <url>https://de.wikipedia.org/wiki/Verona_Pooth</url>
+            <example correction="Verona Pooth"><marker>Veronika Pooth</marker> ist eine deutsche Moderatorin, Unternehmerin und ein Werbemodel.</example>
+        </rule>
         <rule id="SAO_PAOLO" name="Sau Paulo (São Paulo)">
             <antipattern case_sensitive="yes">
                 <token>São</token>
@@ -7884,6 +7898,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
             </rule>
         </rulegroup>
         <rulegroup id="LIBREOFFICE" name="Produktname: 'Libre Office (LibreOffice)'">
+            <url>https://de.wikipedia.org/wiki/LibreOffice</url>
             <rule>
                 <regexp>Libre[ -]Office</regexp>
                 <message>Meinten Sie das freie Programmpaket <suggestion>LibreOffice</suggestion>?</message>
@@ -8824,7 +8839,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
             <pattern>
                 <token regexp="yes">desweitere?n</token>
             </pattern>
-            <message>Das Wort "\1" wird auseinandergeschrieben.</message>
+            <message>Das Wort "\1" wird getrennt geschrieben.</message>
             <suggestion>des Weiteren</suggestion>
             <url>https://www.duden.de/rechtschreibung/des_Weiteren</url>
             <example correction="Des Weiteren"><marker>Desweiteren</marker> werde ich eine Eilmeldung rausschicken.</example>
@@ -9155,7 +9170,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
                 <token regexp="yes">außen|aussen</token>
                 <marker><token regexp="yes">vor(ge)?l[aä]ss(en|t)</token></marker>
             </pattern>
-            <message>In der Bedeutung 'jemanden ausschließen / nicht beteiligen / nicht informieren' wird 'außen vor lassen' auseinandergeschrieben.</message>
+            <message>In der Bedeutung 'jemanden ausschließen / nicht beteiligen / nicht informieren' wird 'außen vor lassen' getrennt geschrieben.</message>
             <suggestion>vor <match no="2" regexp_match="vor" regexp_replace=""/></suggestion>
             <url>https://www.korrekturen.de/beliebte_fehler/aussen_vorlassen.shtml</url>
             <short>&getrennt;.</short>
@@ -11196,15 +11211,21 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
         </rule>
         <rule id="DIENSTAG_ABEND" name="'Dienstag abend (Dienstagabend)">
             <pattern>
-                <token regexp="yes">&wochentage;</token>
-                <token regexp="yes">&tageszeitangabenklein;</token>
+                <token postag="PRP:.+|ART:.+|ADJ:.+" postag_regexp="yes"/>
+                <marker>
+                    <token regexp="yes">&wochentage;</token>
+                    <token regexp="yes">&tageszeitangabenklein;</token>
+                </marker>
             </pattern>
-            <message>Wochentag + Tageszeit wird groß- und zusammengeschrieben.</message>
-            <suggestion><match no="1"/><match case_conversion="startlower" no="2"/></suggestion>
+            <message>Verbindungen aus Wochentag und Tageszeitangabe schreibt man zusammen, sofern ihnen ein Artikel, ein Adjektiv oder eine Präposition vorausgeht.</message>
+            <suggestion><match no="2"/><match case_conversion="startlower" no="3"/></suggestion>
             <url>http://www.canoonet.eu/services/GermanSpelling/Reform/trennung/tageszeitangaben.jsp</url>
             <short>&getrennt;.</short>
             <example correction="Dienstagabend">Am <marker>Dienstag abend</marker> geht es rund!</example>
             <example correction="Dienstagabend">Am <marker>Dienstag Abend</marker> geht es rund!</example>
+            <example>Berlin, Alexanderplatz, Montag Morgen.</example>
+            <example>Ihr könnt uns Dienstag Abend besuchen.</example>
+            <example>Der Überfall fand Dienstag Abend statt.</example>
         </rule>
         <rule id="DIENSTAG_ABENDS" name="'Dienstag abend (dienstagabends)">
             <pattern>
@@ -12928,7 +12949,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
                         <token case_sensitive="yes" regexp="yes">zu(sehen|hören|machen|bauen|bekommen|betonieren|bewegen|billigen|binden|bringen|brüllen|buchen|decken|drehen|drücken|fahren|fassen|faxen|fliegen|gewinnen|gipsen|gucken|haben|halten|heften|heilen|kaufen|kehren|kiffen|kitten|kleben|knallen|knöpfen|knoten|lassen|leimen|leiten|messen|mischen|nähen|nehmen|ordnen|packen|parken|raten|rechnen|reiten|rollen|rufen|sagen|schalten|schauen|schicken|schieben|schießen|schiessen|schlagen|schließen|schliessen|schmeißen|schmeissen|schmieren|schnallen|schneiden|schnüren|schrauben|schreiben|schreien|schütten|spielen|stechen|stecken|stopfen|stoßen|stossen|teilen|tragen|treffen|treiben|werfen)</token>
                     </marker>
                 </pattern>
-                <message>Die Infinitivgruppe <suggestion><match no="5" regexp_match="zu" regexp_replace="zu "/></suggestion> wird auseinandergeschrieben.</message>
+                <message>Die Infinitivgruppe <suggestion><match no="5" regexp_match="zu" regexp_replace="zu "/></suggestion> wird getrennt geschrieben.</message>
                 <short>Falsche Zusammenschreibung</short>
                 <example correction='zu hören'>Andreas freute sich, das <marker>zuhören</marker>.</example>
                 <example>Andreas freute sich, das zu hören.</example>
@@ -12949,7 +12970,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
                     </marker>
                     <token>,</token>
                 </pattern>
-                <message>Die Infinitivgruppe <suggestion><match no="4" regexp_match="zu" regexp_replace="zu "/></suggestion> wird auseinandergeschrieben.</message>
+                <message>Die Infinitivgruppe <suggestion><match no="4" regexp_match="zu" regexp_replace="zu "/></suggestion> wird getrennt geschrieben.</message>
                 <short>Falsche Zusammenschreibung</short>
                 <example correction='zu hören'>Andreas freute sich, <marker>zuhören</marker>, dass es ihr gut geht.</example>
                 <example>Andreas freut sich zu hören, dass alles in Ordnung ist.</example>
@@ -12970,7 +12991,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
                     </marker>
                     <token>,</token>
                 </pattern>
-                <message>Die Infinitivgruppe <suggestion><match no="5" regexp_match="zu" regexp_replace="zu "/></suggestion> wird auseinandergeschrieben.</message>
+                <message>Die Infinitivgruppe <suggestion><match no="5" regexp_match="zu" regexp_replace="zu "/></suggestion> wird getrennt geschrieben.</message>
                 <short>Falsche Zusammenschreibung</short>
                 <example correction='zu hören'>Es freute ihn, <marker>zuhören</marker>, dass es ihr gut geht.</example>
                 <example>Es freute ihn zu hören, dass alles in Ordnung war.</example>
@@ -12993,7 +13014,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
                     <token case_sensitive="yes" regexp="yes">zu(sehen|hören|machen|bauen|bekommen|betonieren|bewegen|billigen|binden|bringen|brüllen|buchen|decken|drehen|drücken|fahren|fassen|faxen|fliegen|gewinnen|gipsen|gucken|haben|halten|heften|heilen|kaufen|kehren|kiffen|kitten|kleben|knallen|knöpfen|knoten|lassen|leimen|leiten|messen|mischen|nähen|nehmen|ordnen|packen|parken|raten|rechnen|reiten|rollen|rufen|sagen|schalten|schauen|schicken|schieben|schießen|schiessen|schlagen|schließen|schliessen|schmeißen|schmeissen|schmieren|schnallen|schneiden|schnüren|schrauben|schreiben|schreien|schütten|spielen|stechen|stecken|stopfen|stoßen|stossen|teilen|tragen|treffen|treiben|werfen)</token>
                     </marker>
                 </pattern>
-                <message>Die Infinitivgruppe <suggestion><match no="6" regexp_match="zu" regexp_replace="zu "/></suggestion> wird auseinandergeschrieben.</message>
+                <message>Die Infinitivgruppe <suggestion><match no="6" regexp_match="zu" regexp_replace="zu "/></suggestion> wird getrennt geschrieben.</message>
                 <short>Falsche Zusammenschreibung</short>
                 <example correction='zu hören'>Es freute ihn, das <marker>zuhören</marker>.</example>
                 <example correction="zu hören">Es freut ihn das <marker>zuhören</marker>.</example>

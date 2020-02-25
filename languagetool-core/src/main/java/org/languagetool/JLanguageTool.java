@@ -103,6 +103,7 @@ public class JLanguageTool {
 
   private final ResultCache cache;
   private final UserConfig userConfig;
+  private final GlobalConfig globalConfig;
   private final ShortDescriptionProvider descProvider;
 
   private float maxErrorsPerWordRate;
@@ -281,11 +282,12 @@ public class JLanguageTool {
     this.language = Objects.requireNonNull(language, "language cannot be null");
     this.altLanguages = Objects.requireNonNull(altLanguages, "altLanguages cannot be null (but empty)");
     this.motherTongue = motherTongue;
-    if(userConfig == null) {
+    if (userConfig == null) {
       this.userConfig = new UserConfig();
     } else {
       this.userConfig = userConfig;
     }
+    this.globalConfig = globalConfig;
     ResourceBundle messages = ResourceBundleTools.getMessageBundle(language);
     builtinRules = getAllBuiltinRules(language, messages, userConfig, globalConfig);
     this.cleanOverlappingMatches = true;
@@ -470,7 +472,7 @@ public class JLanguageTool {
   private void updateOptionalLanguageModelRules(@Nullable LanguageModel lm) {
     ResourceBundle messages = getMessageBundle(language);
     try {
-      List<Rule> rules = language.getRelevantLanguageModelCapableRules(messages, lm, userConfig, motherTongue, altLanguages);
+      List<Rule> rules = language.getRelevantLanguageModelCapableRules(messages, lm, globalConfig, userConfig, motherTongue, altLanguages);
       userRules.removeIf(rule -> optionalLanguageModelRules.contains(rule.getId()));
       optionalLanguageModelRules.clear();
       rules.stream().map(Rule::getId).forEach(optionalLanguageModelRules::add);
@@ -527,7 +529,7 @@ public class JLanguageTool {
         configs = Collections.emptyList();
       }
       List<Rule> rules = language.getRelevantRemoteRules(getMessageBundle(language), configs,
-        userConfig, motherTongue, altLanguages);
+        globalConfig, userConfig, motherTongue, altLanguages);
       userRules.addAll(rules);
       Function<Rule, Rule> enhanced = language.getRemoteEnhancedRules(getMessageBundle(language), configs, userConfig, motherTongue, altLanguages);
       transformRules(enhanced, builtinRules);
@@ -828,6 +830,10 @@ public class JLanguageTool {
             return Stream.empty();
           }
         }).collect(Collectors.toList());
+
+      for (RuleMatch match : remoteMatches) {
+        match.setSuggestedReplacementObjects(extendSuggestions(match.getSuggestedReplacementObjects()));
+      }
     }
 
     ruleMatches.addAll(remoteMatches);
@@ -1016,6 +1022,7 @@ public class JLanguageTool {
       if (replacement.getShortDescription() == null) {  // don't overwrite more specific suggestions from the rule
         String descOrNull = descProvider.getShortDescription(replacement.getReplacement(), language);
         newReplacement.setShortDescription(descOrNull);
+        newReplacement.setSuffix(replacement.getSuffix());
       }
       extended.add(newReplacement);
     }
@@ -1373,6 +1380,7 @@ public class JLanguageTool {
               newMatch.setColumn(range.from.column);
             }
             newMatch.setEndColumn(range.to.column);
+            newMatch.setSuggestedReplacementObjects(extendSuggestions(match.getSuggestedReplacementObjects()));
             adaptedMatches.add(newMatch);
           }
           ruleMatches.addAll(adaptedMatches);

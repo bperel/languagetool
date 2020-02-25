@@ -35,7 +35,7 @@ public class TextLevelCheckQueue {
   public static final int DISPOSE_FLAG = 3;
 
   private Deque<QueueEntry> textRuleQueue = new ArrayDeque<QueueEntry>();  //  Queue to check text rules in a separate thread
-  private Object queueWakeup = new Object();
+//  private Object queueWakeup = new Object();
   private MultiDocumentsHandler multiDocHandler;
   private SwJLanguageTool langTool;
   private QueueIterator queueIterator;
@@ -51,8 +51,9 @@ public class TextLevelCheckQueue {
     multiDocHandler = multiDocumentsHandler;
     langTool = multiDocHandler.initLanguageTool();
     multiDocHandler.initCheck(langTool);
-    queueIterator = new QueueIterator();
-    queueIterator.start();
+    multiDocHandler.activateTextRulesByIndex(1, langTool);
+//    queueIterator = new QueueIterator();
+//    queueIterator.start();
   }
  
  /**
@@ -89,7 +90,8 @@ public class TextLevelCheckQueue {
     }
     interruptCheck = false;
     textRuleQueue.addLast(new QueueEntry(nStart, nEnd, cacheNum, nCheck, docId, overrideRunning));
-    wakeupQueue();
+    startQueue();
+//    wakeupQueue();
   }
   
   /**
@@ -114,6 +116,7 @@ public class TextLevelCheckQueue {
   /**
    * wake up the waiting iteration of the queue
    */
+/*
   private void wakeupQueue() {
     synchronized(queueWakeup) {
       if(debugMode) {
@@ -122,20 +125,36 @@ public class TextLevelCheckQueue {
       queueWakeup.notify();
     }
   }
+*/
   
+  /**
+   * Start queue
+   */
+  private void startQueue() {
+    if(!queueRuns) {
+      queueIterator = new QueueIterator();
+      queueIterator.start();
+      queueRuns = true;
+      if(debugMode) {
+        MessageHandler.printToLogFile("start queue");
+      }
+    }
+  }
   /**
    * Set a stop flag to get a definite ending of the iteration
    */
   public void setStop() {
-    textRuleQueue.clear();
-    interruptCheck = true;
-    QueueEntry queueEntry = new QueueEntry();
-    queueEntry.setStop();
-    if(debugMode) {
-      MessageHandler.printToLogFile("stop queue");
+    if(queueRuns) {
+      textRuleQueue.clear();
+      interruptCheck = true;
+      QueueEntry queueEntry = new QueueEntry();
+      queueEntry.setStop();
+      if(debugMode) {
+        MessageHandler.printToLogFile("stop queue");
+      }
+      textRuleQueue.addLast(queueEntry);
     }
-    textRuleQueue.addLast(queueEntry);
-    wakeupQueue();
+//    wakeupQueue();
   }
   
   /**
@@ -149,7 +168,8 @@ public class TextLevelCheckQueue {
       MessageHandler.printToLogFile("reset queue");
     }
     doReset();
-    wakeupQueue();
+    startQueue();
+//    wakeupQueue();
   }
   
   /**
@@ -304,6 +324,14 @@ public class TextLevelCheckQueue {
               continue;
             }
           }
+          if(textRuleQueue.isEmpty()) {
+            queueRuns = false;
+            if(debugMode) {
+              MessageHandler.printToLogFile("queue ended");
+            }
+            return;
+          }
+/*          
           synchronized(queueWakeup) {
             try {
               if(debugMode) {
@@ -316,6 +344,7 @@ public class TextLevelCheckQueue {
               return;
             }
           }
+*/    
         } else {
           QueueEntry queueEntry = textRuleQueue.pollLast();
           if(queueEntry.special == STOP_FLAG) {
@@ -328,6 +357,9 @@ public class TextLevelCheckQueue {
             if(debugMode) {
               MessageHandler.printToLogFile("run queue entry: docId = " + queueEntry.docId + ", nStart = " 
                   + queueEntry.nStart + ", nEnd = " + queueEntry.nEnd + ", nCheck = " + queueEntry.nCheck + ", overrideRunning = " + queueEntry.overrideRunning);
+            }
+            if(lastCache != queueEntry.nCache) {
+              multiDocHandler.activateTextRulesByIndex(queueEntry.nCache, langTool);
             }
             lastStart = queueEntry.nStart;
             lastCache = queueEntry.nCache;
