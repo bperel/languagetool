@@ -9804,8 +9804,6 @@ haustierfreundlich/A
 De Niro/S #name
 House of Cards #name
 Pöhler #name
-British Airways #name
-British Columbia #name
 Qatar Airways #name
 Jet Airways #name
 Airways #eng
@@ -16008,3 +16006,58 @@ Ausziehcouches
 Avengers #name
 Bereichscontrolling/S
 BHAG/S #name
+Mahlstrom
+Putschgeneral/S
+Recep Tayyip #name
+Quarantänemaßnahme/N
+Hecking/S #name
+Giuseppe Conte/S #name
+Getty Images #name
+Hollywoodmogul/S
+diffizilsten
+Annabella/S #name
+Sopranos #name
+übersensible
+Plácido/S #name
+SSC Neapel/S #name
+Lionel Messi/S #name
+Maradona/S #name
+Lazio/S #name
+Gazzetta dello Sport/S #name
+Tifoso
+Tifosi
+Atalanta Bergamo/S #name
+Early Adopter/NS #eng
+weg_piepsen
+Monty Python/S #name
+heute-journal/S #name
+El Mundo/S #name
+Turkish Airlines #name
+U-Turn/S #eng
+SARS-CoV
+Sars-CoV
+SARS-CoV-2
+transgender
+Teamgedanke/N
+Norbert Röttgen/S #name
+Gaffer-Video/S
+Gaffer-Foto/S
+Freemium/S #eng
+Freemium-Dienst/E
+Freemium-Dienstes
+Freemium-Account/S
+Newsartikel/NS
+RKI/S #name
+UKE/S #name
+FA #abk
+EP #abk
+ICF #abk
+GMP #abk
+Data-Mining/S #eng
+Datamining/S #eng
+Longseller/SN #eng
+Alicja/S #name
+Vivien/S #name
+Administrationstoolkit/S
+Louwagie/S #name
+Abacus #name

@@ -27,8 +27,7 @@ import org.languagetool.rules.RuleMatch;
 import org.languagetool.rules.SuggestedReplacement;
 import org.languagetool.rules.en.translation.BeoLingusTranslator;
 import org.languagetool.rules.spelling.morfologik.MorfologikSpellerRule;
-import org.languagetool.rules.translation.TranslationData;
-import org.languagetool.rules.translation.TranslationEntry;
+import org.languagetool.rules.translation.Translator;
 import org.languagetool.synthesis.en.EnglishSynthesizer;
 import org.languagetool.tools.StringTools;
 
@@ -222,7 +221,7 @@ public abstract class AbstractEnglishSpellerRule extends MorfologikSpellerRule {
       return Arrays.asList("ad hoc");
     } else if ("Ad-hoc".equals(word) || "Adhoc".equals(word)) {
       return Arrays.asList("Ad hoc");
-    } else if ("ad-on".equals(word)) {
+    } else if ("ad-on".equals(word) || "add-o".equals(word)) {
       return Arrays.asList("add-on");
     } else if ("acc".equals(word)) {
       return Arrays.asList("account", "accusative");
@@ -422,6 +421,10 @@ public abstract class AbstractEnglishSpellerRule extends MorfologikSpellerRule {
       return Arrays.asList("people");
     } else if ("kiddin".equals(word)) {
       return Arrays.asList("kidding");
+    } else if ("doin".equals(word)) {
+      return Arrays.asList("doing");
+    } else if ("nothin".equals(word)) {
+      return Arrays.asList("nothing");
     } else if ("Thx".equals(word)) {
       return Arrays.asList("Thanks");
     } else if ("thx".equals(word)) {
@@ -450,8 +453,14 @@ public abstract class AbstractEnglishSpellerRule extends MorfologikSpellerRule {
       return Arrays.asList("What are you", "What do you");
     } else if ("sinc".equals(word)) {
       return Arrays.asList("sync");
+    } else if ("sweety".equals(word)) {
+      return Arrays.asList("sweetie");
+    } else if ("sweetys".equals(word)) {
+      return Arrays.asList("sweeties");
     } else if ("Hongkong".equals(word)) {
       return Arrays.asList("Hong Kong");
+    } else if ("Playstation".equalsIgnoreCase(word)) {
+      return Arrays.asList("PlayStation");
     } else if ("center".equals(word)) {
       // For non-US English
       return Arrays.asList("centre");
@@ -661,15 +670,8 @@ public abstract class AbstractEnglishSpellerRule extends MorfologikSpellerRule {
   }
 
   @Override
-  protected TranslationData getTranslation(String word, String sourceLang, String targetLang) {
-    if (translator == null) {
-      return null;
-    }
-    List<TranslationEntry> translations = translator.translate(word, sourceLang, language.getShortCode());
-    if (translations.size() > 0) {
-      return new TranslationData(translations, translator.getDataSource());
-    }
-    return null;
+  protected Translator getTranslator(GlobalConfig globalConfig) {
+    return translator;
   }
 
   private static class IrregularForms {

@@ -114,3 +114,7 @@ BuzzFeed
 BlaBlaCar
 Rio de Janeiro
 Barclays
+GoPro
+WebEx
+Waldridge
+Squarespace

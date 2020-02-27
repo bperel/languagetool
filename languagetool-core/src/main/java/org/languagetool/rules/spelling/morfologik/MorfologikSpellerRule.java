@@ -41,8 +41,8 @@ import org.languagetool.rules.spelling.suggestions.SuggestionsChanges;
 import org.languagetool.rules.spelling.suggestions.SuggestionsOrderer;
 import org.languagetool.rules.spelling.suggestions.SuggestionsOrdererFeatureExtractor;
 import org.languagetool.rules.spelling.suggestions.XGBoostSuggestionsOrderer;
-import org.languagetool.rules.translation.TranslationData;
 import org.languagetool.rules.translation.TranslationEntry;
+import org.languagetool.rules.translation.Translator;
 import org.languagetool.tools.Tools;
 
 import static org.languagetool.JLanguageTool.*;
@@ -177,7 +177,7 @@ public abstract class MorfologikSpellerRule extends SpellingCheckRule {
   }
 
   @Nullable
-  protected TranslationData getTranslation(String word, String sourceLang, String targetLang) throws IOException {
+  protected Translator getTranslator(GlobalConfig globalConfig) throws IOException {
     return null;
   }
 
@@ -381,7 +381,8 @@ public abstract class MorfologikSpellerRule extends SpellingCheckRule {
  
     int translationSuggestionCount = 0;
     boolean preventFurtherSuggestions = false;
-    if (ruleMatch == null && motherTongue != null) {
+    Translator translator = getTranslator(globalConfig);
+    if (translator != null && ruleMatch == null && motherTongue != null) {
       List<String> phrasesToTranslate = new ArrayList<>();
       int translationEndPos = startPos + word.length();
       if (idx + 1 < tokens.length) {
@@ -389,32 +390,35 @@ public abstract class MorfologikSpellerRule extends SpellingCheckRule {
         if (isMisspelled(nextWord)) {
           phrasesToTranslate.add(word + " " + nextWord);
           translationEndPos = tokens[idx + 1].getEndPos();
-          preventFurtherSuggestions = true;  // mark gets extended, so suggestions for the original marker won't make sense
         }
       }
       phrasesToTranslate.add(word);
       for (String phraseToTranslate : phrasesToTranslate) {
-        TranslationData tData = getTranslation(phraseToTranslate, motherTongue.getShortCode(), language.getShortCode());
-        if (tData != null) {
-          ruleMatch = new RuleMatch(this, sentence, startPos, translationEndPos, "Translate to English?");
+        List<TranslationEntry> translations = translator.translate(phraseToTranslate, motherTongue.getShortCode(), language.getShortCode());
+        if (translations.size() > 0) {
+          ruleMatch = new RuleMatch(this, sentence, startPos, translationEndPos, translator.getMessage());
           ruleMatch.setType(RuleMatch.Type.Hint);
           ruleMatch.setSuggestedReplacements(new ArrayList<>());
           List<SuggestedReplacement> l = new ArrayList<>();
-          for (TranslationEntry translation : tData.getTranslations()) {
+          String prevWord = idx > 0 ? tokens[idx-1].getToken() : null;
+          for (TranslationEntry translation : translations) {
             for (String s : translation.getL2()) {
-              String suffix = cleanTranslationForSuffix(s);
-              l.add(new SuggestedReplacement(cleanTranslationForReplace(s), String.join(", ", translation.getL1()), suffix.isEmpty() ? null : suffix));
+              String suffix = translator.cleanTranslationForSuffix(s);
+              l.add(new SuggestedReplacement(translator.cleanTranslationForReplace(s, prevWord), String.join(", ", translation.getL1()), suffix.isEmpty() ? null : suffix));
             }
           }
           if (l.size() > 0) {
             ruleMatch.setSuggestedReplacementObjects(l);
             translationSuggestionCount = l.size();
+            if (phraseToTranslate.contains(" ")) {
+              preventFurtherSuggestions = true;  // mark gets extended, so suggestions for the original marker won't make sense
+            }
             break;  // let's assume the first phrase is the best because it's longer
           }
         }
       }
     }
-    
+
     if (ruleMatch == null) {
       Language acceptingLanguage = acceptedInAlternativeLanguage(word);
       if (acceptingLanguage != null) {
@@ -490,46 +494,6 @@ public abstract class MorfologikSpellerRule extends SpellingCheckRule {
  
     ruleMatches.add(ruleMatch);
     return ruleMatches;
-  }
-
-  private String cleanTranslationForReplace(String s) {
-    return s
-      .replaceAll("\\[.*?\\]", "")   // e.g. "[coll.]", "[Br.]"
-      .replaceAll("\\{.*?\\}", "")   // e.g. "to go {went; gone}"
-      .replaceAll("\\(.*?\\)", "")   // e.g. "icebox (old-fashioned)"
-      .replaceAll("/[A-Z]+/", "")    // e.g. "heavy goods vehicle /HGV/"
-      .trim();
-  }
-
-  String cleanTranslationForSuffix(String s) {
-    StringBuilder sb = new StringBuilder();
-    List<String> lookingFor = new ArrayList<>();
-    for (int i = 0; i < s.length(); i++) {
-      char c = s.charAt(i);
-      if (c == '[') {
-        lookingFor.add("]");
-      } else if (c == ']' && lookingFor.contains("]")) {
-        sb.append(c);
-        sb.append(' ');
-        lookingFor.remove("]");
-      } else if (c == '(') {
-        lookingFor.add(")");
-      } else if (c == ')') {
-        sb.append(c);
-        sb.append(' ');
-        lookingFor.remove(")");
-      } else if (c == '{') {
-        lookingFor.add("}");
-      } else if (c == '}') {
-        sb.append(c);
-        sb.append(' ');
-        lookingFor.remove("}");
-      }
-      if (lookingFor.size() > 0) {
-        sb.append(c);
-      }
-    }
-    return sb.toString().trim();
   }
 
   /**

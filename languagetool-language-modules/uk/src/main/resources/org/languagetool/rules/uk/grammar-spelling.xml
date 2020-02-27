@@ -476,7 +476,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
         </antipattern>
         <pattern>
           <token case_sensitive="yes" regexp="yes">[мк]?г|мкг|грн|год|крб|м?л|млн|млрд|[мнсдк]м|мкм|[нм]с|мкс|смт|трлн|хв</token>
-          <token negate_pos="yes" postag="SENT_END">.</token>
+          <token negate_pos="yes" postag_regexp="yes" postag="SENT_END|PARA_END">.</token>
         </pattern>
         <message>Стягнені скорочення та метричні одиниці пишуться без крапки: <suggestion><match no="1"/></suggestion></message>
         <example correction="грн">100 <marker>грн.</marker> в банк.</example>
