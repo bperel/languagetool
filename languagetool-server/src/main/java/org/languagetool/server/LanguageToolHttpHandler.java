@@ -174,7 +174,7 @@ class LanguageToolHttpHandler implements HttpHandler {
       }
       if (allowedIps == null || allowedIps.contains(origAddress)) {
         if (path.startsWith("/v2/")) {
-          ApiV2 apiV2 = new ApiV2(textCheckerV2, config.getAllowOriginUrl());
+          ApiV2 apiV2 = new ApiV2(textCheckerV2, "*");
           String pathWithoutVersion = path.substring("/v2/".length());
           apiV2.handleRequest(pathWithoutVersion, httpExchange, parameters, errorRequestLimiter, remoteAddress, config);
         } else if (path.endsWith("/Languages")) {

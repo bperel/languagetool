@@ -63,30 +63,28 @@ public class HtmlTools {
     }
 
     private void anonymizeNode(Document doc, Node node, Integer parentId, int childIndex) {
-      switch (node.getNodeType()) {
-        case Node.ELEMENT_NODE:
-          String nodeName = node.getNodeName();
-          if (!nodeName.equals(DEFAULT_TAG)) { // This node has not already been handled
-            doc.renameNode(node, null, DEFAULT_TAG);
-            htmlNodes.add(new HtmlNode(null, null, parentId, childIndex, nodeName));
+      if (node.getNodeType() != Node.ELEMENT_NODE) {
+        return;
+      }
+      String nodeName = node.getNodeName();
+      if (!nodeName.equals(DEFAULT_TAG)) { // This node has not already been handled
+        doc.renameNode(node, null, DEFAULT_TAG);
+        htmlNodes.add(new HtmlNode(null, null, parentId, childIndex, nodeName));
 
-            NamedNodeMap attributes = node.getAttributes();
-            while (attributes.getLength() > 0) {
-              removeAttribute(node, parentId, childIndex, attributes.item(0));
-            }
+        NamedNodeMap attributes = node.getAttributes();
+        if (attributes != null) {
+          while (attributes.getLength() > 0) {
+            removeAttribute(node, parentId, childIndex, attributes.item(0));
           }
+        }
+      }
 
-          lastNodeId = (lastNodeId == null ? 0 : lastNodeId + 1);
-          Integer currentNodeId = lastNodeId;
+      lastNodeId = (lastNodeId == null ? 0 : lastNodeId + 1);
+      Integer currentNodeId = lastNodeId;
 
-          NodeList childNodes = node.getChildNodes();
-          for (int i = 0; i < childNodes.getLength(); i++) {
-            anonymizeNode(doc, childNodes.item(i), currentNodeId, i);
-          }
-        break;
-        case Node.COMMENT_NODE:
-          node.getParentNode().removeChild(node);
-        break;
+      NodeList childNodes = node.getChildNodes();
+      for (int i = 0; i < childNodes.getLength(); i++) {
+        anonymizeNode(doc, childNodes.item(i), currentNodeId, i);
       }
     }
 
@@ -171,7 +169,7 @@ public class HtmlTools {
       this.articleId = articleId;
     }
 
-    public String getWikitext() {;
+    public String getWikitext() {
       return wikiText;
     }
 

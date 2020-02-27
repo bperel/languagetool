@@ -68,8 +68,11 @@ public class ParsoidWikipediaTextParser {
       url = new URL("http://localhost:8026/wikipedia_fr/v3/transform/"+fromFormat+"/to/"+toFormat);
       HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 
-      HashMap<String, String> params = new HashMap<>();
+      HashMap<String, Object> params = new HashMap<>();
       params.put(fromFormat, inputText);
+      if (toFormat.equals("wikitext")) {
+        params.put("scrub_wikitext", true);
+      }
       String requestBody = new ObjectMapper().writeValueAsString(params);
 
       conn.setDoInput(true);
