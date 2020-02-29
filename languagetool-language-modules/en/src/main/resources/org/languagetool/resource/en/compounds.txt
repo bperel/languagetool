@@ -2896,6 +2896,7 @@ pre-eclamptic
 pre-election
 pre-eminence
 pre-eminent
+pre-eminently
 pre-employment
 pre-employments
 pre-empt
@@ -3992,3 +3993,12 @@ geo-morphist?
 geo-morphists?
 geo-morphy?
 geo-morphogenic?
+super-delegate?
+super-delegates?
+crypto-currency?
+crypto-currencies?
+crypto-graphically?
+crypto-graphical?
+custom-builds*
+custom-building*
+flat-bottomed*

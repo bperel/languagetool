@@ -2246,6 +2246,12 @@ commutes	commute	NNS
 comorbid	comorbid	JJ
 comorbidity	comorbidity	NN
 comorbidities	comorbidity	NNS
+compassionate	compassionate	VB
+compassionate	compassionate	VBP
+compassionated	compassionate	VBD
+compassionated	compassionate	VBN
+compassionates	compassionate	VBZ
+compassionating	compassionate	VBG
 compère	compère	NN
 compère	compère	VB
 compère	compère	VBP
@@ -2655,6 +2661,12 @@ curry	curry	NN:U
 curveball	curveball	NN
 curveballs	curveball	NNS
 Cushman	Cushman	NNP
+custom-build	custom-build	VB
+custom-build	custom-build	VBP
+custom-built	custom-build	VBD
+custom-built	custom-build	VBN
+custom-builds	custom-build	VBZ
+custom-building	custom-build	VBG
 customer-centric	customer-centric	JJ
 customisable	customisable	JJ
 customiser	customiser	NN
@@ -5082,6 +5094,7 @@ flambéed	flambé	VBN
 flambéing	flambé	VBG
 flambés	flambé	VBZ
 flamenco	flamenco	NN:U
+flat-bottomed	flat-bottomed	JJ
 flânerie	flânerie	NN:U
 flâneur	flâneur	NN
 flâneurs	flâneur	NNS
@@ -9099,6 +9112,7 @@ Newsela	Newsela	NNP
 newsfeed	newsfeed	NN
 newsfeeds	newsfeed	NNS
 next	next	RB
+Nextcloud	Nextcloud	NNP
 Nezahualcóyotl	Nezahualcóyotl	NNP
 nginx	nginx	NNP
 Nginx	Nginx	NNP
@@ -9348,6 +9362,7 @@ officializes	officialize	VBZ
 officializing	officialize	VBG
 Ofgem	Ofgem	NNP
 oganesson	oganesson	NN:U
+oh-oh	oh-oh	UH
 oil	oil	NN
 oil-free	oil-free	JJ
 Oksana	Oksana	NNP
@@ -13288,6 +13303,7 @@ Sémillon	Sémillon	NNP
 semi-professional	semi-professional	JJ
 semi-professional	semi-professional	NN
 semi-professionals	semi-professional	NNS
+Semperoper	Semperoper	NNP
 Sennheiser	Sennheiser	NNP
 señor	señor	NN
 señora	señora	NN
@@ -14585,6 +14601,7 @@ therapized	therapize	VBN
 therapizes	therapize	VBZ
 therapizing	therapize	VBG
 therapy	therapy	NN:U
+Thérèse	Thérèse	NNP
 thereunto	thereunto	RB
 thermalisation	thermalisation	NN:UN
 thermalise	thermalise	VB
@@ -14888,6 +14905,7 @@ Udemy	Udemy	NNP
 UEFA	UEFA	NNP
 UEFI	UEFI	NNP
 uh	uh	UH
+uh-oh	uh-oh	UH
 UHC	UHC	NNP
 UI	UI	NN
 UID	UID	NNP
@@ -15453,6 +15471,12 @@ verticalizes	verticalize	VBZ
 verticalizing	verticalize	VBG
 Vettel	Vettel	NNP
 Viasat	Viasat	NNP
+vibe	vibe	VB
+vibe	vibe	VBP
+vibed	vibe	VBD
+vibed	vibe	VBN
+vibes	vibe	VBZ
+vibing	vibe	VBG
 vicuña	vicuña	NN:UN
 vicuñas	vicuña	NNS
 vid	vid	NN

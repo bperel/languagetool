@@ -9093,6 +9093,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
             <short>&getrennt;.</short>
             <example correction="zweieinhalb">Wir haben noch <marker>zwei einhalb</marker> Liter Sprit.</example>
         </rule>
+        <!-- TODO: doesn't work due to sentence splitting not working as needed here
         <rulegroup id="NT_KLAESSLER" name="fünft Klässler (Fünftklässler) etc.">
             <rule>
                 <pattern>
@@ -9105,6 +9106,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
                 <example correction='4.-Klässlerinnen'>Ich war mit einigen <marker>4 Klässlerinnen</marker> unterwegs.</example>
             </rule>
         </rulegroup>
+        -->
         <rulegroup id="ZAHL_ER" name="100 er (100er)">
             <rule>
                 <pattern>
@@ -9189,7 +9191,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
             </pattern>
             <message>Im Sinne von 'ersatzweise' wird <suggestion>\1\2</suggestion> zusammengeschrieben.</message>
             <short>&getrennt;.</short>
-            <example correction='stattdessen'>Ich habe keine Lust auf Kino. Wollen wir <marker>statt dessen</marker> ins Theater?</example>
+            <example correction='stattdessen'>Wollen wir <marker>statt dessen</marker> ins Theater?</example>
         </rule>
         <rule id="ZU_DEM_ZUDEM" name="Zu dem (Zudem)">
             <pattern case_sensitive="yes">
@@ -14058,6 +14060,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
                 <token regexp="yes">10.\d{4,9}/[-._;()/:A-Z0-9]+</token> 
                 does not work because of <regexp> rules in this rulegroup 
             </antipattern>-->
+            <!-- TODO: doesn't work because of sentence splitting
             <rule>
                 <regexp>\d\d?\.\s+\d\d?.\d{2,4}|\d\d?\.\d\d?.\s+\d{2,4}[^:]|\d\d?\.\s+\d\d?.\s+\d{2,4}</regexp>
                 <message>Datumsangaben im Format TT.MM.JJJJ enthalten keine Leerzeichen.</message>
@@ -14067,6 +14070,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
                 <example>21.3.2015</example>
                 <example>16.08.19 11:00</example>
             </rule>
+            -->
             <rule>
                 <pattern>
                     <token>31</token>
@@ -16773,8 +16777,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
             <url>https://de.wikipedia.org/wiki/SpaceX</url>
             <example correction="SpaceX"><marker>Space X</marker> ist ein Raumfahrtunternehmen.</example>
         </rule>
+        <!--
+        don't work because of the way sentence splitting works
         <rulegroup id="ZITAT_VGL" name="'vgl.' bei direkten Zitaten">
-            <!--
             <rule>
               <pattern mark_from="1">
                 <token postag="SENT_START" skip="-1"><exception scope="next" regexp="yes">('|"|»|„|›|‚|‘|‹|«)</exception></token>
@@ -16787,7 +16792,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
               <example correction="(vgl. S">Er sagt, Rota solle kommen <marker>(S</marker>. 1).</example>
               <example>Am Anfang der Szene (Z. 1-11)...</example> TODO false alarm (Gliederungsangabe)
             </rule>
-            -->
             <rule>
                 <pattern>
                     <token regexp="yes">&anfzu;</token>
@@ -16805,6 +16809,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
                 <example>„ein Kind“ (vgl. Erbe)</example>
             </rule>
         </rulegroup>
+        -->
     </category>
 
     <!-- ====================================================================== -->
@@ -18999,7 +19004,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
                     <token>das</token>
                     <token case_sensitive="yes">aus</token>
                     <token postag="PRO:POS:GEN:.+" postag_regexp="yes" skip="-1"/>
-                    <token postag="PA.+" postag_regexp="yes"/>
+                    <token postag="PA2.+" postag_regexp="yes"/>
                 </antipattern>
                 <pattern>
                     <token>das</token>
@@ -19020,7 +19025,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
                     <token>das</token>
                     <token case_sensitive="yes">aus</token>
                     <token postag="PRO:POS:GEN:.+" postag_regexp="yes" skip="-1"/>
-                    <token postag="PA.+" postag_regexp="yes"/>
+                    <token postag="PA2.+" postag_regexp="yes"/>
                 </antipattern>
                 <pattern>
                     <token>das</token>
@@ -32128,7 +32133,7 @@ Andere Projekte</example>
                     <marker>
                         <token regexp="yes">&farbadj;</token>
                     </marker>
-                    <token><exception postag="PA.+" postag_regexp="yes"/></token>
+                    <token><exception postag="PA2.+" postag_regexp="yes"/></token>
                 </pattern>
                 <message>In dieser Wendung scheint '\2' als Nomen gebraucht zu werden und ist deshalb großzuschreiben.</message>
                 <suggestion><match case_conversion="startupper" no="2"/></suggestion>
@@ -33429,7 +33434,7 @@ Andere Projekte</example>
             <rule>
                 <pattern>
                     <token>e</token>
-                    <token regexp="yes">autos?|mobilität|motor(s|en)?|bikes?|mobil[es]?|mobility|roller[sn]?|zigaretten?|scooter[sn]?|shishas?|fahrrads?|fahrräder|gitarren?|herds?|heizung(en)?|motorrads?|motorräder|tretroller|bus(se)?|pkws?|lkws?|maschinen?|sport</token>
+                    <token regexp="yes">autos?|mobilität|motor(s|en)?|bikes?|mobil[es]?|mobility|roller[sn]?|zigaretten?|scooter[sn]?|shishas?|fahrrads?|fahrräder|gitarren?|herds?|heizung(en)?|motorrads?|motorräder|tretroller|bus(se)?|pkws?|lkws?|maschinen?|sport|shishas?|schischas?</token>
                 </pattern>
                 <message>Meinten Sie <suggestion>E-<match no="2" case_conversion="startupper" /></suggestion>?</message>
                 <example correction="E-Autos">Die <marker>E Autos</marker> sind oft umweltschonender als Autos mit Verbrenner.</example>
@@ -33439,7 +33444,7 @@ Andere Projekte</example>
                     <token regexp="yes">E-[A-Z].+</token>
                 </antipattern>
                 <pattern>
-                    <token regexp="yes">e-?(autos?|mobilität|motor(s|en)?|bikes?|mobil[es]?|mobility|roller[sn]?|zigaretten?|scooter[sn]?|shishas?|fahrrads?|fahrräder|gitarren?|herds?|heizung(en)?|motorrads?|motorräder|tretroller|bus(se)?|pkws?|lkws?|maschinen?|sport)</token>
+                    <token regexp="yes">e-?(autos?|mobilität|motor(s|en)?|bikes?|mobil[es]?|mobility|roller[sn]?|zigaretten?|scooter[sn]?|shishas?|fahrrads?|fahrräder|gitarren?|herds?|heizung(en)?|motorrads?|motorräder|tretroller|bus(se)?|pkws?|lkws?|maschinen?|sport|shishas?|schischas?)</token>
                 </pattern>
                 <message>Meinten Sie <suggestion>E-<match no="1" regexp_match="(?i)^e-?" regexp_replace="" case_conversion="startupper" /></suggestion>?</message>
                 <example correction="E-Auto">Ein <marker>eAuto</marker> ist oft umweltschonender als ein Auto mit Verbrenner.</example>
@@ -36073,7 +36078,8 @@ Andere Projekte</example>
             <rule>
                 <pattern case_sensitive="yes">
                     <token postag="SENT_START"/>
-                    <token regexp="yes">Bitte|So</token>
+                    <token regexp="yes">Bitte|So|Aber|Und|Danke|Oder</token>
+                    <token min="0">,</token>
                     <token postag="VER:3:PLU:PRÄ.*" postag_regexp="yes"/>
                     <marker>
                         <token skip="-1">sie</token>
@@ -36085,6 +36091,7 @@ Andere Projekte</example>
                 <example>Kommen <marker>Sie</marker> schnell!</example>
                 <example correction="Sie">Bitte kommen <marker>sie</marker> schnell!</example>
                 <example correction="Sie">So kommen <marker>sie</marker> doch!</example>
+                <example correction="Sie">Aber schalten <marker>sie</marker> unsere Stelle doch bitte frei.</example>
             </rule>
         </rulegroup>
         <rulegroup id="DEN_DEM" name="'dem/den' (nur für wenige Verben)">
@@ -39194,7 +39201,7 @@ Andere Projekte</example>
             </antipattern>
             <antipattern>
                 <!-- vermutlich Spielstand -->
-                <token inflected="yes" regexp="yes" skip="5">mit|verlieren|gewinnen|enden|unentschieden|trennen|spielen|schlagen|Spiel|treffen|gegen|FC|(Halb|Viertel|Achtel)finale|Finale|Pokal|Cup</token>
+                <token inflected="yes" regexp="yes" skip="5">mit|verlieren|gewinnen|enden|unentschieden|trennen|spielen|schlagen|Spiel|treffen|gegen|FC|(Halb|Viertel|Achtel)?finale|Pokal|Cup</token>
                 <token regexp="yes">[0-9]+</token>
                 <token>:</token>
                 <token regexp="yes">[0-9]+</token>
@@ -39204,7 +39211,7 @@ Andere Projekte</example>
                 <token regexp="yes">[0-9]+</token>
                 <token>:</token>
                 <token regexp="yes" skip="5">[0-9]+</token>
-                <token inflected="yes" regexp="yes">mit|verlieren|gewinnen|enden|unentschieden|spielen|treffen|gegen|FC|(Halb|Viertel|Achtel)finale|Finale|Pokal|Cup</token>
+                <token inflected="yes" regexp="yes">mit|verlieren|gewinnen|enden|unentschieden|spielen|treffen|gegen|FC|(Halb|Viertel|Achtel)finale|Pokal|Cup</token>
             </antipattern>
             <antipattern>
                 <!-- Maßstab -->
@@ -40335,7 +40342,7 @@ Andere Projekte</example>
                 <example>Der <marker>„Film“</marker> ist „gut“.</example>
 <!--                 <example>Der <marker>„Film über ‚die Sachen, die „gut“ sind‘“</marker> ist „gut“.</example> TODO -->
                 <example correction="‚Anführungszeichen‘">„Verschachtelte <marker>„Anführungszeichen“</marker>“ sind kompliziert.</example>
-                <example correction="‚das Ding‘">„Ich weiß es nicht. Ich habe <marker>„das Ding“</marker> noch nicht gesehen.“</example>
+                <example correction="‚das Ding‘">„Ich habe <marker>„das Ding“</marker> noch nicht gesehen.“</example>
 <!--                 <example correction="‚Elemente der Mathematik‘">Informationen aus „Beihefte zur Zeitschrift <marker>„Elemente der Mathematik“</marker>“ von Ernst</example> -->
             </rule>
             <rule>
@@ -40703,6 +40710,7 @@ Andere Projekte</example>
                 <example correction="»ist">»Der Garten«, sagte er, <marker>» ist</marker> wirklich schön.«</example>
                 <example>Das Huhn sagt "Kickerikie", das Schwein sagt "Oink, Oink," die Ente sagt "Quak, Quak" und die Katze sagt: "Miau".</example>
             </rule>
+            <!-- TODO: doesn't work because of sentence splitting
             <rule>
                 <antipattern>
                     <token postag="ABK.*" postag_regexp="yes"/>
@@ -40731,6 +40739,7 @@ Andere Projekte</example>
                 <example correction=".«">»Der Garten«, sagte er, »ist wirklich schön<marker>. «</marker></example>
                 <example>Manche englische Wörter haben zwei Schreibweisen, z. B. "gray" und "grey".</example>
             </rule>
+            -->
             <rule>
                 <antipattern>
                     <token regexp="yes">„|»|«|"|\(|\{</token>
