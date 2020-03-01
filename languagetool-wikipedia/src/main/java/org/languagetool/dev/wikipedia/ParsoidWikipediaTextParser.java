@@ -31,16 +31,15 @@ import java.util.HashMap;
 import java.util.zip.GZIPInputStream;
 
 /**
- * Convert Wikipedia syntax to HTML (or the other way around) using Parsoid.
+ * Convert Wikipedia wikicode syntax to HTML using Parsoid.
  */
 public class ParsoidWikipediaTextParser {
 
-  public ParsoidWikipediaTextParser() {
-  }
+  public ParsoidWikipediaTextParser() { }
 
   public HtmlTools.HtmlAnonymizer convertWikitextToHtml(String title, String wikiText) {
     try {
-      String html = callParsoid("wikitext", "html", wikiText);
+      String html = convertWikitextToHtml(wikiText);
       if (html == null) {
         return null;
       }
@@ -54,25 +53,14 @@ public class ParsoidWikipediaTextParser {
     }
   }
 
-  public String convertHtmlToWikitext(String html) {
-    String wikitext = callParsoid("html", "wikitext", html);
-    if (wikitext != null) {
-      wikitext = wikitext.replaceFirst("(?s)^.+?</title>", "");
-    }
-    return wikitext;
-  }
-
-  private String callParsoid(String fromFormat, String toFormat, String inputText) {
+  private String convertWikitextToHtml(String inputText) {
     URL url;
     try {
-      url = new URL("http://localhost:8026/wikipedia_fr/v3/transform/"+fromFormat+"/to/"+toFormat);
+      url = new URL("http://localhost:8026/wikipedia_fr/v3/transform/wikitext/to/html");
       HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 
       HashMap<String, Object> params = new HashMap<>();
-      params.put(fromFormat, inputText);
-      if (toFormat.equals("wikitext")) {
-        params.put("scrub_wikitext", true);
-      }
+      params.put("wikitext", inputText);
       String requestBody = new ObjectMapper().writeValueAsString(params);
 
       conn.setDoInput(true);

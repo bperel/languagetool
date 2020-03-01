@@ -29,7 +29,6 @@ import org.apache.ibatis.session.RowBounds;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
-import org.languagetool.tools.HtmlTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -168,28 +167,6 @@ class DatabaseAccess {
       Map<Object, Object> map = new HashMap<>();
       map.put("id", articleId);
       return session.selectOne("org.languagetool.server.WikipediaMapper.selectWikipediaArticle", map);
-    }
-  }
-
-  List<HtmlTools.HtmlAnonymizer.HtmlNode> getHtmlNodes(Integer articleId) {
-    if (sqlSessionFactory == null) {
-      return new ArrayList<>();
-    }
-    try (SqlSession session = sqlSessionFactory.openSession(true)) {
-      Map<Object, Object> map = new HashMap<>();
-      map.put("articleId", articleId);
-      return session.selectList("org.languagetool.server.WikipediaMapper.selectWikipediaHtmlNodes", map);
-    }
-  }
-
-  List<HtmlTools.HtmlAnonymizer.HtmlAttribute> getHtmlAttributes(Integer articleId) {
-    if (sqlSessionFactory == null) {
-      return new ArrayList<>();
-    }
-    try (SqlSession session = sqlSessionFactory.openSession(true)) {
-      Map<Object, Object> map = new HashMap<>();
-      map.put("articleId", articleId);
-      return session.selectList("org.languagetool.server.WikipediaMapper.selectWikipediaHtmlAttributes", map);
     }
   }
 

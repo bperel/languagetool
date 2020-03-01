@@ -10,10 +10,4 @@
     <select id="selectWikipediaSuggestion" resultType="org.languagetool.server.CorpusMatchEntry">
         SELECT * FROM corpus_match WHERE id=#{id}
     </select>
-    <select id="selectWikipediaHtmlNodes" resultType="org.languagetool.tools.HtmlTools$HtmlAnonymizer$HtmlNode">
-        SELECT * FROM corpus_article_html_node WHERE article_id=#{articleId}
-    </select>
-    <select id="selectWikipediaHtmlAttributes" resultType="org.languagetool.tools.HtmlTools$HtmlAnonymizer$HtmlAttribute">
-        SELECT * FROM corpus_article_html_attribute WHERE article_id=#{articleId}
-    </select>
 </mapper>

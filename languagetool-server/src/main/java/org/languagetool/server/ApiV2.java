@@ -27,7 +27,6 @@ import org.jetbrains.annotations.NotNull;
 import org.languagetool.JLanguageTool;
 import org.languagetool.Language;
 import org.languagetool.Languages;
-import org.languagetool.dev.wikipedia.ParsoidWikipediaTextParser;
 import org.languagetool.markup.AnnotatedText;
 import org.languagetool.markup.AnnotatedTextBuilder;
 import org.languagetool.rules.CorrectExample;
@@ -35,18 +34,13 @@ import org.languagetool.rules.IncorrectExample;
 import org.languagetool.rules.Rule;
 import org.languagetool.rules.TextLevelRule;
 import org.languagetool.tools.HtmlTools;
-import org.languagetool.tools.HtmlTools.HtmlAnonymizer.HtmlAttribute;
-import org.languagetool.tools.HtmlTools.HtmlAnonymizer.HtmlNode;
-import org.xml.sax.SAXException;
 
-import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.net.HttpURLConnection;
 import java.util.*;
 
 import static org.languagetool.server.LanguageToolHttpHandler.API_DOC_URL;
-import static org.languagetool.tools.HtmlTools.HtmlAnonymizer.createFromAnonymized;
 
 /**
  * Handle requests to {@code /v2/} of the HTTP API. 
@@ -223,25 +217,15 @@ class ApiV2 {
     }
 
     CorpusArticleEntry article = db.getCorpusArticle(suggestion.getArticleId());
-    List<HtmlNode> htmlNodes = db.getHtmlNodes(suggestion.getArticleId());
-    List<HtmlAttribute> htmlAttributes = db.getHtmlAttributes(suggestion.getArticleId());
 
-    String anonymizedHtml = article.getAnonymizedHtml();
-    String anonymizedHtmlWithReplacement = anonymizedHtml.replace(
-      suggestion.getErrorContext().replaceAll("<err>(.+?)</err>", "$1"),
-      suggestion.getErrorContext().replaceAll("<err>.+?</err>", suggestion.getReplacementSuggestion())
-    );
-    HtmlTools.HtmlAnonymizer anonymizer = createFromAnonymized(anonymizedHtmlWithReplacement, htmlNodes, htmlAttributes);
     try {
-      anonymizer.deanonymize();
-    } catch (ParserConfigurationException | SAXException | IOException e) {
-      throw new RuntimeException("Something went wrong when de-anonymizing the article " + article.getTitle() + " : " + e.getMessage());
+      return Arrays.asList(
+        article.getWikitext(),
+        HtmlTools.getTextWithAppliedSuggestion(article.getTitle(), article.getWikitext(), suggestion.getErrorContext(), suggestion.getReplacementSuggestion())
+      );
+    } catch (HtmlTools.SuggestionNotApplicableException e) {
+      throw new RuntimeException(e.getMessage());
     }
-
-    ParsoidWikipediaTextParser parser = new ParsoidWikipediaTextParser();
-    String suggestedWikiText = parser.convertHtmlToWikitext(anonymizer.getOriginalHtml());
-
-    return Arrays.asList(article.getWikitext(), suggestedWikiText);
   }
 
   private void handleRuleExamplesRequest(HttpExchange httpExchange, Map<String, String> params) throws Exception {

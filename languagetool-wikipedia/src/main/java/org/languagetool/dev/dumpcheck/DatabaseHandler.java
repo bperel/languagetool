@@ -25,8 +25,6 @@ import org.languagetool.rules.RuleMatch;
 import org.languagetool.rules.patterns.AbstractPatternRule;
 import org.languagetool.tools.ContextTools;
 import org.languagetool.tools.HtmlTools;
-import org.languagetool.tools.HtmlTools.HtmlAnonymizer.HtmlAttribute;
-import org.languagetool.tools.HtmlTools.HtmlAnonymizer.HtmlNode;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -82,8 +80,6 @@ abstract class DatabaseHandler extends ResultHandler {
 
     private final PreparedStatement insertCorpusArticleSt;
     private final PreparedStatement insertCorpusMatchSt;
-    private final PreparedStatement insertHtmlNodeSt;
-    private final PreparedStatement insertHtmlAttributeSt;
 
     private Set<String> processedAnonymizedArticles = new HashSet<>();
 
@@ -108,12 +104,6 @@ abstract class DatabaseHandler extends ResultHandler {
         insertCorpusMatchSt = conn.prepareStatement("" +
           " INSERT INTO corpus_match (article_id, version, language_code, ruleid, rule_category, rule_subid, rule_description, message, error_context, small_error_context, corpus_date, check_date, source_type, replacement_suggestion, is_visible)" +
           " VALUES (?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)");
-        insertHtmlNodeSt = conn.prepareStatement("" +
-          " INSERT INTO corpus_article_html_node (article_id, parent_id, child_index, tag_name)" +
-          " VALUES (?, ?, ?, ?)", new String[] {"id"});
-        insertHtmlAttributeSt = conn.prepareStatement("" +
-          " INSERT INTO corpus_article_html_attribute (article_id, parent_id, child_index, attribute_name, attribute_value)" +
-          " VALUES (?, ?, ?, ?, ?)");
       } catch (SQLException e) {
         throw new RuntimeException(e);
       }
@@ -136,18 +126,30 @@ abstract class DatabaseHandler extends ResultHandler {
             continue;
           }
 
-          String smallContext = smallContextTools.getContext(match.getFromPos(), match.getToPos(), sentence.getText());
+          String suggestion = match.getSuggestedReplacements().get(0);
+          List<String> urlParts = Arrays.asList(sentence.getUrl().split("/"));
+          String urlWithoutRevision = StringUtils.join(urlParts.subList(0, urlParts.size()-1), "/");
+          HtmlTools.HtmlAnonymizer articleAnonymizer = WikipediaSentenceSource.anonymizedArticles.get(urlWithoutRevision);
 
-          addSentenceToBatch(articleId, sentence.getSource(), language, nowDate, match, context, smallContext);
-          if (++batchCount >= batchSize){
-            executeBatch();
-            batchCount = 0;
+          try {
+            HtmlTools.getTextWithAppliedSuggestion(articleAnonymizer.getTitle(), articleAnonymizer.getWikitext(), context, suggestion);
+
+            String smallContext = smallContextTools.getContext(match.getFromPos(), match.getToPos(), sentence.getText());
+
+            addSentenceToBatch(articleId, sentence.getSource(), language, nowDate, match, context, smallContext);
+            if (++batchCount >= batchSize) {
+              executeBatch();
+              batchCount = 0;
+            }
+
+            checkMaxErrors(++errorCount);
+            if (errorCount % 100 == 0) {
+              System.out.println("Storing error #" + errorCount + " for text:");
+              System.out.println("  " + sentence.getText());
+            }
           }
-
-          checkMaxErrors(++errorCount);
-          if (errorCount % 100 == 0) {
-            System.out.println("Storing error #" + errorCount + " for text:");
-            System.out.println("  " + sentence.getText());
+          catch(HtmlTools.SuggestionNotApplicableException e) {
+            System.out.println("Can't apply suggestion : " + e.getMessage());
           }
         }
         checkMaxSentences(++sentenceCount);
@@ -171,7 +173,7 @@ abstract class DatabaseHandler extends ResultHandler {
         insertCorpusArticleSt.setString(4, anonymizer.getAnonymizedHtml());
 
         if (insertCorpusArticleSt.executeUpdate() == 0) {
-          throw new SQLException("Creating user failed, no rows affected.");
+          throw new SQLException("Creating article failed, no rows affected.");
         }
 
         ResultSet generatedKeys = insertCorpusArticleSt.getGeneratedKeys();
@@ -179,32 +181,9 @@ abstract class DatabaseHandler extends ResultHandler {
           anonymizer.setArticleId(generatedKeys.getLong(1));
         }
         else {
-          throw new SQLException("Creating user failed, no ID obtained.");
+          throw new SQLException("Creating article failed, no ID obtained.");
         }
 
-        for (HtmlNode node : anonymizer.getHtmlNodes()) {
-          insertHtmlNodeSt.setLong(1, anonymizer.getArticleId());
-          if (node.getParentId() == null) {
-            insertHtmlNodeSt.setNull(2, Types.INTEGER);
-          } else {
-            insertHtmlNodeSt.setInt(2, node.getParentId());
-          }
-          insertHtmlNodeSt.setInt(3, node.getChildIndex());
-          insertHtmlNodeSt.setString(4, node.getTagName());
-          insertHtmlNodeSt.addBatch();
-        }
-        for (HtmlAttribute attribute : anonymizer.getHtmlAttributes()) {
-          insertHtmlAttributeSt.setLong(1, anonymizer.getArticleId());
-          if (attribute.getParentId() == null) {
-            insertHtmlAttributeSt.setNull(2, Types.INTEGER);
-          } else {
-            insertHtmlAttributeSt.setInt(2, attribute.getParentId());
-          }
-          insertHtmlAttributeSt.setInt(3, attribute.getChildIndex());
-          insertHtmlAttributeSt.setString(4, attribute.getAttributeName());
-          insertHtmlAttributeSt.setString(5, attribute.getAttributeValue());
-          insertHtmlAttributeSt.addBatch();
-        }
         processedAnonymizedArticles.add(urlWithoutRevision);
       }
       return anonymizer.getArticleId();
@@ -239,8 +218,6 @@ abstract class DatabaseHandler extends ResultHandler {
       conn.setAutoCommit(false);
       try {
         insertCorpusMatchSt.executeBatch();
-        insertHtmlNodeSt.executeBatch();
-        insertHtmlAttributeSt.executeBatch();
         if (autoCommit) {
           conn.commit();
         }
@@ -251,7 +228,7 @@ abstract class DatabaseHandler extends ResultHandler {
 
     @Override
     public void close() throws Exception {
-      for (PreparedStatement preparedStatement : Arrays.asList(insertCorpusMatchSt, insertHtmlNodeSt, insertHtmlAttributeSt)) {
+      for (PreparedStatement preparedStatement : Arrays.asList(insertCorpusArticleSt, insertCorpusMatchSt)) {
         if (preparedStatement != null) {
           if (batchCount > 0) {
             executeBatch();
