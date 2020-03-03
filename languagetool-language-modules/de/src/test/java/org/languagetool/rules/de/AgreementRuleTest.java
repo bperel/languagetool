@@ -60,6 +60,9 @@ public class AgreementRuleTest {
     assertBad("Wir gehen durchs Fitness Studio", "durchs Fitnessstudio", "durchs Fitness-Studio");
     //assertBad("Die Bad Taste Party von Susi", "Die Bad-Taste-Party");   // not supported yet
     //assertBad("Die Update Liste.", "Die Updateliste");  // not accepted by speller
+    List<RuleMatch> matches = lt.check("Er folgt damit dem Tipp des Autoren Michael Müller.");
+    assertThat(matches.size(), is(1));
+    assertFalse(matches.get(0).getMessage().contains("zusammengesetztes Nomen"));
   }
   
   @Test
@@ -199,6 +202,7 @@ public class AgreementRuleTest {
     assertGood("Jede*r Mitarbeiter*in ist davon betroffen.");
     assertGood("Alle Professor*innen");
     assertGood("Gleichzeitig wünscht sich Ihr frostresistenter Mitbewohner einige Grad weniger im eigenen Zimmer?");
+    assertGood("Ein Trainer, der zum einen Fußballspiele sehr gut lesen und analysieren kann");
 
     // relative clauses:
     assertGood("Das Recht, das Frauen eingeräumt wird.");

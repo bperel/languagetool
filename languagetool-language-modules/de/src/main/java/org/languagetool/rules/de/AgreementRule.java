@@ -557,6 +557,11 @@ public class AgreementRule extends Rule {
       token("die"),
       tokenRegex("Deutsch|Englisch|Spanisch|Französisch|Russisch|Polnisch|Holländisch|Niederländisch|Portugiesisch"),
       new PatternTokenBuilder().csToken("sprechen").matchInflectedForms().build()
+    ),
+    Arrays.asList( // "Ein Trainer, der zum einen Fußballspiele sehr gut lesen und analysieren kann"
+      token("zum"),
+      token("einen"),
+      posRegex("SUB:.*")
     )
   );
 
@@ -914,6 +919,9 @@ public class AgreementRule extends Rule {
   private RuleMatch getRuleMatch(AnalyzedTokenReadings token1, AnalyzedSentence sentence, AnalyzedTokenReadings nextToken, String testPhrase, String hyphenTestPhrase) {
     try {
       initLt();
+      if (nextToken.getReadings().stream().allMatch(k -> k.getPOSTag() != null && k.getPOSTag().startsWith("EIG:"))) {
+        return null;
+      }
       List<String> replacements = new ArrayList<>();
       if (lt.check(testPhrase).size() == 0 && nextToken.isTagged()) {
         replacements.add(testPhrase);
