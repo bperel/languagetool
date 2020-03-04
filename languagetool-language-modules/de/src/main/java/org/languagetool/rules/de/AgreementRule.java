@@ -89,6 +89,11 @@ public class AgreementRule extends Rule {
   private static final AnalyzedToken[] ZUR_REPLACEMENT = {new AnalyzedToken("der", "ART:DEF:DAT:SIN:FEM", "der")};
 
   private static final List<List<PatternToken>> ANTI_PATTERNS = Arrays.asList(
+    Arrays.asList(  // "Besonders reizen mich Fahrräder.", "weil mich psychische Erkrankungen aus der Bahn werfen"
+      tokenRegex("dich|mich"),
+      new PatternTokenBuilder().posRegex("ADJ:.*").min(0).build(),
+      posRegex("SUB:.*")
+    ),
     Arrays.asList(  // "jenes Weges, den die Tausenden Juden 1945 ..."
       token("die"),
       token("Tausenden"),
@@ -536,6 +541,10 @@ public class AgreementRule extends Rule {
     Arrays.asList(
       csToken("Premier"),
       csToken("League")
+    ),
+    Arrays.asList(
+      csToken("Mark"),
+      posRegex("EIG:.*")
     ),
     Arrays.asList(
       csToken("Sales"),

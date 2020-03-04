@@ -130,6 +130,15 @@ public class AgreementRuleTest {
     assertGood("Sie legen ein Teilstück jenes Weges zurück, den die Tausenden Juden 1945 auf sich nehmen mussten.");
     assertGood("Aber das ignorierte Herr Grey bewusst.");
     assertGood("Aber das ignorierte Herr Müller bewusst.");
+    assertGood("Ich werde mich zurücknehmen und mich frischen Ideen zuwenden.");
+    assertGood("Das, plus ein eigener Firmenwagen.");
+    assertGood("Dieses leise Summen stört nicht.");
+    assertGood("Die Tiroler Küche");
+    assertGood("Was ist denn das für ein ungewöhnlicher Name?");
+    assertGood("Besonders reizen mich Fahrräder.");
+    assertGood("Und nur, weil mich psychische Erkrankungen aus der Bahn werfen");
+    assertGood("Das kostet dich Zinsen.");
+    assertGood("Sie hatten keine Chance gegen das kleinere Preußen.");
 
     assertGood("Wir machen das Januar.");
     assertGood("Wir teilen das Morgen mit.");
@@ -269,6 +278,7 @@ public class AgreementRuleTest {
     assertGood("Das hängt davon ab, ob die Deutsch sprechen");
     assertGood("Die meisten Coaches wissen nichts.");
     assertGood("Die Präsent AG.");
+    assertGood("In New York war er der Titelheld in Richard III. und spielte den Mark Anton in Julius Cäsar.");
 
     // incorrect sentences:
     assertBad("Ein Buch mit einem ganz ähnlichem Titel.");

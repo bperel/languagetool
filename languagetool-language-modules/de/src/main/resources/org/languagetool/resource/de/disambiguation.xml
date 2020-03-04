@@ -492,10 +492,17 @@ Copyright © 2013 Markus Brenneis, Daniel Naber, Jan Schreiber
     <!-- ============================================================================================================== -->
     <rulegroup id="UNIFY_PRP_DET_SUB" name="NP with preposition unify">
         <rule>
+            <antipattern>
+                <!-- "Was ist denn das für ein ungewöhnlicher Name?" -->
+                <token regexp="yes">der|die|das</token>
+                <token>für</token>
+                <token regexp="yes">eine?</token>
+            </antipattern>
             <pattern>
                 <token postag_regexp="yes" postag="PRP.+">
                     <exception postag="PRP.+" postag_regexp="yes" negate_pos="yes"/>
                     <exception scope="previous">was</exception>
+                    <exception>plus</exception>
                 </token>
                 <marker>
                     <and>
@@ -628,6 +635,12 @@ Copyright © 2013 Markus Brenneis, Daniel Naber, Jan Schreiber
         <!-- Er sah <marker>den gut erhaltenen Koffer</marker>  -->
     </rule>
     <rule name="NP unify 3b" id="UNIFY_ADJ_SUB">
+        <antipattern>
+            <!-- sonst falsche Tags für z.B. "Sie hatten keine Chance gegen das kleinere Preußen." -->
+            <token postag="ART:.*" postag_regexp="yes"/>
+            <token postag="ADJ:.*" postag_regexp="yes"/>
+            <token postag="SUB:.*" postag_regexp="yes"/>
+        </antipattern>
         <pattern>
             <unify>
                 <feature id="number"/><feature id="case"/><feature id="gender"/>
