@@ -82,8 +82,10 @@ class ApiV2 {
         handleWikipediaSuggestionRequest(httpExchange);
     } else if (path.equals("wikipedia/suggestion")) {
         handleWikipediaSuggestionDetailsRequest(httpExchange, parameters);
-    } else if (path.equals("wikipedia/fix")) {
-        handleWikipediaFixRequest(httpExchange, parameters);
+    } else if (path.equals("wikipedia/suggestion/accept")) {
+        handleWikipediaAcceptRequest(httpExchange, parameters);
+    } else if (path.equals("wikipedia/suggestion/refuse")) {
+        handleWikipediaRefuseRequest(httpExchange, parameters);
     } else if (path.equals("rule/examples")) {
       // private (i.e. undocumented) API for our own use only
       handleRuleExamplesRequest(httpExchange, parameters);
@@ -201,12 +203,25 @@ class ApiV2 {
     writeSuggestionDetailsResponse("suggestion", originalAndSuggestedWikitext, httpExchange);
   }
 
-  private void handleWikipediaFixRequest(HttpExchange httpExchange, Map<String, String> parameters) throws Exception {
-    ensurePostMethod(httpExchange, "/wikipedia/fix");
+  private void handleWikipediaAcceptRequest(HttpExchange httpExchange, Map<String, String> parameters) throws Exception {
+    ensurePostMethod(httpExchange, "/wikipedia/accept");
     int suggestionId = Integer.parseInt(parameters.get("suggestion_id"));
-    List<String> originalAndSuggestedWikitext = getOriginalAndSuggestedWikitext(suggestionId);
 
-    writeResponse("wikiText", originalAndSuggestedWikitext.get(1), httpExchange);
+    // TODO Actually call the Wikipedia API
+
+    DatabaseAccess db = DatabaseAccess.getInstance();
+    boolean accepted = db.resolveCorpusMatch(suggestionId, true);
+
+    writeResponse("accepted", accepted, httpExchange);
+  }
+
+  private void handleWikipediaRefuseRequest(HttpExchange httpExchange, Map<String, String> parameters) throws Exception {
+    ensurePostMethod(httpExchange, "/wikipedia/refuse");
+    int suggestionId = Integer.parseInt(parameters.get("suggestion_id"));
+    DatabaseAccess db = DatabaseAccess.getInstance();
+    boolean refused = db.resolveCorpusMatch(suggestionId, false);
+
+    writeResponse("refused", refused, httpExchange);
   }
 
   private List<String> getOriginalAndSuggestedWikitext(int suggestionId) {

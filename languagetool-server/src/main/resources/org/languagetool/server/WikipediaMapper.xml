@@ -4,10 +4,13 @@
     <select id="selectWikipediaArticle" resultType="org.languagetool.server.CorpusArticleEntry">
         SELECT * FROM corpus_article WHERE id=#{id}
     </select>
-    <select id="selectWikipediaSuggestions" resultType="org.languagetool.server.CorpusMatchEntry">
-        SELECT * FROM corpus_match m ORDER BY length((select wikitext from corpus_article a where m.article_id = a.id)) LIMIT 10
+    <select id="selectNonAppliedWikipediaSuggestions" resultType="org.languagetool.server.CorpusMatchEntry">
+        SELECT * FROM corpus_match m WHERE applied IS NULL ORDER BY length((select wikitext from corpus_article a where m.article_id = a.id)) LIMIT 10
     </select>
     <select id="selectWikipediaSuggestion" resultType="org.languagetool.server.CorpusMatchEntry">
         SELECT * FROM corpus_match WHERE id=#{id}
+    </select>
+    <select id="updateWikipediaSuggestion">
+        UPDATE corpus_match SET applied=#{applied} WHERE id=#{id}
     </select>
 </mapper>

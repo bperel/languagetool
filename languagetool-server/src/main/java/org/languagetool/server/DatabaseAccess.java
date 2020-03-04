@@ -155,7 +155,7 @@ class DatabaseAccess {
       return new ArrayList<>();
     }
     try (SqlSession session = sqlSessionFactory.openSession(true)) {
-      return session.selectList("org.languagetool.server.WikipediaMapper.selectWikipediaSuggestions", new HashMap<>(), new RowBounds(0, limit));
+      return session.selectList("org.languagetool.server.WikipediaMapper.selectNonAppliedWikipediaSuggestions", new HashMap<>(), new RowBounds(0, limit));
     }
   }
 
@@ -178,6 +178,19 @@ class DatabaseAccess {
       Map<Object, Object> map = new HashMap<>();
       map.put("id", suggestionId);
       return session.selectOne("org.languagetool.server.WikipediaMapper.selectWikipediaSuggestion", map);
+    }
+  }
+
+  boolean resolveCorpusMatch(int suggestionId, boolean shouldBecomeApplied) {
+    if (sqlSessionFactory == null) {
+      return false;
+    }
+    try (SqlSession session = sqlSessionFactory.openSession(true)) {
+      Map<Object, Object> map = new HashMap<>();
+      map.put("id", suggestionId);
+      map.put("applied", shouldBecomeApplied);
+      int affectedRows = session.update("org.languagetool.server.WikipediaMapper.updateWikipediaSuggestion", map);
+      return affectedRows >= 1;
     }
   }
   
