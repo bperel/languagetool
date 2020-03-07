@@ -4321,8 +4321,6 @@ lid-veehouder
 monosaccharide
 buskruitje
 intersekse
-Amerikaanser
-Amerikaansere
 eiergooiende
 enhance
 kenwijzen
@@ -4339,6 +4337,9 @@ smuik
 smuikend
 smuikt
 voeter
+Amerikaansen
+Amerikaanser
+Amerikaansere
 aansluitpijp
 aansluitpijpen
 aansluitpijpjes
@@ -4813,6 +4814,7 @@ elfjesrijken
 emissieuitstoot
 enzymfabriekje
 equipagelijst
+etaleuse
 etherdichtheid
 ex-zelfstandige
 ezelsjongen
@@ -5480,6 +5482,8 @@ oorlogsopname
 oorplug
 oorplugje
 oorplugjes
+opbergton
+opbergtonnen
 oplegstukjes
 oplosmiddellijmen
 opstartmuziek

@@ -158,6 +158,7 @@ brandstofzakken	brandstofzakken	ZNW:MRV:DE_
 brandstroken	brandstrook	ZNW:MRV:DE
 breeduit	breeduit	UNSPECIFIED
 breukenstroken	breukenstrook	ZNW:MRV:DE
+breves	breve	ZNW:MRV:DE_
 brillenhoesje	brillenhoesje	ZNW:EKV:VRK:HET
 broeikasadepten	broeikasadepten	ZNW:MRV:DE_
 broodsoldaatje	broodsoldaatje	ZNW:EKV:VRK:HET
@@ -7596,6 +7597,7 @@ dagmoeders	dagmoeder	ZNW:BEZ
 doopvaders	doopvader	ZNW:BEZ
 aartsmoeders	aartsmoeder	ZNW:BEZ
 ghazel	ghazel	ZNW:MRV:DE_
+Amerikaanss	Amerikaans	BNW:STL:VRB
 factoren	factoor	ZNW:MRV:DE_
 cadeau-ideetjes	cadeau-ideetjes	ZNW:MRV:VRK:DE_
 eiermatjes	eiermatjes	ZNW:MRV:VRK:DE_
