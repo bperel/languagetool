@@ -106,11 +106,9 @@ public class HtmlTools {
     return lsSerializer.writeToString(doc);
   }
 
-  public static String getTextWithAppliedSuggestion(String articleTitle, String articleWikitext, String suggestionErrorContext, String suggestion) throws SuggestionNotApplicableException {
-    String LARGEST_ERROR_CONTEXT_REGEX = "^.*?([^>]+<err>(?:(?!</err>).)+</err>[^<]*)<?.*$";
-
-    String largestErrorContextWithoutHtmlTags = suggestionErrorContext.replaceAll(LARGEST_ERROR_CONTEXT_REGEX, "$1");
-    String stringToReplace = largestErrorContextWithoutHtmlTags.replaceAll("<err>(.+?)</err>", "$1");
+  public static String getErrorContextWithAppliedSuggestion(String articleTitle, String articleWikitext, String suggestionErrorContext, String suggestion) throws SuggestionNotApplicableException {
+    String largestErrorContextWithoutHtmlTags = getLargestErrorContext(suggestionErrorContext);
+    String stringToReplace = getStringToReplace(largestErrorContextWithoutHtmlTags);
 
     boolean hasMatch = articleWikitext.contains(stringToReplace);
     boolean hasMultipleMatches = hasMatch && articleWikitext.indexOf(stringToReplace) != articleWikitext.lastIndexOf(stringToReplace);
@@ -121,15 +119,20 @@ public class HtmlTools {
       }
       else {
         System.out.println(String.format("Found a match for '%s' in the wikitext of article '%s'", stringToReplace, articleTitle));
-        String stringToReplaceWith = largestErrorContextWithoutHtmlTags.replaceAll("<err>.+?</err>", suggestion);
-        return articleWikitext.replace(
-          stringToReplace,
-          stringToReplaceWith
-        );
+        return largestErrorContextWithoutHtmlTags.replaceAll("<err>.+?</err>", suggestion);
       }
     }
     else {
       throw new SuggestionNotApplicableException(String.format("Can't find a match for '%s' in the wikitext of article '%s'", stringToReplace, articleTitle));
     }
+  }
+
+  public static String getLargestErrorContext(String errorContext) {
+    String LARGEST_ERROR_CONTEXT_REGEX = "^.*?([^>]+<err>(?:(?!</err>).)+</err>[^<]*)<?.*$";
+    return errorContext.replaceAll(LARGEST_ERROR_CONTEXT_REGEX, "$1");
+  }
+
+  public static String getStringToReplace(String largestErrorContextWithoutHtmlTags) {
+    return largestErrorContextWithoutHtmlTags.replaceAll("<err>(.+?)</err>", "$1");
   }
 }

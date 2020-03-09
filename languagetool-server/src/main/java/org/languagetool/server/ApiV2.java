@@ -235,8 +235,8 @@ class ApiV2 {
 
     try {
       return Arrays.asList(
-        article.getWikitext(),
-        HtmlTools.getTextWithAppliedSuggestion(article.getTitle(), article.getWikitext(), suggestion.getErrorContext(), suggestion.getReplacementSuggestion())
+        HtmlTools.getStringToReplace(HtmlTools.getLargestErrorContext(suggestion.getErrorContext())),
+        HtmlTools.getErrorContextWithAppliedSuggestion(article.getTitle(), article.getWikitext(), suggestion.getErrorContext(), suggestion.getReplacementSuggestion())
       );
     } catch (HtmlTools.SuggestionNotApplicableException e) {
       throw new RuntimeException(e.getMessage());
@@ -325,16 +325,6 @@ class ApiV2 {
     try (JsonGenerator g = factory.createGenerator(sw)) {
       g.writeStartObject();
       g.writeBooleanField(fieldName, added);
-      g.writeEndObject();
-    }
-    sendJson(httpExchange, sw);
-  }
-
-  private void writeResponse(String fieldName, String value, HttpExchange httpExchange) throws IOException {
-    StringWriter sw = new StringWriter();
-    try (JsonGenerator g = factory.createGenerator(sw)) {
-      g.writeStartObject();
-      g.writeStringField(fieldName, value);
       g.writeEndObject();
     }
     sendJson(httpExchange, sw);
