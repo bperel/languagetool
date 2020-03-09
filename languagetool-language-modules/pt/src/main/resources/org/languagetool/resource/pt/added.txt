@@ -401,6 +401,14 @@ chanceleres	chanceler	NCCP000
 charlatães	charlatão	AQ0MP0
 charlatães	charlatão	NCMP000
 Chasqueira	Chasqueira	NPMS000
+chavala	chavalo	AQ0FS0
+chavala	chavalo	NCFS000
+chavalas	chavalo	AQ0FP0
+chavalas	chavalo	NCFP000
+chavalo	chavalo	AQ0MS0
+chavalo	chavalo	NCMS000
+chavalos	chavalo	AQ0MP0
+chavalos	chavalo	NCMP000
 chefe	chefe	NCCS000
 chefes	chefe	NCCP000
 Cher	Cher	NPFS000
@@ -564,6 +572,7 @@ copilotos	copiloto	NCMP000
 coprodução	coprodução	NCFS000
 coproduções	coprodução	NCFP000
 coquetel	coquetel	NCMS000
+coronavírus	coronavírus	NCMN000
 corpulento	corpulento	AQ0MS0
 corpulentos	corpulento	AQ0MP0
 corpuscular	corpuscular	AQ0CS0
@@ -2663,6 +2672,8 @@ Chrome	Chrome	NPMS000
 # Software / OSes / Computers
 AI	AI	NCFS000
 AmigaOS	AmigaOS	NPMS000
+bot	bot	NCMS000
+bots	bot	NCMP000
 Celeron	Celeron	NPMS000
 Debian	Debian	NPMS000
 gigabyte	gigabyte	NCMS000
@@ -2736,6 +2747,7 @@ Mikhail	Mikhail	NPMS000
 Multicare	Multicare	NPFS000
 Nara	Nara	NPFS000
 Nélio	Nélio	NPMS000
+Prosegur	Prosegur	NPFS000
 Pushkin	Pushkin	NPMS000
 Steckling	Steckling	NPMS000
 Vítor	Vítor	NPMS000

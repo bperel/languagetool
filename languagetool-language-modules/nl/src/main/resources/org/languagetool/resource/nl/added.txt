@@ -26,6 +26,7 @@ beiderlei	beiderlei	ZNW:EKV:DE_
 bergaf	bergaf	ZNW:MRV:DE_
 bergop	bergop	ZNW:MRV:DE_
 binnenin	binnenin	ZNW:MRV:DE_
+blog	blog	ZNW:EKV
 bovenaf	bovenaf	ZNW:MRV:DE_
 bovenin	bovenin	ZNW:MRV:DE_
 bovenlangs	bovenlangs	ZNW:EKV:DE_
@@ -33,6 +34,7 @@ bovenom	bovenom	ZNW:MRV:DE_
 bovenuit	bovenuit	ZNW:EKV:DE_
 breeduit	breeduit	ZNW:EKV:DE_
 buitenom	buitenom	ZNW:MRV:DE_
+cookie	cookie	ZNW:EKV
 cyberbewustzijn	cyberbewustzijn	ZNW:MRV:DE_
 côte	côte	ZNW:EKV:DE_
 daaraf	daaraf	ZNW:MRV:DE_
@@ -92,6 +94,7 @@ ertussenuit	ertussenuit	ZNW:EKV:DE_
 evenzo	evenzo	ZNW:MRV:DE_
 fabriekswege	fabriekswege	ZNW:EKV:DE_
 fietsleunhekken	fietsleunhekken	ZNW:MRV:DE_
+gecoverden	coveren	WKW:VTD:ZNW:MRV:DE_
 geeneens	geeneens	ZNW:EKV
 gezelschap	gezelschap	ZNW:EKV:HET
 gijzelf	gijzelf	ZNW:EKV:DE_
@@ -103,7 +106,6 @@ hierbeneden	hierbeneden	ZNW:EKV:DE_
 hierbinnen	hierbinnen	ZNW:EKV
 hierlangs	hierlangs	ZNW:EKV:DE_
 hiernaartoe	hiernaartoe	ZNW:MRV:DE_
-hierom	hierom	ZNW:MRV:DE_
 hieromheen	hieromheen	ZNW:EKV:DE_
 hieromtrent	hieromtrent	ZNW:MRV:DE_
 hiertegen	hiertegen	ZNW:EKV:HET
@@ -141,6 +143,7 @@ linksaf	linksaf	ZNW:MRV:DE_
 linksboven	linksboven	ZNW:MRV:DE_
 linksom	linksom	ZNW:MRV:DE_
 linksonder	linksonder	ZNW:MRV:DE_
+liveblog	liveblog	ZNW:EKV
 marktkraamwagen	marktkraamwagen	ZNW:MRV:DE_
 megabelangrijke	megabelangrijke	ZNW:EKV:DE_
 mennonieten	mennonieten	ZNW:MRV:DE_
@@ -230,7 +233,6 @@ wijzelf	wijzelf	ZNW:EKV:DE_
 zaagsnee	zaagsnee	ZNW:EKV:DE_
 zeshonderdzesde	zeshonderdzesde	ZNW:EKV:DE_
 zienderogen	zienderogen	ZNW:MRV:DE_
-zoal	zoal	ZNW:EKV:DE_
 zoekmachinebots	zoekmachinebots	ZNW:EKV:DE_
 zomin	zomin	ZNW:EKV:DE_
 zonet	zonet	ZNW:EKV:HET
@@ -7835,6 +7837,7 @@ scheerplankje	scheerplank	ZNW:EKV:VRK:HET
 peeshotelletjes	peeshotel	ZNW:MRV:VRK:DE_
 veelkinderen	veelkind	ZNW:MRV:DE_
 problemenkindje	problemenkind	ZNW:EKV:VRK:HET
+kromdenkers	kromdenker	ZNW:MRV:DE_
 pastoriezaaltje	pastoriezaal	ZNW:EKV:VRK:HET
 koelkastlampje	koelkastlamp	ZNW:EKV:VRK:HET
 slavariëteiten	slavariëteit	ZNW:MRV:DE_
@@ -15413,3 +15416,9 @@ opbergtonnen	opbergton	ZNW:MRV:DE_
 aanbevolen	aanbevelen	WKW:VTD:VRB
 Vos	Vos	ENM:PER:LST:DE_
 In	In	ENM:PER:LST:VAN
+zo	zo	ZNW:EKV:DE_
+zoal	zoal	BYW
+voldoende	voldoende	BNW:STL:ONV
+hierom	hierom	BYW
+binnen	binnen	BYW
+hierover	hierover	BYW
