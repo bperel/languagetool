@@ -71,6 +71,16 @@ public class EnglishConfusionProbabilityRule extends ConfusionProbabilityRule {
       "have I known",// vs. "know"
       "had I known",
       "had you known",
+      "haven't known",
+      "hasn't known",
+      "hadn't known",
+      "haven’t known",
+      "hasn’t known",
+      "hadn’t known",
+      "wasn't known",
+      "wasn’t known",
+      "weren't known",
+      "weren’t known",
       "his fluffy butt",
       "it's now better", // vs. no
       "it’s now better", // vs. no
@@ -85,7 +95,18 @@ public class EnglishConfusionProbabilityRule extends ConfusionProbabilityRule {
       "he most likely",
       "good cause",
       "big butt",
-      "news debate"
+      "news debate",
+      "verify you own",
+      "ensure you own",
+      "happy us!",
+      "your pick up",
+      "no but you",
+      "no but we",
+      "no but he",
+      "no but I",
+      "no but they",
+      "no but she",
+      "no but it"
     );
     
   public EnglishConfusionProbabilityRule(ResourceBundle messages, LanguageModel languageModel, Language language) {

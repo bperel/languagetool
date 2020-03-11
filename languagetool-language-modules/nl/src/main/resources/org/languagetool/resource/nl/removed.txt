@@ -15,6 +15,7 @@ aardappelrapers	aardappelrapers	UNSPECIFIED
 aardbeienjurkje	aardbeienjurkje	ZNW:EKV:VRK:HET
 aardpeerblokjes	aardpeerblokjes	ZNW:MRV:VRK:DE_
 aardschroef	aardschroef	ZNW:EKV
+achteraf	achteraf	BNW:STL:VRB
 achterheen	achterheen	UNSPECIFIED
 actiedoeleinden	actiedoeleinden	ZNW:MRV:DE_
 ad-hocopdrachten	ad-hocopdrachten	UNSPECIFIED
@@ -321,6 +322,7 @@ ertussenuit	ertussenuit	UNSPECIFIED
 etalage-aspecten	etalage-aspecten	ZNW:MRV:DE_
 etensvoorkeuren	etensvoorkeuren	ZNW:MRV:DE_
 etherdichtheden	etherdichtheden	ZNW:MRV:DE_
+evenwel	evenwel	ZNW:EKV
 evenzo	evenzo	UNSPECIFIED
 ex-abonnees	ex-abonnees	ZNW:MRV:DE_
 ex-hongerstakers	ex-hongerstakers	ZNW:MRV:DE_
@@ -2144,6 +2146,7 @@ woondoeleinden	woondoeleinden	ZNW:MRV:DE_
 dumpingklachten	dumpingklachten	ZNW:MRV:DE_
 kagoes	kagoes	ZNW:MRV:DE_
 onzen	wij	ZNW:MRV:DE_
+rvs	rvs	ZNW:EKV:DE_
 instopstroken	instopstrook	ZNW:MRV:DE
 dude	dude	UNSPECIFIED
 procesdata	procesdata	ZNW:MRV:DE_

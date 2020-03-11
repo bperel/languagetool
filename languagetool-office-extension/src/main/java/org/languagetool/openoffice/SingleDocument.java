@@ -418,24 +418,24 @@ class SingleDocument {
       return nParas;
     }
     
+    // number of paragraphs has changed? --> Update the internal information
     int numOldPara = allParas.size();
     int ret = changesInNumberOfParagraph();
+    
     if(ret == -1 || (proofInfo == PROOFINFO_MARK_PARAGRAPH && ret < -1)) {
       if (debugMode > 0) {
         MessageHandler.printToLogFile("changes In Number of Paragraph: ret: " + ret + logLineBreak);
       }
       return -1;
     }
-    if(!isReset) {
-      isReset = numOldPara != allParas.size();
-    }
     
-    if (proofInfo == PROOFINFO_UNKNOWN && ret < 0) {
+    if(ret >= 0) {
+      nParas = flatPara.getCurNumFlatParagraph();
+    }
+    if (proofInfo == PROOFINFO_UNKNOWN && (ret < 0 || nParas < 0)) {
       //  no automatic iteration - get ViewCursor position
       return getParaFromViewCursorOrDialog(chPara);
     }
-
-    nParas = flatPara.getCurNumFlatParagraph();
 
     if (nParas < divNum || nParas >= divNum + allParas.size()) {
       return -1; //  nParas < divNum: Proof footnote etc.  /  nParas >= allParas.size():  document was changed while checking
@@ -444,7 +444,8 @@ class SingleDocument {
     nParas -= divNum;
     String curFlatParaText = flatPara.getCurrentParaText();
 
-    if (proofInfo == PROOFINFO_UNKNOWN && (!curFlatParaText.equals(chPara) && curFlatParaText.equals(allParas.get(nParas)))) {
+    if (proofInfo == PROOFINFO_UNKNOWN 
+        && (curFlatParaText != null && !curFlatParaText.equals(chPara) && curFlatParaText.equals(allParas.get(nParas)))) {
       //  no automatic iteration - get ViewCursor position
       return getParaFromViewCursorOrDialog(chPara);
     }
@@ -452,6 +453,9 @@ class SingleDocument {
     //  test real flat paragraph rather then the one given by Proofreader - it could be changed meanwhile
     if(curFlatParaText != null) {
       chPara = curFlatParaText;
+    }
+    if(!isReset) {
+      isReset = numOldPara != allParas.size();
     }
 
     // find position from changed paragraph
