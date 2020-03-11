@@ -199,7 +199,12 @@
             <artifactId>mariadb-java-client</artifactId>
             <version>${mariadb.client.version}</version>
         </dependency>
-        
+        <dependency>
+            <groupId>com.github.scribejava</groupId>
+            <artifactId>scribejava-apis</artifactId>
+            <version>6.9.0</version>
+        </dependency>
+
     </dependencies>
 
 </project>

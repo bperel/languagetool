@@ -27,6 +27,7 @@ import org.jetbrains.annotations.NotNull;
 import org.languagetool.JLanguageTool;
 import org.languagetool.Language;
 import org.languagetool.Languages;
+import org.languagetool.dev.wikipedia.MediaWikiApi;
 import org.languagetool.markup.AnnotatedText;
 import org.languagetool.markup.AnnotatedTextBuilder;
 import org.languagetool.rules.CorrectExample;
@@ -39,6 +40,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.net.HttpURLConnection;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 
 import static org.languagetool.server.LanguageToolHttpHandler.API_DOC_URL;
 
@@ -185,6 +187,15 @@ class ApiV2 {
 
   private void handleWikipediaSuggestionRequest(HttpExchange httpExchange) throws IOException {
     ensureGetMethod(httpExchange, "/wikipedia/suggestions");
+
+    MediaWikiApi instance = new MediaWikiApi("fr");
+    try {
+      instance.login();
+      instance.edit();
+    } catch (InterruptedException|ExecutionException e) {
+      throw new RuntimeException("Failed to login : " + e.getMessage());
+    }
+
     DatabaseAccess db = DatabaseAccess.getInstance();
     List<CorpusMatchEntry> suggestions = db.getCorpusMatches(10);
 

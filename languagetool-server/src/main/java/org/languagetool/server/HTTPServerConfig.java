@@ -22,6 +22,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.languagetool.*;
+import org.languagetool.dev.wikipedia.MediaWikiApi;
 import org.languagetool.rules.spelling.morfologik.suggestions_ordering.SuggestionsOrdererConfig;
 
 import java.io.File;
@@ -116,7 +117,7 @@ public class HTTPServerConfig {
     "grammalecteServer", "grammalecteUser", "hiddenMatchesLanguages", "hiddenMatchesServer", "hiddenMatchesServerFailTimeout",
     "hiddenMatchesServerTimeout", "ipFingerprintFactor", "languageModel", "maxCheckThreads", "maxCheckTimeMillis",
     "maxCheckTimeWithApiKeyMillis", "maxErrorsPerWordRate", "maxPipelinePoolSize", "maxSpellingSuggestions", "maxTextHardLength",
-    "maxTextLength", "maxTextLengthWithApiKey", "maxWorkQueueSize", "neuralNetworkModel", "pipelineCaching",
+    "maxTextLength", "maxTextLengthWithApiKey", "maxWorkQueueSize", "mediaWikiApiKey", "mediaWikiApiSecret", "neuralNetworkModel", "parsoidUrl", "pipelineCaching",
     "pipelineExpireTimeInSeconds", "pipelinePrewarming", "prometheusMonitoring", "prometheusPort", "remoteRulesFile",
     "requestLimit", "requestLimitInBytes", "requestLimitPeriodInSeconds", "rulesFile", "secretTokenKey", "serverURL",
     "skipLoggingChecks", "skipLoggingRuleMatches", "timeoutRequestLimit", "trustXForwardForHeader", "warmUp", "word2vecModel",
@@ -309,6 +310,11 @@ public class HTTPServerConfig {
         globalConfig.setGrammalecteServer(getOptionalProperty(props, "grammalecteServer", null));
         globalConfig.setGrammalecteUser(getOptionalProperty(props, "grammalecteUser", null));
         globalConfig.setGrammalectePassword(getOptionalProperty(props, "grammalectePassword", null));
+
+        String mediaWikiApiKey = getProperty(props, "mediaWikiApiKey", file).trim();
+        String mediaWikiApiSecret = getProperty(props, "mediaWikiApiSecret", file).trim();
+        MediaWikiApi.setup(mediaWikiApiKey, mediaWikiApiSecret);
+
         String beolingusFile = getOptionalProperty(props, "beolingusFile", null);
         if (beolingusFile != null) {
           if (new File(beolingusFile).exists()) {
