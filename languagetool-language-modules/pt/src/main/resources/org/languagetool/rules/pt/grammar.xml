@@ -2393,6 +2393,15 @@ MARCOAGPINTO 2020-02-18 -->
             <exception scope='next'>,</exception></token>
           <token postag='V.[CIS].3S0' postag_regexp='yes'/>
       </antipattern>
+<!-- MARCOAGPINTO 2020-03-13 *START* -->
+<!-- "A probabilidade de prosseguir trilhas entre nós é conseguida na função." -->
+      <antipattern>
+			<token  postag_regexp="no" postag="SPS00"/>
+			<token  postag_regexp="yes" postag="PP1CP000|NCMP000"/>
+			<token  postag_regexp="no" postag="VMIP3S0"/>
+			<token  postag_regexp="no" postag="VMP00SF"/>			
+      </antipattern>
+<!-- MARCOAGPINTO 2020-03-13 *END* -->
       <pattern>
           <token>nós</token>
           <token min="0" max="3" postag='R.+' postag_regexp='yes'>
@@ -6784,6 +6793,19 @@ MARCOAGPINTO 2020-02-18 -->
       </pattern>
       <message>Substitua por <suggestion>embora seja</suggestion>.</message>
       <example correction="embora seja">Vamos vencer <marker>embora que seja</marker> difícil.</example>
+    </rule>
+
+    <rule id='EM_QUE_NAO_HA_PRONOME-INDEFINIDO' name="Sem PRONOME_INDEFINIDO">
+    <!--      Created by Marco A.G.Pinto, Portuguese rule 2020-03-12     -->
+      <pattern>
+          <token>em</token>
+          <token>que</token>
+		  <token>não</token>
+		  <token>há</token>
+		  <token postag_regexp='yes' postag='DI0C[SP]0|DI0M[SP]0|DI0F[SP]0'></token>
+      </pattern>
+      <message>Substitua por <suggestion>sem \5</suggestion>.</message>
+      <example correction="sem qualquer">Temos um período <marker>em que não há qualquer</marker> registo histórico.</example>
     </rule>
 
     <rule id='EM_VÊS_DE_DA_DAS_DO_DOS' name="Confusão: vês - vez">
