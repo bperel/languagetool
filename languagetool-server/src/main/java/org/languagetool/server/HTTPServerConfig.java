@@ -314,7 +314,7 @@ public class HTTPServerConfig {
 
         String mediaWikiApiKey = getProperty(props, "mediaWikiApiKey", file).trim();
         String mediaWikiApiSecret = getProperty(props, "mediaWikiApiSecret", file).trim();
-        MediaWikiApi.setup(mediaWikiApiKey, mediaWikiApiSecret);
+        MediaWikiApi.setup(mediaWikiApiKey, mediaWikiApiSecret, new String[]{"fr"});
 
         String beolingusFile = getOptionalProperty(props, "beolingusFile", null);
         if (beolingusFile != null) {

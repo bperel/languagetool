@@ -127,6 +127,13 @@ public class HtmlTools {
     }
   }
 
+  public static String getArticleWithAppliedSuggestion(String articleTitle, String articleWikitext, String suggestionErrorContext, String suggestion) throws SuggestionNotApplicableException {
+    return articleWikitext.replace(
+      getStringToReplace(getLargestErrorContext(suggestionErrorContext)),
+      getErrorContextWithAppliedSuggestion(articleTitle, articleWikitext, suggestionErrorContext, suggestion)
+    );
+  }
+
   public static String getLargestErrorContext(String errorContext) {
     String LARGEST_ERROR_CONTEXT_REGEX = "^.*?([^>]+<err>(?:(?!</err>).)+</err>[^<]*)<?.*$";
     return errorContext.replaceAll(LARGEST_ERROR_CONTEXT_REGEX, "$1");

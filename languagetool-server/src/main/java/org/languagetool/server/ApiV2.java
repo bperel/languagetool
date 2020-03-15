@@ -80,6 +80,12 @@ class ApiV2 {
       handleWordAddRequest(httpExchange, parameters, config);
     } else if (path.equals("words/delete")) {
       handleWordDeleteRequest(httpExchange, parameters, config);
+    } else if (path.equals("wikipedia/authorize")) {
+        handleWikipediaAuthorizeRequest(httpExchange);
+    } else if (path.equals("wikipedia/login")) {
+        handleWikipediaLoginRequest(httpExchange, parameters);
+    } else if (path.equals("wikipedia/user")) {
+        handleWikipediaUserRequest(httpExchange, parameters);
     } else if (path.equals("wikipedia/suggestions")) {
         handleWikipediaSuggestionRequest(httpExchange);
     } else if (path.equals("wikipedia/suggestion")) {
@@ -174,7 +180,7 @@ class ApiV2 {
     UserLimits limits = getUserLimits(parameters, config);
     DatabaseAccess db = DatabaseAccess.getInstance();
     boolean added = db.addWord(parameters.get("word"), limits.getPremiumUid());
-    writeResponse("added", added, httpExchange);
+    writeBooleanResponse("added", added, httpExchange);
   }
 
   private void handleWordDeleteRequest(HttpExchange httpExchange, Map<String, String> parameters, HTTPServerConfig config) throws Exception {
@@ -182,19 +188,62 @@ class ApiV2 {
     UserLimits limits = getUserLimits(parameters, config);
     DatabaseAccess db = DatabaseAccess.getInstance();
     boolean deleted = db.deleteWord(parameters.get("word"), limits.getPremiumUid());
-    writeResponse("deleted", deleted, httpExchange);
+    writeBooleanResponse("deleted", deleted, httpExchange);
+  }
+
+  private void handleWikipediaAuthorizeRequest(HttpExchange httpExchange) throws IOException {
+    ensureGetMethod(httpExchange, "/wikipedia/authorize");
+
+    MediaWikiApi mediaWikiApi = new MediaWikiApi("fr");
+    String requestToken;
+    String authorizationUrl;
+    try {
+      requestToken = mediaWikiApi.authorize();
+      authorizationUrl = mediaWikiApi.getAuthorizationUrl(requestToken);
+    } catch (InterruptedException|ExecutionException e) {
+      throw new RuntimeException("Failed to login : " + e.getMessage());
+    }
+
+    HashMap<String, String> responseFields = new HashMap<>();
+    responseFields.put("authorizationUrl", authorizationUrl);
+    responseFields.put("requestToken", requestToken);
+
+    writeStringHashMapResponse(responseFields, httpExchange);
+  }
+
+  private void handleWikipediaLoginRequest(HttpExchange httpExchange, Map<String, String> parameters) throws IOException {
+    ensureGetMethod(httpExchange, "/wikipedia/login");
+    String requestToken = parameters.get("requestToken");
+    String oAuthVerifier = parameters.get("oauth_verifier");
+
+    MediaWikiApi mediaWikiApi = new MediaWikiApi("fr");
+    String accessToken;
+    try {
+      accessToken = mediaWikiApi.login(requestToken, oAuthVerifier);
+    } catch (InterruptedException|ExecutionException e) {
+      throw new RuntimeException("Failed to login : " + e.getMessage());
+    }
+
+    writeStringResponse("accessToken", accessToken, httpExchange);
+  }
+
+  private void handleWikipediaUserRequest(HttpExchange httpExchange, Map<String, String> parameters) throws IOException {
+    ensureGetMethod(httpExchange, "/wikipedia/user");
+    String accessToken = parameters.get("accessToken");
+
+    MediaWikiApi mediaWikiApi = new MediaWikiApi("fr");
+    String userName;
+    try {
+      userName = mediaWikiApi.getUserName(accessToken);
+    } catch (InterruptedException|ExecutionException e) {
+      throw new RuntimeException("Failed to login : " + e.getMessage());
+    }
+
+    writeStringResponse("userName", userName, httpExchange);
   }
 
   private void handleWikipediaSuggestionRequest(HttpExchange httpExchange) throws IOException {
     ensureGetMethod(httpExchange, "/wikipedia/suggestions");
-
-    MediaWikiApi instance = new MediaWikiApi("fr");
-    try {
-      instance.login();
-      instance.edit();
-    } catch (InterruptedException|ExecutionException e) {
-      throw new RuntimeException("Failed to login : " + e.getMessage());
-    }
 
     DatabaseAccess db = DatabaseAccess.getInstance();
     List<CorpusMatchEntry> suggestions = db.getCorpusMatches(10);
@@ -216,23 +265,40 @@ class ApiV2 {
 
   private void handleWikipediaAcceptRequest(HttpExchange httpExchange, Map<String, String> parameters) throws Exception {
     ensurePostMethod(httpExchange, "/wikipedia/accept");
+    ServerTools.setCommonHeaders(httpExchange, JSON_CONTENT_TYPE, allowOriginUrl);
     int suggestionId = Integer.parseInt(parameters.get("suggestion_id"));
-
-    // TODO Actually call the Wikipedia API
+    String accessToken = parameters.get("accessToken");
 
     DatabaseAccess db = DatabaseAccess.getInstance();
+    CorpusMatchEntry suggestion = db.getCorpusMatch(suggestionId);
+    CorpusArticleEntry article = db.getCorpusArticle(suggestion.getArticleId());
+    MediaWikiApi mediaWikiApi = new MediaWikiApi(suggestion.getLanguageCode());
+    try {
+      String articleWikitext = mediaWikiApi.getPage(accessToken, article.getTitle());
+      String contentWithSuggestionApplied = HtmlTools.getArticleWithAppliedSuggestion(
+        article.getTitle(),
+        articleWikitext,
+        suggestion.getErrorContext(),
+        suggestion.getReplacementSuggestion()
+      );
+      mediaWikiApi.edit(accessToken, article.getTitle(), contentWithSuggestionApplied);
+    } catch (InterruptedException|ExecutionException e) {
+      throw new RuntimeException("Failed to edit : " + e.getMessage());
+    }
+
     boolean accepted = db.resolveCorpusMatch(suggestionId, true);
 
-    writeResponse("accepted", accepted, httpExchange);
+    writeBooleanResponse("accepted", accepted, httpExchange);
   }
 
   private void handleWikipediaRefuseRequest(HttpExchange httpExchange, Map<String, String> parameters) throws Exception {
     ensurePostMethod(httpExchange, "/wikipedia/refuse");
+    ServerTools.setCommonHeaders(httpExchange, JSON_CONTENT_TYPE, allowOriginUrl);
     int suggestionId = Integer.parseInt(parameters.get("suggestion_id"));
     DatabaseAccess db = DatabaseAccess.getInstance();
     boolean refused = db.resolveCorpusMatch(suggestionId, false);
 
-    writeResponse("refused", refused, httpExchange);
+    writeBooleanResponse("refused", refused, httpExchange);
   }
 
   private List<String> getOriginalAndSuggestedWikitext(int suggestionId) {
@@ -316,8 +382,14 @@ class ApiV2 {
     }
   }
   
-  private void ensurePostMethod(HttpExchange httpExchange, String url) {
-    if (!httpExchange.getRequestMethod().equalsIgnoreCase("post")) {
+  private void ensurePostMethod(HttpExchange httpExchange, String url) throws IOException {
+    if (httpExchange.getRequestMethod().equalsIgnoreCase("options")) {
+      httpExchange.getResponseHeaders().add("Access-Control-Allow-Origin", allowOriginUrl);
+      httpExchange.getResponseHeaders().add("Access-Control-Allow-Methods", "POST, OPTIONS");
+      httpExchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type,Authorization");
+      httpExchange.sendResponseHeaders(204, -1);
+    }
+    else if (!httpExchange.getRequestMethod().equalsIgnoreCase("post")) {
       throw new IllegalArgumentException(url + " needs to be called with POST");
     }
   }
@@ -331,11 +403,33 @@ class ApiV2 {
     return limits;
   }
 
-  private void writeResponse(String fieldName, boolean added, HttpExchange httpExchange) throws IOException {
+  private void writeBooleanResponse(String fieldName, boolean value, HttpExchange httpExchange) throws IOException {
     StringWriter sw = new StringWriter();
     try (JsonGenerator g = factory.createGenerator(sw)) {
       g.writeStartObject();
-      g.writeBooleanField(fieldName, added);
+      g.writeBooleanField(fieldName, value);
+      g.writeEndObject();
+    }
+    sendJson(httpExchange, sw);
+  }
+
+  private void writeStringResponse(String fieldName, String value, HttpExchange httpExchange) throws IOException {
+    StringWriter sw = new StringWriter();
+    try (JsonGenerator g = factory.createGenerator(sw)) {
+      g.writeStartObject();
+      g.writeStringField(fieldName, value);
+      g.writeEndObject();
+    }
+    sendJson(httpExchange, sw);
+  }
+
+  private void writeStringHashMapResponse(HashMap<String, String> fields, HttpExchange httpExchange) throws IOException {
+    StringWriter sw = new StringWriter();
+    try (JsonGenerator g = factory.createGenerator(sw)) {
+      g.writeStartObject();
+      for (String key : fields.keySet()) {
+        g.writeStringField(key, fields.get(key));
+      }
       g.writeEndObject();
     }
     sendJson(httpExchange, sw);
