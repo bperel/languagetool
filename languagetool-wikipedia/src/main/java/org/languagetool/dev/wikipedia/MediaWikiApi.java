@@ -95,7 +95,7 @@ public class MediaWikiApi {
     return result.get("parse").get("wikitext");
   }
 
-  public void edit(String accessToken, String title, String content) throws IOException, InterruptedException, ExecutionException {
+  public void edit(String accessToken, String title, String content, String editSummary) throws IOException, InterruptedException, ExecutionException {
     Response tokenResponse = callApiWithAccessToken(accessToken, Verb.GET, API_ENDPOINT_TOKENS, new HashMap<>());
 
     HashMap<String, HashMap<String, HashMap<String, String>>> result = new ObjectMapper().readValue(tokenResponse.getBody(), HashMap.class);
@@ -107,6 +107,7 @@ public class MediaWikiApi {
     editParameters.put("format", "json");
     editParameters.put("title", title);
     editParameters.put("text", content);
+    editParameters.put("summary", editSummary);
     editParameters.put("token", token);
     Response editResponse = callApiWithAccessToken(accessToken, Verb.POST, API_ENDPOINT_BASE, editParameters);
     System.out.println("Response : " + editResponse.getBody());
@@ -115,7 +116,6 @@ public class MediaWikiApi {
   public String getUserName(String accessToken) throws InterruptedException, ExecutionException, IOException {
     Response response = callApiWithAccessToken(accessToken, Verb.GET, API_ENDPOINT_USERINFO, new HashMap<>());
 
-    @SuppressWarnings("unchecked")
     HashMap<String, HashMap<String, HashMap<String, String>>> result = new ObjectMapper().readValue(response.getBody(), HashMap.class);
     return result.get("query").get("userinfo").get("name");
   }

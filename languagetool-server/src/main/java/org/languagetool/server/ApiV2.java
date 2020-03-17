@@ -281,7 +281,7 @@ class ApiV2 {
         suggestion.getErrorContext(),
         suggestion.getReplacementSuggestion()
       );
-      mediaWikiApi.edit(accessToken, article.getTitle(), contentWithSuggestionApplied);
+      mediaWikiApi.edit(accessToken, article.getTitle(), contentWithSuggestionApplied, suggestion.getRuleCategory());
     } catch (InterruptedException|ExecutionException e) {
       throw new RuntimeException("Failed to edit : " + e.getMessage());
     }
