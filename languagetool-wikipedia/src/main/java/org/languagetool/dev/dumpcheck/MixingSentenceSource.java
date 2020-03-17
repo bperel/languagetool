@@ -39,15 +39,23 @@ public class MixingSentenceSource extends SentenceSource {
   private int count;
 
   public static MixingSentenceSource create(List<String> dumpFileNames, Language language) throws IOException {
-    return create(dumpFileNames, language, null);
+    return create(dumpFileNames, language, null, null);
   }
 
-  public static MixingSentenceSource create(List<String> dumpFileNames, Language language, Pattern filter) throws IOException {
+  public static MixingSentenceSource create(List<String> dumpFileNames, Language language, Pattern filter, File propFile) throws IOException {
     List<SentenceSource> sources = new ArrayList<>();
     for (String dumpFileName : dumpFileNames) {
       File file = new File(dumpFileName);
       if (file.getName().endsWith(".xml")) {
-        sources.add(new WikipediaSentenceSource(new FileInputStream(dumpFileName), language, filter));
+        Properties dbProperties = new Properties();
+        try (FileInputStream inStream = new FileInputStream(propFile)) {
+          dbProperties.load(inStream);
+          String parsoidUrl = getProperty(dbProperties, "parsoidUrl");
+          sources.add(new WikipediaSentenceSource(new FileInputStream(dumpFileName), language, filter, parsoidUrl));
+        }
+        catch (IOException e) {
+          throw new RuntimeException(e);
+        }
       } else if (file.getName().startsWith("tatoeba-")) {
         sources.add(new TatoebaSentenceSource(new FileInputStream(dumpFileName), language, filter));
       } else if (file.getName().endsWith(".txt")) {
@@ -70,7 +78,15 @@ public class MixingSentenceSource extends SentenceSource {
   Map<String, Integer> getSourceDistribution() {
     return sourceDistribution;
   }
-  
+
+  private static String getProperty(Properties prop, String key) {
+    String value = prop.getProperty(key);
+    if (value == null) {
+      throw new RuntimeException("Required key '" + key + "' not found in properties");
+    }
+    return value;
+  }
+
   @Override
   public boolean hasNext() {
     for (SentenceSource source : sources) {
