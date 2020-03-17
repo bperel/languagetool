@@ -10273,7 +10273,8 @@ Neuroradiologe/N
 Paysafe/S #name
 Afrikanisierung
 Amphenol/S #name
-Authcode/S
+Authcode/S #eng
+Auth-Code/S #eng
 Bezahlprozess/E
 Caravaning-Messe/N
 Destatis #abk
@@ -16899,3 +16900,49 @@ entlang_schneiden
 darüber_schreiben
 an_täuschen
 fern_bedienen
+um_gewichten
+vorikonografisch/A
+an_skypen #ugs
+hin_trauen #ugs
+drauf_gucken #ugs
+anmailen #ugs
+anmaile #ugs
+anmailst #ugs
+anmailt #ugs
+angemailt #ugs
+anzumailen #ugs
+drüber_kippen #ugs
+zusammen_stutzen
+weg_nicken
+durch_schwenken
+dahin_strömen
+zurück_boxen
+unter_kategorisieren
+hoch_schreiben
+herum_lutschen #ugs
+entgegen_speien
+durch_mixen #ugs
+davon_huschen #ugs
+dahin_brausen #ugs
+aus_baggern
+anzicken #ugs
+anzicke #ugs
+anzickst #ugs
+anzickt #ugs
+angezickt #ugs
+anzuzicken #ugs
+Stornostaffel/N
+Stornoangebot/ES
+Accountinhaber/NS
+Bouffier/S #name
+los_kochen
+nach_putzen
+los_spritzen
+hin_bauen
+drunter_setzen #ugs
+weg_klappen
+hoch_kämpfen
+weg_wünschen
+mit_kaufen
+aus_diffundieren
+ruckhaft/A
