@@ -495,6 +495,9 @@ centimeter;centimetre
 centimeters;centimetres
 centralization;centralisation
 centralize;centralise
+centralized;centralised
+centralizes;centralises
+centralizing;centralising
 centralizer;centraliser
 centralizers;centralisers
 cesium;caesium
@@ -1191,6 +1194,8 @@ dualize;dualise
 dualized;dualised
 dualizes;dualises
 dualizing;dualising
+dyslipidemia;dyslipidaemia
+dyslipidemias;dyslipidaemias
 ebonize;ebonise
 ebonized;ebonised
 ebonizes;ebonises
@@ -1391,6 +1396,9 @@ fantasized;fantasised
 fantasizes;fantasises
 fantasizing;fantasising
 favor;favour
+favors;favours
+favored;favoured
+favoring;favouring
 favorable;favourable
 favors;favours
 favorite;favourite

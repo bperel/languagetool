@@ -6,6 +6,10 @@
   * Added initial support for Arabic, contributed by Sohaib Afifi
     (https://github.com/languagetool-org/languagetool/pull/2219)
 
+#### Catalan
+  * added and improved rules
+  * updated dictionary (catalan-pos-dict-2.7)
+
 #### English
   * added and improved rules
   * added new part-of-speech tag `ORD` for ordinal numbers (e.g., first, second, twenty-third etc.)
@@ -21,8 +25,17 @@
   * German `spelling.txt` now supports `prefix_verb` syntax like `vorüber_eilen` so
     the speller will accept all forms of "eilen" prefixed by "vorüber" 
 
+#### Portuguese
+  * added and improved rules
+  * added words and POS data
+
 #### Russian
   * small improvements
+
+#### Ukrainian
+  * dictionary update
+  * new rules
+  * tokenization and tagging improvements
 
 ## 4.8 (released 2019-12-27)
 
