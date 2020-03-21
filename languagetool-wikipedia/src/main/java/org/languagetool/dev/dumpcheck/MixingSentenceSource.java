@@ -39,23 +39,18 @@ public class MixingSentenceSource extends SentenceSource {
   private int count;
 
   public static MixingSentenceSource create(List<String> dumpFileNames, Language language) throws IOException {
-    return create(dumpFileNames, language, null, null);
+    return create(dumpFileNames, language, null, null, null);
   }
 
-  public static MixingSentenceSource create(List<String> dumpFileNames, Language language, Pattern filter, File propFile) throws IOException {
+  public static MixingSentenceSource create(List<String> dumpFileNames, Language language, Pattern filter, String parsoidUrl, CorpusMatchDatabaseHandler resultHandler) throws IOException {
     List<SentenceSource> sources = new ArrayList<>();
     for (String dumpFileName : dumpFileNames) {
       File file = new File(dumpFileName);
       if (file.getName().endsWith(".xml")) {
-        Properties dbProperties = new Properties();
-        try (FileInputStream inStream = new FileInputStream(propFile)) {
-          dbProperties.load(inStream);
-          String parsoidUrl = getProperty(dbProperties, "parsoidUrl");
-          sources.add(new WikipediaSentenceSource(new FileInputStream(dumpFileName), language, filter, parsoidUrl));
+        if (parsoidUrl == null || resultHandler == null) {
+          throw new RuntimeException("You need to specify a Parsoid URL and a DB handler to parse XML files");
         }
-        catch (IOException e) {
-          throw new RuntimeException(e);
-        }
+        sources.add(new WikipediaSentenceSource(new FileInputStream(dumpFileName), language, filter, parsoidUrl, resultHandler));
       } else if (file.getName().startsWith("tatoeba-")) {
         sources.add(new TatoebaSentenceSource(new FileInputStream(dumpFileName), language, filter));
       } else if (file.getName().endsWith(".txt")) {

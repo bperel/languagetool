@@ -35,7 +35,7 @@ class TatoebaSentenceSource extends SentenceSource {
   private final Scanner scanner;
 
   // Each sentence is one article, but count anyway so it's coherent with what the Wikipedia code does:
-  private int articleCount = 0;
+  private Long articleCount = 0L;
   
   TatoebaSentenceSource(InputStream textInput, Language language) {
     this(textInput, language, null);

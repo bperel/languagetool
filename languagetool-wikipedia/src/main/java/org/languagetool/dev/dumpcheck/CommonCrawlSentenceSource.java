@@ -48,7 +48,7 @@ class CommonCrawlSentenceSource extends SentenceSource {
   private int empty = 0;
   private int wrongStartChar = 0;
   private int wrongEndChar = 0;
-  private int count = 0;
+  private Long count = 0L;
   private int lineCount = 0;
 
   CommonCrawlSentenceSource(InputStream input, Language language, Pattern filter) throws IOException {
@@ -131,8 +131,8 @@ class CommonCrawlSentenceSource extends SentenceSource {
 
   private static class CommonCrawlSentence {
     final String sentence;
-    final int articleCount;
-    CommonCrawlSentence(String sentence, int articleCount) {
+    final Long articleCount;
+    CommonCrawlSentence(String sentence, Long articleCount) {
       this.sentence = sentence;
       this.articleCount = articleCount;
     }

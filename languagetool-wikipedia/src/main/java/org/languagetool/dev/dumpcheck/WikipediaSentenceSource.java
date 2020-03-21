@@ -32,6 +32,7 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import java.io.IOException;
 import java.io.InputStream;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -54,7 +55,7 @@ public class WikipediaSentenceSource extends SentenceSource {
 
   public static HashMap<String, HtmlTools.HtmlAnonymizer> anonymizedArticles = new HashMap<>();
 
-  private final ParsoidWikipediaTextParser textFilter = new ParsoidWikipediaTextParser();
+  private final ParsoidWikipediaTextParser textParser;
   private final Tokenizer sentenceTokenizer;
   private final List<WikipediaSentence> sentences;
   private final Language language;
@@ -64,12 +65,13 @@ public class WikipediaSentenceSource extends SentenceSource {
   private int redirectSkipCount = 0;
 
   WikipediaSentenceSource(InputStream xmlInput, Language language) {
-    this(xmlInput, language, null);
+    this(xmlInput, language, null, null, null);
   }
 
   /** @since 3.0 */
-  WikipediaSentenceSource(InputStream xmlInput, Language language, Pattern filter) {
+  WikipediaSentenceSource(InputStream xmlInput, Language language, Pattern filter, String parsoidUrl, CorpusMatchDatabaseHandler resultHandler) {
     super(language, filter);
+    textParser = new ParsoidWikipediaTextParser(parsoidUrl);
     sentenceTokenizer = language.getSentenceTokenizer();
     sentences = new ArrayList<>();
     this.language = language;
@@ -100,10 +102,7 @@ public class WikipediaSentenceSource extends SentenceSource {
           currentQName = qName.toLowerCase();
 
           if (currentQName.equals("revision")) {
-            if (++articleCount % 100 == 0) {
-              System.out.println("Article #" + articleCount);
-            }
-            if (articleCount > 10) {
+            if (articleCount > 20) {
               throw new ParseLimitExceededException(articleCount);
             }
             isRevisionContext = true;
@@ -122,13 +121,26 @@ public class WikipediaSentenceSource extends SentenceSource {
         @Override
         public void endElement(String uri, String localName, String qName) {
           if (qName.toLowerCase().equals("page")) {
-            addSentence(
-              namespace.toString().trim(),
-              title.toString().trim(),
-              Integer.parseInt(revisionId.toString().trim()),
-              text.toString().trim(),
-              articleCount
-            );
+            String title = this.title.toString().trim();
+            int revisionId = Integer.parseInt(this.revisionId.toString().trim());
+            try {
+              if (resultHandler.getArticleIdFromDb(title, revisionId) == null) {
+                articleCount++;
+                System.out.println("Article #" + articleCount + " : " + title);
+                addArticle(
+                  resultHandler,
+                  namespace.toString().trim(),
+                  title,
+                  revisionId,
+                  text.toString().trim()
+                );
+              }
+              else {
+                System.out.println("Article " + title +" with revision " + revisionId + " is already in the DB, ignoring");
+              }
+            } catch (SQLException e) {
+              e.printStackTrace();
+            }
           }
         }
 
@@ -136,9 +148,15 @@ public class WikipediaSentenceSource extends SentenceSource {
         public void characters(char[] ch, int start, int length) {
           String content = new String(ch, start, length);
           switch(currentQName) {
-            case "title": title.append(content);break;
-            case "ns": namespace.append(content); break;
-            case "text": text.append(content); break;
+            case "title":
+              title.append(content);
+              break;
+            case "ns":
+              namespace.append(content);
+              break;
+            case "text":
+              text.append(content);
+              break;
             case "id":
               if (isRevisionContext) {
                 revisionId.append(content);
@@ -168,7 +186,7 @@ public class WikipediaSentenceSource extends SentenceSource {
     }
     WikipediaSentence wikiSentence = sentences.remove(0);
     String url = getUrl(wikiSentence.title, wikiSentence.revision);
-    return new Sentence(wikiSentence.sentence, getSource(), wikiSentence.title, url, wikiSentence.articleCount);
+    return new Sentence(wikiSentence.sentence, getSource(), wikiSentence.title, url, wikiSentence.articleId);
   }
 
   @NotNull
@@ -185,7 +203,7 @@ public class WikipediaSentenceSource extends SentenceSource {
     return "wikipedia";
   }
 
-  private void addSentence(String namespace, String title, Integer revisionId, String text, int articleCount) {
+  private void addArticle(CorpusMatchDatabaseHandler resultHandler, String namespace, String title, Integer revisionId, String text) {
     if (ONLY_ARTICLES && !ARTICLE_NAMESPACE.equals(namespace)) {
       namespaceSkipCount++;
     }
@@ -195,20 +213,13 @@ public class WikipediaSentenceSource extends SentenceSource {
         redirectSkipCount++;
       }
 
-      HtmlTools.HtmlAnonymizer anonymizer;
-      String articleUrl = getUrl(title, null);
-      if (anonymizedArticles.containsKey(articleUrl)) {
-        anonymizer = anonymizedArticles.get(articleUrl);
-      }
-      else {
-        anonymizer = textFilter.convertWikitextToHtml(title, text);
-        anonymizedArticles.put(articleUrl, anonymizer);
-      }
+      resultHandler.deleteNeverAppliedSuggestionsOfObsoleteArticles(title, revisionId);
+      String anonymizedHtml = textParser.convertWikitextToHtml(title, text).getAnonymizedHtml();
+      Long articleId = resultHandler.createArticle(title, revisionId, text, anonymizedHtml);
 
-      String textToCheck = anonymizer.getAnonymizedHtml();
-      for (String sentence : sentenceTokenizer.tokenize(textToCheck)) {
+      for (String sentence : sentenceTokenizer.tokenize(anonymizedHtml)) {
         if (acceptSentence(sentence)) {
-          sentences.add(new WikipediaSentence(sentence, title, revisionId, articleCount));
+          sentences.add(new WikipediaSentence(sentence, title, revisionId, articleId));
         }
       }
     } catch (Exception e) {
@@ -221,12 +232,12 @@ public class WikipediaSentenceSource extends SentenceSource {
     final String sentence;
     final String title;
     final Integer revision;
-    final int articleCount;
-    WikipediaSentence(String sentence, String title, Integer revision, int articleCount) {
+    final Long articleId;
+    WikipediaSentence(String sentence, String title, Integer revision, Long articleId) {
       this.sentence = sentence;
       this.title = title;
       this.revision = revision;
-      this.articleCount = articleCount;
+      this.articleId = articleId;
     }
   }
 }

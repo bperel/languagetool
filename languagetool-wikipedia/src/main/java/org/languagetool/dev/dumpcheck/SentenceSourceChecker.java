@@ -35,6 +35,11 @@ import java.io.IOException;
 import java.text.NumberFormat;
 import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import static org.languagetool.dev.dumpcheck.CorpusMatchDatabaseHandler.MAX_CONTEXT_LENGTH;
+import static org.languagetool.tools.HtmlTools.SuggestionNotApplicableException;
+import static org.languagetool.tools.HtmlTools.getErrorContextWithAppliedSuggestion;
 
 /**
  * Checks texts from one or more {@link SentenceSource}s.
@@ -193,34 +198,56 @@ public class SentenceSourceChecker {
       System.out.println("*** NOTE: only sentences that match regular expression '" + filter + "' will be checked");
     }
     activateAdditionalCategories(additionalCategoryIds, lt);
-    disableSpellingRules(lt);
+    disableRulesForWiki(lt);
     System.out.println("Working on: " + StringUtils.join(fileNames, ", "));
     System.out.println("Sentence limit: " + (maxSentences > 0 ? maxSentences : "no limit"));
     System.out.println("Context size: " + contextSize);
     System.out.println("Error limit: " + (maxErrors > 0 ? maxErrors : "no limit"));
     //System.out.println("Version: " + JLanguageTool.VERSION + " (" + JLanguageTool.BUILD_DATE + ")");
 
-    ResultHandler resultHandler = null;
+    CorpusMatchDatabaseHandler databaseHandler = new CorpusMatchDatabaseHandler(propFile, maxSentences, maxErrors);
     int ruleMatchCount = 0;
     int sentenceCount = 0;
     try {
-      if (propFile != null) {
-        resultHandler = new DatabaseHandler.CorpusMatchDatabaseHandler(propFile, maxSentences, maxErrors);
-      } else {
-        resultHandler = new StdoutHandler(maxSentences, maxErrors, contextSize);
-      }
-      MixingSentenceSource mixingSource = MixingSentenceSource.create(fileNames, lang, filter);
+      FileInputStream inStream = new FileInputStream(propFile);
+      Properties properties = new Properties();
+      properties.load(inStream);
+      String parsoidUrl = getProperty(properties, "parsoidUrl");
+      MixingSentenceSource mixingSource = MixingSentenceSource.create(fileNames, lang, filter, parsoidUrl, databaseHandler);
+
+      int currentArticleId = -1;
+      String wikitext = null;
       while (mixingSource.hasNext()) {
         Sentence sentence = mixingSource.next();
         try {
-          List<RuleMatch> matches = lt.check(sentence.getText());
-          resultHandler.handleResult(sentence, matches, lang);
+          if (currentArticleId != sentence.getArticleId()) {
+            wikitext = databaseHandler.getCorpusArticleWikitextFromId(sentence.getArticleId());
+          }
+
+          String finalWikitext = wikitext;
+          List<RuleMatch> matches = lt.check(sentence.getText()).stream().filter(match -> {
+            String context = CorpusMatchDatabaseHandler.contextTools.getContext(match.getFromPos(), match.getToPos(), sentence.getText());
+            if (context.length() > MAX_CONTEXT_LENGTH) {
+              return false;
+            }
+            List<String> suggestions = match.getSuggestedReplacements();
+            if (suggestions.isEmpty()) {
+              return false;
+            }
+            try {
+              getErrorContextWithAppliedSuggestion(sentence.getTitle(), finalWikitext, context, suggestions.get(0));
+            } catch (SuggestionNotApplicableException e) {
+              return false;
+            }
+            return true;
+          }).collect(Collectors.toList());
+          databaseHandler.handleResult(sentence, matches, lang);
           sentenceCount++;
           if (sentenceCount % 5000 == 0) {
             System.err.printf("%s sentences checked...\n", NumberFormat.getNumberInstance(Locale.US).format(sentenceCount));
           }
           ruleMatchCount += matches.size();
-        } catch (DocumentLimitReachedException | ErrorLimitReachedException e) {
+        } catch (DocumentLimitReachedException | ErrorLimitReachedException | IOException e) {
           throw e;
         } catch (Exception e) {
           throw new RuntimeException("Check failed on sentence: " + StringUtils.abbreviate(sentence.getText(), 250), e);
@@ -230,17 +257,15 @@ public class SentenceSourceChecker {
       System.out.println(getClass().getSimpleName() + ": " + e);
     } finally {
       lt.shutdown();
-      if (resultHandler != null) {
-        float matchesPerSentence = (float)ruleMatchCount / sentenceCount;
-        System.out.printf(lang + ": %d total matches\n", ruleMatchCount);
-        System.out.printf(Locale.ENGLISH, lang + ": ø%.2f rule matches per sentence\n", matchesPerSentence);
-        long runTimeMillis = System.currentTimeMillis() - startTime;
-        //System.out.printf(Locale.ENGLISH, lang + ": Time: %.2f minutes\n", runTimeMillis/1000.0/60.0);
-        try {
-          resultHandler.close();
-        } catch (Exception e) {
-          e.printStackTrace();
-        }
+      float matchesPerSentence = (float)ruleMatchCount / sentenceCount;
+      System.out.printf(lang + ": %d total matches\n", ruleMatchCount);
+      System.out.printf(Locale.ENGLISH, lang + ": ø%.2f rule matches per sentence\n", matchesPerSentence);
+      long runTimeMillis = System.currentTimeMillis() - startTime;
+      //System.out.printf(Locale.ENGLISH, lang + ": Time: %.2f minutes\n", runTimeMillis/1000.0/60.0);
+      try {
+        databaseHandler.close();
+      } catch (Exception e) {
+        e.printStackTrace();
       }
     }
   }
@@ -293,10 +318,18 @@ public class SentenceSourceChecker {
     }
   }
 
-  private void disableSpellingRules(JLanguageTool lt) {
+  private static String getProperty(Properties prop, String key) {
+    String value = prop.getProperty(key);
+    if (value == null) {
+      throw new RuntimeException("Required key '" + key + "' not found in properties");
+    }
+    return value;
+  }
+
+  private void disableRulesForWiki(JLanguageTool lt) {
     List<Rule> allActiveRules = lt.getAllActiveRules();
     for (Rule rule : allActiveRules) {
-      if (rule.isDictionaryBasedSpellingRule()) {
+      if (rule.isDictionaryBasedSpellingRule()) { // TODO disable WHITESPACE_RULE
         lt.disableRule(rule.getId());
       }
     }
