@@ -22,7 +22,6 @@ import org.jetbrains.annotations.NotNull;
 import org.languagetool.Language;
 import org.languagetool.dev.wikipedia.ParsoidWikipediaTextParser;
 import org.languagetool.tokenizers.Tokenizer;
-import org.languagetool.tools.HtmlTools;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -34,7 +33,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.regex.Pattern;
@@ -52,8 +50,6 @@ public class WikipediaSentenceSource extends SentenceSource {
 
   private static final boolean ONLY_ARTICLES = false;
   private static final String ARTICLE_NAMESPACE = "0";
-
-  public static HashMap<String, HtmlTools.HtmlAnonymizer> anonymizedArticles = new HashMap<>();
 
   private final ParsoidWikipediaTextParser textParser;
   private final Tokenizer sentenceTokenizer;
@@ -215,7 +211,7 @@ public class WikipediaSentenceSource extends SentenceSource {
 
       resultHandler.deleteNeverAppliedSuggestionsOfObsoleteArticles(title, revisionId);
       String anonymizedHtml = textParser.convertWikitextToHtml(title, text).getAnonymizedHtml();
-      Long articleId = resultHandler.createArticle(title, revisionId, text, anonymizedHtml);
+      Long articleId = resultHandler.createArticle(language.getShortCode(), title, revisionId, text, anonymizedHtml);
 
       for (String sentence : sentenceTokenizer.tokenize(anonymizedHtml)) {
         if (acceptSentence(sentence)) {

@@ -272,7 +272,7 @@ class ApiV2 {
     DatabaseAccess db = DatabaseAccess.getInstance();
     CorpusMatchEntry suggestion = db.getCorpusMatch(suggestionId);
     CorpusArticleEntry article = db.getCorpusArticle(suggestion.getArticleId());
-    MediaWikiApi mediaWikiApi = new MediaWikiApi(suggestion.getLanguageCode());
+    MediaWikiApi mediaWikiApi = new MediaWikiApi(article.getLanguageCode());
     try {
       String articleWikitext = mediaWikiApi.getPage(accessToken, article.getTitle());
       String contentWithSuggestionApplied = HtmlTools.getArticleWithAppliedSuggestion(

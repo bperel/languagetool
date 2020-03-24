@@ -11,6 +11,6 @@
         SELECT * FROM corpus_match WHERE id=#{id}
     </select>
     <select id="updateWikipediaSuggestion">
-        UPDATE corpus_match SET applied=#{applied} WHERE id=#{id}
+        UPDATE corpus_match SET applied=#{applied}, applied_date=current_timestamp() WHERE id=#{id}
     </select>
 </mapper>

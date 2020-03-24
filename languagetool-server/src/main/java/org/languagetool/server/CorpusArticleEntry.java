@@ -25,13 +25,15 @@ package org.languagetool.server;
 public class CorpusArticleEntry {
 
   private Integer id;
+  private final String languageCode;
   private final String title;
   private final Integer revision;
   private final String wikitext;
   private final String anonymizedHtml;
 
-  public CorpusArticleEntry(Integer id, String title, Integer revision, String wikiText, String anonymizedHtml) {
+  public CorpusArticleEntry(Integer id, String languageCode, String title, Integer revision, String wikiText, String anonymizedHtml) {
     this.id = id;
+    this.languageCode = languageCode;
     this.title = title;
     this.revision = revision;
     this.wikitext = wikiText;
@@ -40,6 +42,10 @@ public class CorpusArticleEntry {
 
   public Integer getId() {
     return id;
+  }
+
+  public String getLanguageCode() {
+    return languageCode;
   }
 
   public String getTitle() {

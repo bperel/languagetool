@@ -92,11 +92,11 @@ class CorpusMatchDatabaseHandler extends ResultHandler {
           " SELECT id FROM corpus_article" +
           " WHERE title = ? AND revision = ?");
         insertCorpusArticleSt = conn.prepareStatement("" +
-          " INSERT INTO corpus_article (title, revision, wikitext, anonymized_html)" +
-          " VALUES (?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
+          " INSERT INTO corpus_article (language_code, title, revision, wikitext, anonymized_html)" +
+          " VALUES (?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
         insertCorpusMatchSt = conn.prepareStatement("" +
-          " INSERT INTO corpus_match (article_id, version, language_code, ruleid, rule_category, rule_subid, rule_description, message, error_context, small_error_context, corpus_date, check_date, source_type, replacement_suggestion, is_visible)" +
-          " VALUES (?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)");
+          " INSERT INTO corpus_match (article_id, ruleid, rule_category, rule_subid, rule_description, message, error_context, small_error_context, replacement_suggestion)" +
+          " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
         deleteNeverAppliedSuggestionsOfObsoleteArticles = conn.prepareStatement("" +
           " DELETE FROM corpus_match" +
           " WHERE applied IS NULL AND article_id IN (SELECT id FROM corpus_article WHERE title = ? AND revision <> ? )");
@@ -117,7 +117,6 @@ class CorpusMatchDatabaseHandler extends ResultHandler {
   @Override
   protected void handleResult(Sentence sentence, List<RuleMatch> ruleMatches, Language language) {
     try {
-      java.sql.Date nowDate = new java.sql.Date(new java.util.Date().getTime());
       List<RuleMatch> rulesMatchesWithSuggestions = ruleMatches.stream()
         .filter(match -> !match.getSuggestedReplacements().isEmpty())
         .collect(Collectors.toList());
@@ -126,7 +125,7 @@ class CorpusMatchDatabaseHandler extends ResultHandler {
         String context = contextTools.getContext(match.getFromPos(), match.getToPos(), sentence.getText());
         String smallContext = smallContextTools.getContext(match.getFromPos(), match.getToPos(), sentence.getText());
 
-        addSentenceToBatch(sentence.getArticleId(), sentence.getSource(), language, nowDate, match, context, smallContext);
+        addSentenceToBatch(sentence.getArticleId(), match, context, smallContext);
         if (++batchCount >= batchSize) {
           executeBatch();
           batchCount = 0;
@@ -152,11 +151,12 @@ class CorpusMatchDatabaseHandler extends ResultHandler {
     deleteNeverAppliedSuggestionsOfObsoleteArticles.execute();
   }
 
-  Long createArticle(String title, int revision, String wikitext, String anonymizedHtml) throws SQLException {
-    insertCorpusArticleSt.setString(1, title);
-    insertCorpusArticleSt.setInt(2, revision);
-    insertCorpusArticleSt.setString(3, wikitext);
-    insertCorpusArticleSt.setString(4, anonymizedHtml);
+  Long createArticle(String languageCode, String title, int revision, String wikitext, String anonymizedHtml) throws SQLException {
+    insertCorpusArticleSt.setString(1, languageCode);
+    insertCorpusArticleSt.setString(2, title);
+    insertCorpusArticleSt.setInt(3, revision);
+    insertCorpusArticleSt.setString(4, wikitext);
+    insertCorpusArticleSt.setString(5, anonymizedHtml);
     insertCorpusArticleSt.execute();
     ResultSet generatedKeys = insertCorpusArticleSt.getGeneratedKeys();
     if (generatedKeys.next()) {
@@ -166,27 +166,23 @@ class CorpusMatchDatabaseHandler extends ResultHandler {
     throw new SQLException("Couldn't create article " + title);
   }
 
-  private void addSentenceToBatch(long articleId, String source, Language language, Date nowDate, RuleMatch match, String context, String smallContext) throws SQLException {
+  private void addSentenceToBatch(long articleId, RuleMatch match, String context, String smallContext) throws SQLException {
 
     Rule rule = match.getRule();
     insertCorpusMatchSt.setLong(1, articleId);
-    insertCorpusMatchSt.setString(2, language.getShortCode());
-    insertCorpusMatchSt.setString(3, rule.getId());
-    insertCorpusMatchSt.setString(4, rule.getCategory().getName());
+    insertCorpusMatchSt.setString(2, rule.getId());
+    insertCorpusMatchSt.setString(3, rule.getCategory().getName());
     if (rule instanceof AbstractPatternRule) {
-      insertCorpusMatchSt.setString(5, ((AbstractPatternRule) rule).getSubId());
+      insertCorpusMatchSt.setString(4, ((AbstractPatternRule) rule).getSubId());
     } else {
-      insertCorpusMatchSt.setNull(5, Types.VARCHAR);
+      insertCorpusMatchSt.setNull(4, Types.VARCHAR);
     }
-    insertCorpusMatchSt.setString(6, rule.getDescription());
-    insertCorpusMatchSt.setString(7, StringUtils.abbreviate(match.getMessage(), 255));
-    insertCorpusMatchSt.setString(8, context);
-    insertCorpusMatchSt.setString(9, StringUtils.abbreviate(smallContext, 255));
+    insertCorpusMatchSt.setString(5, rule.getDescription());
+    insertCorpusMatchSt.setString(6, StringUtils.abbreviate(match.getMessage(), 255));
+    insertCorpusMatchSt.setString(7, context);
+    insertCorpusMatchSt.setString(8, StringUtils.abbreviate(smallContext, 255));
 
-    insertCorpusMatchSt.setDate(10, nowDate);  // should actually be the dump's date, but isn't really used anyway...
-    insertCorpusMatchSt.setDate(11, nowDate);
-    insertCorpusMatchSt.setString(12, source);
-    insertCorpusMatchSt.setString(13, match.getSuggestedReplacements().get(0));
+    insertCorpusMatchSt.setString(9, match.getSuggestedReplacements().get(0));
     insertCorpusMatchSt.addBatch();
   }
 

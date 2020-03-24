@@ -28,8 +28,6 @@ public class CorpusMatchEntry {
 
   private Integer id;
   private final Integer articleId;
-  private final Integer version;
-  private final String languageCode;
   private final String ruleid;
   private final String ruleCategory;
   private final String ruleSubid;
@@ -37,18 +35,13 @@ public class CorpusMatchEntry {
   private final String message;
   private final String errorContext;
   private final String smallErrorContext;
-  private final Date corpusDate;
-  private final Date checkDate;
-  private final String sourceType;
-  private final Boolean isVisible;
   private final String replacementSuggestion;
   private final Boolean applied;
+  private final Date appliedDate;
 
-  public CorpusMatchEntry(Integer id, Integer articleId, Integer version, String languageCode, String ruleid, String ruleCategory, String ruleSubid, String ruleDescription, String message, String errorContext, String smallErrorContext, Date corpusDate, Date checkDate, String sourceType, Boolean isVisible, String replacementSuggestion, Boolean applied) {
+  public CorpusMatchEntry(Integer id, Integer articleId, String ruleid, String ruleCategory, String ruleSubid, String ruleDescription, String message, String errorContext, String smallErrorContext, String replacementSuggestion, Boolean applied, Date appliedDate) {
     this.id = id;
     this.articleId = articleId;
-    this.version = version;
-    this.languageCode = languageCode;
     this.ruleid = ruleid;
     this.ruleCategory = ruleCategory;
     this.ruleSubid = ruleSubid;
@@ -56,12 +49,9 @@ public class CorpusMatchEntry {
     this.message = message;
     this.errorContext = errorContext;
     this.smallErrorContext = smallErrorContext;
-    this.corpusDate = corpusDate;
-    this.checkDate = checkDate;
-    this.sourceType = sourceType;
-    this.isVisible = isVisible;
     this.replacementSuggestion = replacementSuggestion;
     this.applied = applied;
+    this.appliedDate = appliedDate;
   }
 
   public Integer getId() {
@@ -70,14 +60,6 @@ public class CorpusMatchEntry {
 
   public Integer getArticleId() {
     return articleId;
-  }
-
-  public Integer getVersion() {
-    return version;
-  }
-
-  public String getLanguageCode() {
-    return languageCode;
   }
 
   public String getRuleid() {
@@ -108,27 +90,15 @@ public class CorpusMatchEntry {
     return smallErrorContext;
   }
 
-  public Date getCorpusDate() {
-    return corpusDate;
-  }
-
-  public Date getCheckDate() {
-    return checkDate;
-  }
-
-  public String getSourceType() {
-    return sourceType;
-  }
-
-  public Boolean getVisible() {
-    return isVisible;
-  }
-
   public String getReplacementSuggestion() {
     return replacementSuggestion;
   }
 
   public Boolean getApplied() {
     return applied;
+  }
+
+  public Date getAppliedDate() {
+    return appliedDate;
   }
 }
