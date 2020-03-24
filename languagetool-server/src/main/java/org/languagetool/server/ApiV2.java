@@ -286,7 +286,7 @@ class ApiV2 {
       throw new RuntimeException("Failed to edit : " + e.getMessage());
     }
 
-    boolean accepted = db.resolveCorpusMatch(suggestionId, true);
+    boolean accepted = db.resolveCorpusMatch(suggestionId, true, null);
 
     writeBooleanResponse("accepted", accepted, httpExchange);
   }
@@ -295,8 +295,14 @@ class ApiV2 {
     ensurePostMethod(httpExchange, "/wikipedia/refuse");
     ServerTools.setCommonHeaders(httpExchange, JSON_CONTENT_TYPE, allowOriginUrl);
     int suggestionId = Integer.parseInt(parameters.get("suggestion_id"));
+    String reason = parameters.get("reason");
+
+    if (!Arrays.asList("false-positive", "false-correction", "too-little-context", "should-be-ignored", "other").contains(reason)) {
+      throw new RuntimeException("Invalid refusal reason : " + reason);
+    }
+
     DatabaseAccess db = DatabaseAccess.getInstance();
-    boolean refused = db.resolveCorpusMatch(suggestionId, false);
+    boolean refused = db.resolveCorpusMatch(suggestionId, false, reason);
 
     writeBooleanResponse("refused", refused, httpExchange);
   }

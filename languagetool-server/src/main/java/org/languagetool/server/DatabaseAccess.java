@@ -181,7 +181,7 @@ class DatabaseAccess {
     }
   }
 
-  boolean resolveCorpusMatch(int suggestionId, boolean shouldBecomeApplied) {
+  boolean resolveCorpusMatch(int suggestionId, boolean shouldBecomeApplied, String reason) {
     if (sqlSessionFactory == null) {
       return false;
     }
@@ -189,6 +189,7 @@ class DatabaseAccess {
       Map<Object, Object> map = new HashMap<>();
       map.put("id", suggestionId);
       map.put("applied", shouldBecomeApplied);
+      map.put("reason", reason);
       int affectedRows = session.update("org.languagetool.server.WikipediaMapper.updateWikipediaSuggestion", map);
       return affectedRows >= 1;
     }
