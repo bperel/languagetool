@@ -14,9 +14,11 @@ public class MediaWikiApi {
   private static final String API_ENDPOINT_TOKENS = "/w/api.php?action=query&format=json&meta=tokens";
   private static final String API_ENDPOINT_USERINFO = "/w/api.php?action=query&format=json&meta=userinfo";
 
+  public static final String[] SUPPORTED_LANGUAGES = new String[]{"fr"};
+
   private static HashMap<String, OAuth10aService> services = new HashMap<>();
-  private static HashMap<String, OAuth1RequestToken> requestTokens = new HashMap<>();
-  private static HashMap<String, OAuth1AccessToken> accessTokens = new HashMap<>();
+  private static HashMap<String, HashMap<String, OAuth1RequestToken>> requestTokens = new HashMap<>();
+  private static HashMap<String, HashMap<String, OAuth1AccessToken>> accessTokens = new HashMap<>();
 
   private String language;
 
@@ -28,8 +30,8 @@ public class MediaWikiApi {
     return "https://" + language + ".wikipedia.org";
   }
 
-  public static void setup(String consumerKey, String consumerSecret, String[] languages) {
-    for (String language : languages) {
+  public static void setup(String consumerKey, String consumerSecret) {
+    for (String language : SUPPORTED_LANGUAGES) {
       if (!services.containsKey(language)) {
         services.put(language, new ServiceBuilder(consumerKey)
           .apiSecret(consumerSecret)
@@ -37,6 +39,8 @@ public class MediaWikiApi {
             getApiEndpointBase(language) + "/w/index.php",
             getApiEndpointBase(language) + "/wiki/"
           )));
+        requestTokens.put(language, new HashMap<>());
+        accessTokens.put(language, new HashMap<>());
       }
     }
   }
@@ -51,8 +55,7 @@ public class MediaWikiApi {
     System.out.println("Got the Request Token!");
     System.out.println();
 
-    requestTokens.put(requestToken.getToken(), requestToken);
-
+    addRequestToken(requestToken);
     return requestToken.getToken();
   }
 
@@ -61,20 +64,20 @@ public class MediaWikiApi {
       throw new RuntimeException("Language " + language + " has not been set up!");
     }
 
-    return services.get(language).getAuthorizationUrl(requestTokens.get(requestToken));
+    return services.get(language).getAuthorizationUrl(getRequestToken(requestToken));
   }
 
   public String login(String requestToken, String oauthVerifier) throws InterruptedException, ExecutionException, IOException {
     System.out.println();
 
-    if (!requestTokens.containsKey(requestToken)) {
+    if (getRequestToken(requestToken) == null) {
       throw new RuntimeException("Can't find request token " + requestToken);
     }
 
     // Trade the Request Token and Verifier for the Access Token
     System.out.println("Trading the Request Token for an Access Token...");
-    OAuth1AccessToken accessToken = services.get(language).getAccessToken(requestTokens.get(requestToken), oauthVerifier);
-    accessTokens.put(accessToken.getToken(), accessToken);
+    OAuth1AccessToken accessToken = services.get(language).getAccessToken(getRequestToken(requestToken), oauthVerifier);
+    addAccessToken(accessToken);
     System.out.println("Got the Access Token!");
     System.out.println("(The raw response looks like this: " + accessToken.getRawResponse() + "')");
     System.out.println();
@@ -121,7 +124,7 @@ public class MediaWikiApi {
   }
 
   private Response callApiWithAccessToken(String accessToken, Verb verb, String endpoint, HashMap<String, String> parameters) throws InterruptedException, ExecutionException, IOException {
-    if (! accessTokens.containsKey(accessToken)) {
+    if (getAccessToken(accessToken) == null) {
       throw new RuntimeException("Can't find access token " + accessToken);
     }
 
@@ -134,7 +137,23 @@ public class MediaWikiApi {
         request.addBodyParameter(bodyParameterKey, parameters.get(bodyParameterKey));
       }
     }
-    services.get(language).signRequest(accessTokens.get(accessToken), request);
+    services.get(language).signRequest(getAccessToken(accessToken), request);
     return services.get(language).execute(request);
+  }
+
+  private OAuth1AccessToken getAccessToken(String accessToken) {
+    return accessTokens.get(language).get(accessToken);
+  }
+
+  private void addAccessToken(OAuth1AccessToken accessToken) {
+    accessTokens.get(language).put(accessToken.getToken(), accessToken);
+  }
+
+  private OAuth1RequestToken getRequestToken(String requestToken) {
+    return requestTokens.get(language).get(requestToken);
+  }
+
+  private void addRequestToken(OAuth1RequestToken requestToken) {
+    requestTokens.get(language).put(requestToken.getToken(), requestToken);
   }
 }

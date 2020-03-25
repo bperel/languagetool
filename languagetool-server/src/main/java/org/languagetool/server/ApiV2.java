@@ -81,7 +81,7 @@ class ApiV2 {
     } else if (path.equals("words/delete")) {
       handleWordDeleteRequest(httpExchange, parameters, config);
     } else if (path.equals("wikipedia/authorize")) {
-        handleWikipediaAuthorizeRequest(httpExchange);
+        handleWikipediaAuthorizeRequest(httpExchange, parameters);
     } else if (path.equals("wikipedia/login")) {
         handleWikipediaLoginRequest(httpExchange, parameters);
     } else if (path.equals("wikipedia/user")) {
@@ -191,10 +191,11 @@ class ApiV2 {
     writeBooleanResponse("deleted", deleted, httpExchange);
   }
 
-  private void handleWikipediaAuthorizeRequest(HttpExchange httpExchange) throws IOException {
+  private void handleWikipediaAuthorizeRequest(HttpExchange httpExchange, Map<String, String> parameters) throws IOException {
     ensureGetMethod(httpExchange, "/wikipedia/authorize");
+    String languageCode = parameters.get("languageCode");
 
-    MediaWikiApi mediaWikiApi = new MediaWikiApi("fr");
+    MediaWikiApi mediaWikiApi = new MediaWikiApi(languageCode);
     String requestToken;
     String authorizationUrl;
     try {
@@ -214,9 +215,10 @@ class ApiV2 {
   private void handleWikipediaLoginRequest(HttpExchange httpExchange, Map<String, String> parameters) throws IOException {
     ensureGetMethod(httpExchange, "/wikipedia/login");
     String requestToken = parameters.get("requestToken");
+    String languageCode = parameters.get("languageCode");
     String oAuthVerifier = parameters.get("oauth_verifier");
 
-    MediaWikiApi mediaWikiApi = new MediaWikiApi("fr");
+    MediaWikiApi mediaWikiApi = new MediaWikiApi(languageCode);
     String accessToken;
     try {
       accessToken = mediaWikiApi.login(requestToken, oAuthVerifier);
@@ -230,8 +232,9 @@ class ApiV2 {
   private void handleWikipediaUserRequest(HttpExchange httpExchange, Map<String, String> parameters) throws IOException {
     ensureGetMethod(httpExchange, "/wikipedia/user");
     String accessToken = parameters.get("accessToken");
+    String languageCode = parameters.get("languageCode");
 
-    MediaWikiApi mediaWikiApi = new MediaWikiApi("fr");
+    MediaWikiApi mediaWikiApi = new MediaWikiApi(languageCode);
     String userName;
     try {
       userName = mediaWikiApi.getUserName(accessToken);
