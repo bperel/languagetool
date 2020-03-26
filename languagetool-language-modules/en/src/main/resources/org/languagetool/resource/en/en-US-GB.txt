@@ -495,6 +495,9 @@ centimeter;centimetre
 centimeters;centimetres
 centralization;centralisation
 centralize;centralise
+centralized;centralised
+centralizes;centralises
+centralizing;centralising
 centralizer;centraliser
 centralizers;centralisers
 cesium;caesium
@@ -1191,6 +1194,8 @@ dualize;dualise
 dualized;dualised
 dualizes;dualises
 dualizing;dualising
+dyslipidemia;dyslipidaemia
+dyslipidemias;dyslipidaemias
 ebonize;ebonise
 ebonized;ebonised
 ebonizes;ebonises
@@ -1391,6 +1396,9 @@ fantasized;fantasised
 fantasizes;fantasises
 fantasizing;fantasising
 favor;favour
+favors;favours
+favored;favoured
+favoring;favouring
 favorable;favourable
 favors;favours
 favorite;favourite
@@ -1581,6 +1589,8 @@ hectoliter;hectolitre
 hectoliters;hectolitres
 hectometer;hectometre
 hectometers;hectometres
+hematuria;haematuria
+hematurias;haematurias
 hemophilia;haemophilia
 hemorrhage;haemorrhage
 hemorrhages;haemorrhages
@@ -2060,6 +2070,7 @@ mathematize;mathematise
 mathematized;mathematised
 mathematizes;mathematises
 mathematizing;mathematising
+math;maths
 matronize;matronise
 matronized;matronised
 matronizes;matronises
@@ -2344,6 +2355,7 @@ neighbor;neighbour
 neighbors;neighbours
 neighborhood;neighbourhood
 neighborhoods;neighbourhoods
+neighboring;neighbouring
 neighborly;neighbourly
 neologize;neologise
 neologized;neologised
@@ -3031,6 +3043,8 @@ reindustrialize;reindustrialise
 reindustrialized;reindustrialised
 reindustrializes;reindustrialises
 reindustrializing;reindustrialising
+relabeling;relabelling
+relabeled;relabelled
 relativize;relativise
 relativized;relativised
 relativizes;relativises

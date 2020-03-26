@@ -16946,3 +16946,144 @@ weg_wünschen
 mit_kaufen
 aus_diffundieren
 ruckhaft/A
+Lockdown/S #eng
+Shutdown/S #eng
+Dombrowski/S #name
+ImmobilienScout/S #name
+HDI/S #name #abk
+DDP/S #abk
+sexhungrig/A
+Sievers #name
+All-in-one-PC/S
+Anfragevolumen/S
+Annulationsbestätigung
+Annulationsbestätigungen
+For You Travel #name
+Mastering/S #eng
+aus_lenken
+mit_grölen #ugs
+weiter_begleiten
+herum_knallen
+drüber_gucken
+vor_schneiden
+heraus_trauen
+dran_sitzen
+weg_arbeiten #ugs
+hin_reiten
+herumgebissen
+fort_schwimmen
+um_nutzen
+darunter_mischen
+vorgebacken/A
+heraus_schaben
+ab_lüften
+vorgepackt/A
+nach_schalten
+mit_grinsen #ugs
+dran_gehen #ugs
+dazu_fügen #ugs
+aufploppen #ugs
+aufploppe #ugs
+aufploppst #ugs
+aufploppt #ugs
+aufgeploppt #ugs
+aufzuploppen #ugs
+zusammen_kuscheln
+nach_programmieren
+nach_fetten
+herumscrollens
+herumscrolle
+herumscrollst
+herumscrollt
+herumgescrollt
+herumzuscrollen
+drauf_machen
+Touch/S
+Welcome Day/S
+Allianz Direct/S #name
+Howard/S #name
+Ischgl/S #name
+Stretching/S
+WKZ #abk
+nach_nutzen
+los_lernen
+zurück_verschieben
+drauf_werfen #ugs
+hinterher_gehen
+dazu_hängen
+weiter_hören
+vorerkrankt/A
+Vorerkrankte/N
+Vorerkrankter
+umgeschmissen #ugs
+los_kombinieren
+hinklicken
+hinklicke
+hinklickst
+hinklickt
+hingeklickt
+hinzuklicken
+ein_schleimen #ugs
+hoch_schleppen
+zurück_transferieren
+vorbei_drücken
+an_schmoren
+nachgotisch/A
+zusammen_sparen
+zurück_schütten
+vor_glühen #ugs
+drauf_kippen #ugs
+auseinander_klauben #ugs
+Nachschreibtermin/S
+Nachschreibtermine/N
+Gebärdentelefon/S
+gesundheitsrechtlich/A
+Screeningzentrum/S
+Tattoostudio/S
+Sorgentelefon/S
+Nachfragemarkt/S
+Nachfragemärkte/N
+gefaucht
+Machbarkeitsprüfung
+Machbarkeitsprüfungen
+Verschließanlage/N
+Brandtner/S #name
+Copywriting/S #eng
+Coronakrise/N
+Corona-Krise/N
+Petzold/S #name
+Alienrasse/N
+Amira/S #name
+Ansammlungsverbot/ES
+Aufzählungspunkt
+Aufzählungspunkte/N
+Attention
+Beugesehne/N
+zurück_schweifen
+hochbelastbar/A
+#los_rocken #ugs
+herum_scheuchen #ugs
+drauf_packen #ugs
+hereinscheinend/A
+reinscheinend/A #ugs
+drauf_packen #ugs
+#hoch_skalieren
+herum_jagen #ugs
+auf_rammen
+an_schweigen
+fern_schauen #ugs
+drunter_schreiben #ugs
+hinterher_putzen
+weiter_prüfen
+hin_verschieben
+durch_pusten
+aus_feilschen
+ab_lachen #ugs
+weiter_rennen
+drüber_werfen
+drauf_stecken #ugs
+davon_schweben
+Trial-and-Error #eng
+Trial-and-Error-Methode/N #eng
+Rise of Skywalker
+Home-Schooling #eng

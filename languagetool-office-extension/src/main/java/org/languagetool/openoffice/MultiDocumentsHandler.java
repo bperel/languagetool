@@ -104,9 +104,6 @@ public class MultiDocumentsHandler {
   private String menuDocId = null;          //  Id of document at which context menu was called 
   private TextLevelCheckQueue textLevelQueue = null; // Queue to check text level rules
   
-  @SuppressWarnings("unused")
-  private LanguagetoolMenu ltMenu = null;
-
   private boolean testMode = false;
 
 
@@ -121,7 +118,7 @@ public class MultiDocumentsHandler {
     this.mainThread = mainThread;
     documents = new ArrayList<>();
     disabledRulesUI = new HashSet<>();
-    extraRemoteRules = new ArrayList<Rule>();
+    extraRemoteRules = new ArrayList<>();
   }
   
   /**
@@ -418,9 +415,11 @@ public class MultiDocumentsHandler {
           xComponent = null;
         }
       }
-      ltMenu = new LanguagetoolMenu(xContext);
     }
     documents.add(new SingleDocument(xContext, config, docID, xComponent, this));
+    if (!testMode) {              //  xComponent == null for test cases 
+      documents.get(documents.size()-1).setLtMenu(new LanguagetoolMenu(xContext));
+    }
     if (debugMode) {
       MessageHandler.printToLogFile("Document " + docNum + " created; docID = " + docID);
     }
@@ -458,6 +457,24 @@ public class MultiDocumentsHandler {
       goneContext = null;
       if (debugMode) {
         MessageHandler.printToLogFile("Document " + rmNum + " deleted");
+      }
+    }
+  }
+  
+  /**
+   * Delete the menu listener of a document
+   */
+  public void removeMenuListener(XComponent xComponent) {
+    if(xComponent != null) {
+      for (int i = 0; i < documents.size(); i++) {
+        XComponent docComponent = documents.get(i).getXComponent();
+        if (docComponent != null && xComponent.equals(docComponent)) { //  disposed document found
+          documents.get(i).getLtMenu().removeListener();
+          if (debugMode) {
+            MessageHandler.printToLogFile("Menu listener of document " + documents.get(i).getDocID() + " removed");
+          }
+          break;
+        }
       }
     }
   }
@@ -611,7 +628,7 @@ public class MultiDocumentsHandler {
    * Set docID used within menu
    */
   public void setMenuDocId(String docId) {
-    menuDocId = new String(docId);
+    menuDocId = docId;
   }
 
   /**
@@ -673,6 +690,16 @@ public class MultiDocumentsHandler {
   }
 
   /**
+   * Test if sorted rules for index exist
+   */
+  public boolean isSortedRuleForIndex(int index) {
+    if(index < 0 || index > 1 || sortedTextRules.textLevelRules.get(index).isEmpty()) {
+      return false;
+    }
+    return true;
+  }
+
+  /**
    * activate all rules stored under a given index related to the list of getNumMinToCheckParas
    * deactivate all other text level rules
    */
@@ -696,18 +723,22 @@ public class MultiDocumentsHandler {
     List<Integer> minToCheckParagraph;
     List<List<String>> textLevelRules;
     SortedTextRules () {
-      minToCheckParagraph = new ArrayList<Integer>();
-      textLevelRules = new ArrayList<List<String>>();
-      int numParasToCheck = config.getNumParasToCheck();
+      minToCheckParagraph = new ArrayList<>();
+      textLevelRules = new ArrayList<>();
+      minToCheckParagraph.add(0);
+      textLevelRules.add(new ArrayList<>());
+      if(useQueue && config.getNumParasToCheck() != 0) {
+        minToCheckParagraph.add(config.getNumParasToCheck());
+      } else {
+        minToCheckParagraph.add(-1);
+      }
+      textLevelRules.add(new ArrayList<>());
       List<Rule> rules = langTool.getAllActiveOfficeRules();
       for(Rule rule : rules) {
         if(rule instanceof TextLevelRule && !langTool.getDisabledRules().contains(rule.getId()) 
             && !disabledRulesUI.contains(rule.getId())) {
-          insertRule(((TextLevelRule) rule).minToCheckParagraph(), rule.getId(), numParasToCheck);
+          insertRule(((TextLevelRule) rule).minToCheckParagraph(), rule.getId());
         }
-      }
-      if(useQueue && config.getNumParasToCheck() != 0) {
-        minToCheckParagraph.set(1, config.getNumParasToCheck());
       }
       if(debugMode) {
         MessageHandler.printToLogFile("Number different minToCheckParagraph: " + minToCheckParagraph.size());
@@ -720,68 +751,25 @@ public class MultiDocumentsHandler {
       }
     }
 
-    private void insertRule (int minPara, String RuleId, int nToCheck) {
+    private void insertRule (int minPara, String ruleId) {
       if(useQueue) {
         if(minPara == 0) {
-          int n = minToCheckParagraph.indexOf(nToCheck);
-          if( n == 0 || minToCheckParagraph.size() == 0) {
-            minToCheckParagraph.add(0, minPara);
-            textLevelRules.add(0, new ArrayList<String>());
-          }
-          textLevelRules.get(0).add(new String(RuleId));
+          textLevelRules.get(0).add(ruleId);
         } else {
-          int n = minToCheckParagraph.indexOf(nToCheck);
-          if( n < 0) {
-            minToCheckParagraph.add(nToCheck);
-            textLevelRules.add(new ArrayList<String>());
-          }
-          textLevelRules.get(textLevelRules.size() - 1).add(new String(RuleId));
+          textLevelRules.get(1).add(ruleId);
         }
       } else {
         if(minPara < 0) {
-          int n = minToCheckParagraph.indexOf(minPara);
-          if( n < 0) {
-            minToCheckParagraph.add(minPara);
-            textLevelRules.add(new ArrayList<String>());
-          }
-          textLevelRules.get(textLevelRules.size() - 1).add(new String(RuleId));
+          textLevelRules.get(1).add(ruleId);
         } else {
-          int n = minToCheckParagraph.indexOf(-1);
-          if( n == 0 || minToCheckParagraph.size() == 0) {
-            minToCheckParagraph.add(0, minPara);
-            textLevelRules.add(0, new ArrayList<String>());
-          } else if(minPara > minToCheckParagraph.get(0)) {
+          if(minPara > minToCheckParagraph.get(0)) {
             minToCheckParagraph.set(0, minPara);
           }
-          textLevelRules.get(0).add(new String(RuleId));
+          textLevelRules.get(0).add(ruleId);
         }
       }
     }
 
-/*
- * This rule was commented out for performance reasons and replaced by the same named rule before 
- *
-    private void insertRule (int minPara, String RuleId) {
-      int n = minToCheckParagraph.indexOf(minPara); 
-      if( n >= 0) {
-        textLevelRules.get(n).add(new String(RuleId));
-        return;
-      } else {
-        if(minPara < 0) {
-          n = minToCheckParagraph.size();
-        } else {
-          for (n = 0; n < minToCheckParagraph.size(); n++) {
-            if(minPara < minToCheckParagraph.get(n) || minToCheckParagraph.get(n) < 0) {
-              break;
-            }
-          }
-        }
-        minToCheckParagraph.add(n, minPara);
-        textLevelRules.add(n, new ArrayList<String>());
-        textLevelRules.get(n).add(new String(RuleId));
-      }
-    }
-*/
     public List<Integer> getMinToCheckParas() {
       return minToCheckParagraph;
     }
@@ -811,12 +799,13 @@ public class MultiDocumentsHandler {
   }
   
   class LanguagetoolMenu implements XMenuListener {
-    
     XMenuBar menubar = null;
     XPopupMenu toolsMenu = null;
     XPopupMenu ltMenu = null;
     short toolsId = 0;
     short ltId = 0;
+    short switchOffId = 0;
+    short switchOffPos = 0;
     private XPopupMenu xProfileMenu = null;
     private List<String> definedProfiles = null;
     private String currentProfile = null;
@@ -852,43 +841,6 @@ public class MultiDocumentsHandler {
         return;
       }
 
-      toolsMenu.addMenuListener(new XMenuListener() {
-
-        @Override
-        public void disposing(EventObject arg0) {
-        }
-
-        @Override
-        public void itemActivated(MenuEvent arg0) {
-        }
-
-        @Override
-        public void itemDeactivated(MenuEvent arg0) {
-        }
-
-        @Override
-        public void itemHighlighted(MenuEvent event) {
-          if(event.MenuId == ltId) {
-            setLtMenu();
-          }
-        }
-
-        @Override
-        public void itemSelected(MenuEvent event) {
-          if(event.MenuId == ltId) {
-            setLtMenu();
-          }
-        }
-      });
-      if (debugMode) {
-        MessageHandler.printToLogFile("Menu listener set");
-      }
-
-    }
-    
-    private void setLtMenu() {
-      short switchOffId = 0;
-      short switchOffPos = 0;
       for (short i = 0; i < ltMenu.getItemCount(); i++) {
         String command = ltMenu.getCommand(ltMenu.getItemId(i));
         if(LT_SWITCH_OFF_COMMAND.equals(command)) {
@@ -902,8 +854,24 @@ public class MultiDocumentsHandler {
         return;
       }
       
-      ltMenu.setItemText(switchOffId, messages.getString("loMenuSwitchOff"));
-      
+      if(messages.getString("loMenuSwitchOff").equals(ltMenu.getItemText(switchOffId))) {
+        MessageHandler.printToLogFile("LT menu already installed");
+        return;
+      } else {
+        ltMenu.removeItem(switchOffPos, (short) 1);
+        ltMenu.insertItem(switchOffId, messages.getString("loMenuSwitchOff"), MenuItemStyle.CHECKABLE, switchOffPos);
+      }
+      toolsMenu.addMenuListener(this);
+      if (debugMode) {
+        MessageHandler.printToLogFile("Menu listener set");
+      }
+    }
+    
+    public void removeListener() {
+      toolsMenu.removeMenuListener(this);
+    }
+    
+    private void setLtMenu() {
       if(switchOff) {
         ltMenu.checkItem(switchOffId, true);
       } else {
@@ -911,58 +879,74 @@ public class MultiDocumentsHandler {
       }
       short profilesId = (short)(switchOffId + 10);
       short profilesPos = (short)(switchOffPos + 2);
-      setProfileMenu();
-      if(xProfileMenu != null) {
-        if(ltMenu.getItemId(profilesPos) != profilesId) {
-          ltMenu.insertItem(profilesId, messages.getString("loMenuChangeProfiles"), MenuItemStyle.AUTOCHECK, profilesPos);
-        }
-        ltMenu.setPopupMenu(profilesId, xProfileMenu);
-      } else if(ltMenu.getItemId(profilesPos) == profilesId) {
-        ltMenu.removeItem(profilesPos, (short)1);
+      if(ltMenu.getItemId(profilesPos) != profilesId) {
+        setProfileMenu(profilesId, profilesPos);
       }
-      toolsMenu.setPopupMenu(ltId, ltMenu);
+      setProfileItems();
     }
       
-    private void setProfileMenu() {
-      List<String> profiles = null;
-      if(config != null) {
-        profiles = config.getDefinedProfiles();
+    private void setProfileMenu(short profilesId, short profilesPos) {
+      ltMenu.insertItem(profilesId, messages.getString("loMenuChangeProfiles"), MenuItemStyle.AUTOCHECK, profilesPos);
+      xProfileMenu = OfficeTools.getPopupMenu(xContext);
+      if(xProfileMenu == null) {
+        MessageHandler.printToLogFile("Profile menu == null");
+        return;
       }
-      if(profiles != null && !profiles.isEmpty()) {
-        definedProfiles = profiles;
-      }
-      if(definedProfiles != null) {
-        XPopupMenu xPopupMenu = OfficeTools.getPopupMenu(xContext);
-        currentProfile = config.getCurrentProfile();
-        xProfileMenu = getProfileMenu(xPopupMenu);
-      }
-    }
-    
-    private XPopupMenu getProfileMenu(XPopupMenu xPopupMenu) {
-      if(xPopupMenu != null) {
-        short nId = 1;
-        short nPos = 0;
-        xPopupMenu.insertItem(nId, messages.getString("guiUserProfile"), (short) 0, nPos);
-        xPopupMenu.setCommand(nId, LT_PROFILE_COMMAND);
-        if(currentProfile == null || currentProfile.isEmpty()) {
-          xPopupMenu.enableItem(nId , false);
-        } else {
-          xPopupMenu.enableItem(nId , true);
+
+      xProfileMenu.addMenuListener(new XMenuListener() {
+        @Override
+        public void disposing(EventObject arg0) {
         }
-        for (int i = 0; i < definedProfiles.size(); i++) {
-          nId++;
-          nPos++;
-          xPopupMenu.insertItem(nId, definedProfiles.get(i), (short) 0, nPos);
-          xPopupMenu.setCommand(nId, LT_PROFILE_COMMAND + definedProfiles.get(i));
-          if(currentProfile != null && currentProfile.equals(definedProfiles.get(i))) {
-            xPopupMenu.enableItem(nId , false);
+        @Override
+        public void itemActivated(MenuEvent arg0) {
+        }
+        @Override
+        public void itemDeactivated(MenuEvent arg0) {
+        }
+        @Override
+        public void itemHighlighted(MenuEvent arg0) {
+        }
+        @Override
+        public void itemSelected(MenuEvent event) {
+          if(event.MenuId == 1) {
+            runProfileAction(null);
           } else {
-            xPopupMenu.enableItem(nId , true);
+            runProfileAction(definedProfiles.get(event.MenuId - 2));
           }
         }
-        xPopupMenu.addMenuListener(this);
+      });
+
+      ltMenu.setPopupMenu(profilesId, xProfileMenu);
+    }
+    
+    private void setProfileItems() {
+      currentProfile = config.getCurrentProfile();
+      definedProfiles = config.getDefinedProfiles();
+      if(xProfileMenu != null) {
+        xProfileMenu.removeItem((short)0, xProfileMenu.getItemCount());
+        short nId = 1;
+        short nPos = 0;
+        xProfileMenu.insertItem(nId, messages.getString("guiUserProfile"), (short) 0, nPos);
+        xProfileMenu.setCommand(nId, LT_PROFILE_COMMAND);
+        if(currentProfile == null || currentProfile.isEmpty()) {
+          xProfileMenu.enableItem(nId , false);
+        } else {
+          xProfileMenu.enableItem(nId , true);
+        }
+        if(definedProfiles != null) {
+          for (int i = 0; i < definedProfiles.size(); i++) {
+            nId++;
+            nPos++;
+            xProfileMenu.insertItem(nId, definedProfiles.get(i), (short) 0, nPos);
+            xProfileMenu.setCommand(nId, LT_PROFILE_COMMAND + definedProfiles.get(i));
+            if(currentProfile != null && currentProfile.equals(definedProfiles.get(i))) {
+              xProfileMenu.enableItem(nId , false);
+            } else {
+              xProfileMenu.enableItem(nId , true);
+            }
+          }
+        }
       }
-      return xPopupMenu;
     }
 
     private void runProfileAction(String profile) {
@@ -971,7 +955,7 @@ public class MultiDocumentsHandler {
         MessageHandler.showMessage("profile '" + profile + "' not found");
       } else {
         try {
-          List<String> saveProfiles = new ArrayList<String>(); 
+          List<String> saveProfiles = new ArrayList<>();
           saveProfiles.addAll(config.getDefinedProfiles());
           config.initOptions();
           config.loadConfiguration(profile == null ? "" : profile);
@@ -984,31 +968,26 @@ public class MultiDocumentsHandler {
         }
       }
     }
-    
+
     @Override
-    public void itemSelected(MenuEvent event) {
-      if(event.MenuId == 1) {
-        runProfileAction(null);
-      } else {
-        runProfileAction(definedProfiles.get(event.MenuId - 2));
+    public void disposing(EventObject event) {
+    }
+    @Override
+    public void itemActivated(MenuEvent event) {
+      if(event.MenuId == 0) {
+        setLtMenu();
       }
     }
-  
     @Override
-    public void disposing(EventObject arg0) {
+    public void itemDeactivated(MenuEvent event) {
+    }
+    @Override
+    public void itemHighlighted(MenuEvent event) {
+    }
+    @Override
+    public void itemSelected(MenuEvent event) {
     }
 
-    @Override
-    public void itemActivated(MenuEvent arg0) {
-    }
-
-    @Override
-    public void itemDeactivated(MenuEvent arg0) {
-    }
-
-    @Override
-    public void itemHighlighted(MenuEvent arg0) {
-    }
   }
   
 }

@@ -247,6 +247,7 @@ Prada
 Puma
 Airbnb
 Trivago
+TripAdvisor
 Donald Trump
 Barack Obama
 Angela Merkel
@@ -285,6 +286,7 @@ The Independent
 Škoda
 Gmail
 ProtonMail
+ProtonVPN
 AOL
 Yandex
 Pinterest
@@ -321,6 +323,9 @@ Uber Eats
 CIA
 FBI
 COVID-19
+Covid-19
+COVID
+Covid
 Pizza Hut
 Burger King
 Taco Bell
@@ -338,3 +343,35 @@ AutoCAD
 AMD
 SharePoint
 Word
+TechCrunch
+Huffington Post
+HuffPost
+Engadget
+StatCounter
+Zendesk
+JCDecaux
+JC Decaux
+BPCE
+PSA
+Société Générale
+Crédit Agricole
+Carrefour
+Scotiabank
+Royal Bank of Canada
+Bank of Nova Scotia
+Suncor Energy
+Anheuser-Busch
+Anheuser-Busch InBev
+KBC Bank
+Epic Games
+Rockstar Games
+Electronic Arts
+Ubisoft
+Activision Blizzard
+Airbus
+Boeing
+JetBrains
+GitLab
+Fox News
+Gazprom
+Zoom

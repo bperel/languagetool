@@ -210,7 +210,7 @@ public class AgreementRule extends Rule {
       posRegex("PKT|KON:NEB|ZUS")// "Ist das Kunst?" / "Ist das Kunst oder Abfall?" / "Sind das Eier aus Bodenhaltung"
     ),
     Arrays.asList( // Die Präsent AG
-      tokenRegex("Präsent|Windhorst"),
+      tokenRegex("Präsent|Windhorst|Energiedienst"),
       token("AG")
     ),
     Arrays.asList(
@@ -308,7 +308,7 @@ public class AgreementRule extends Rule {
     ),
     Arrays.asList(
       token("Private"),
-      tokenRegex("Equitys?")
+      tokenRegex("Equitys?|Clouds?")
     ),
     Arrays.asList(
       token("Personal"),
@@ -571,6 +571,23 @@ public class AgreementRule extends Rule {
       token("zum"),
       token("einen"),
       posRegex("SUB:.*")
+    ),
+    Arrays.asList( // https://www.duden.de/suchen/dudenonline/Fake%20News
+      csToken("Fake"),
+      posRegex("News")
+    ),
+    Arrays.asList(
+      csToken("Steinberg"),
+      csToken("Apotheke")
+    ),
+    Arrays.asList( // Vielen Dank fürs Bescheid geben
+      token("fürs"),
+      token("Bescheid"),
+      tokenRegex("geben|sagen")
+    ),
+    Arrays.asList( // https://www.autozeitung.de/
+      csToken("Auto"),
+      csToken("Zeitung")
     )
   );
 
@@ -639,6 +656,7 @@ public class AgreementRule extends Rule {
     "Prozent",   // Plural "Prozente", trotzdem ist "mehrere Prozent" korrekt
     "Gramm",
     "Kilogramm",
+    "Badlands",
     "Chief", // Chief Excutive Officer
     "Carina", // Name
     "Meter", // Das Meter (Objekt zum Messen)

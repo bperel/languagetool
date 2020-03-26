@@ -410,6 +410,14 @@ public class CaseRule extends Rule {
       csToken("Top"),
       csToken("Ten")
     ),
+    Arrays.asList( // Dutch name (e.g. "Bert van den Brink")
+      csToken("Van"),
+      csToken("Den")
+    ),
+    Arrays.asList(
+      csToken("Lasse"),
+      posRegex("EIG:.*|UNKNOWN")
+    ),
     Arrays.asList(
       csToken("Just"),
       token("in"),
@@ -1085,6 +1093,7 @@ public class CaseRule extends Rule {
         !isSpecialCase(i, tokens) &&
         !isAdjectiveAsNoun(i, tokens, lowercaseReadings) &&
         !isExceptionPhrase(i, tokens) &&
+        !(i == 2 && "“".equals(tokens[i-1].getToken())) &&   // closing quote at sentence start (https://github.com/languagetool-org/languagetool/issues/2558)
         !isNounWithVerbReading(i, tokens)) {
       String fixedWord = StringTools.lowercaseFirstChar(tokens[i].getToken());
       if (":".equals(tokens[i - 1].getToken())) {

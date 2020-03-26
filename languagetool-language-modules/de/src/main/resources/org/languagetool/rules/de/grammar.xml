@@ -1285,11 +1285,15 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
                 <marker>
                     <token>etwas</token>
                 </marker>
-                <token regexp="yes">[0-9]+</token>
+                <or>
+                    <token regexp="yes">[0-9]+</token>
+                    <token postag="ZAL"/>
+                </or>
                 <token negate="yes">mal</token>
             </pattern>
             <message>Meinten Sie <suggestion>etwa</suggestion>?</message>
             <example correction="etwa">Es gibt <marker>etwas</marker> 24 bis 25 Millionen Wikipedia-Artikel</example>
+            <example correction="etwa">Pro Bürger sind es <marker>etwas</marker> zehn Kilo.</example>
             <example>Etwas 16 mal 10 nehmen.</example>
         </rule>
         <rulegroup id="AUFFUEHREN_AUSFUEHREN" name="'aufführen (ausführen)' etc.">
@@ -1847,6 +1851,17 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
             </pattern>
             <message>Meinten Sie <suggestion><match no="2" regexp_match="e$" regexp_replace=""/></suggestion>?</message>
             <example correction="Spaß">Das Spiel macht mir viel <marker>Spaße</marker>.</example>
+        </rule>
+        <rule id="LIEBE_GRUSS" name="Liebe Gruß (Grüße)">
+            <pattern>
+                <token postag="SENT_START|PKT" postag_regexp="yes" />
+                <marker>
+                    <token regexp="yes">liebe|beste|viele|herzliche</token>
+                    <token regexp="yes">gru(ß|ss)e?</token>
+                </marker>
+            </pattern>
+            <message>Meinten Sie <suggestion>\2 <match no="3" regexp_match="(?i)gru(ß|ss)e?" regexp_replace="Grü$1e" /></suggestion>?</message>
+            <example correction="Liebe Grüße"><marker>Liebe Gruß</marker>, Karl.</example>
         </rule>
         <rulegroup id="GEGEN_GEGEBEN" name="'gegen (gegeben)'">
             <short>Möglicher Tippfehler</short>
@@ -7413,9 +7428,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
             <rule>
                 <pattern>
                     <token>Covid</token>
+                    <token min="0" regexp="yes">-|–</token>
                     <token>19</token>
                 </pattern>
-                <message>Meinten Sie <suggestion>Covid-\2</suggestion> (= Coronavirus)?</message>
+                <message>Meinten Sie <suggestion>Covid-\3</suggestion> (= Coronavirus)?</message>
                 <url>https://de.wikipedia.org/wiki/COVID-19</url>
                 <example correction="Covid-19"><marker>Covid 19</marker> ist eine Viruserkrankung.</example>
             </rule>
@@ -10250,17 +10266,32 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
                 <pattern>
                     <marker>
                         <token>da</token>
-                        <token regexp="yes">nach|neben|ran|rauf|runter</token>
+                        <token regexp="yes">bei|für|gegen|hin|vor|nach|neben|ran|rauf|runter</token>
                     </marker>
-                    <token postag="VER:(AUX:|MOD:)?(1|2|3):.+" postag_regexp="yes"><exception postag="(PA2|SUB|ART|ADJ):.+" postag_regexp="yes"/><exception regexp="yes">sieben|gilt|äußerst|äusserst|einst|meinen?|tausenden?|!(hat)</exception></token>
+                    <token postag="VER:(AUX:|MOD:)?(1|2|3):.+" postag_regexp="yes"><exception postag="(PA2|SUB|ART|ADJ):.+" postag_regexp="yes"/><exception regexp="yes">sein|sieben|gilt|äußerst|äusserst|einst|meinen?|tausenden?|!(hat)</exception></token>
                 </pattern>
                 <message>&getrennt;: Meinten Sie <suggestion>da\2</suggestion>?</message>
                 <short>&getrennt;.</short>
                 <example correction="danach">Was <marker>da nach</marker> kam, war Krieg.</example>
                 <example correction="Darauf"><marker>Da rauf</marker> kann ich verzichten.</example>
                 <example correction="Danach"><marker>Da nach</marker> hat sie mich verlassen.</example>
+                <example correction="dafür">Wenn Sie <marker>da für</marker> bezahlen, dann gerne.</example>
+                <example>Wir versuchen, um 7:45 da zu sein.</example>
             </rule>
             <rule>
+                <antipattern case_sensitive="yes">
+                    <token postag="VER:IMP.+" postag_regexp="yes"></token>
+                    <token>da</token>
+                    <token></token>
+                    <token>!</token>
+                </antipattern>
+                <antipattern case_sensitive="yes">
+                    <token postag="VER:.+" postag_regexp="yes"></token>
+                    <token>Sie</token>
+                    <token>da</token>
+                    <token></token>
+                    <token>!</token>
+                </antipattern>
                 <pattern case_sensitive="yes">
                     <token postag="SENT_START" negate_pos="yes"><exception regexp="yes">[,;]</exception></token>
                     <marker>
@@ -10273,15 +10304,17 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
                 <example correction="danach">Ich konnte <marker>da nach</marker> nicht wieder einschlafen.</example>
                 <example correction="daran">Ich will <marker>da ran</marker> nicht denken.</example>
                 <example><marker>Danach</marker> hat sie mich verlassen.</example>
+                <example>Komm da runter!</example>
+                <example>Kommen Sie da runter!</example>
             </rule>
         </rulegroup>
         <rulegroup id="NACHDEM_NACH_DEM" name="'nachdem (nach dem) Essen etc.'">
             <antipattern>
                 <token>kann</token>
-                <token regexp="yes">außerdem|ausserdem</token>
+                <token regexp="yes">au(ß|ss)erdem</token>
             </antipattern>
             <antipattern>
-                <token regexp="yes">(trotz|seit)dem</token>
+                <token regexp="yes">trotzdem|seitdem</token>
                 <token/>
                 <token postag="SENT_END"/>
             </antipattern>
@@ -33186,6 +33219,28 @@ Andere Projekte</example>
                 <example correction="Break-even-Point">Das Unternehmen hat den <marker>Break Even Punkt</marker> erreicht.</example>
             </rule>
         </rulegroup>
+        <rulegroup id="TRIAL_AND_ERROR" name="Try and Error (Trial-and-Error)" default="temp_off">
+            <url>https://www.duden.de/rechtschreibung/Trial_and_Error_Methode</url>
+            <rule>
+                <pattern>
+                    <token regexp="yes">Try|Trial</token>
+                    <token regexp="yes">[au]nd|&amp;</token>
+                    <token>Error</token>
+                    <token regexp="yes">Methoden?</token>
+                </pattern>
+                <message>Meinten Sie <suggestion>Trial-and-Error-<match no="4" case_conversion="startupper" /></suggestion>?</message>
+                <example correction="Trial-and-Error-Methode">Er probierte es mit der <marker>Try and Error Methode</marker>.</example>
+            </rule>
+            <rule>
+                <pattern>
+                    <token regexp="yes">Try|Trial</token>
+                    <token regexp="yes">[au]nd|&amp;</token>
+                    <token>Error</token>
+                </pattern>
+                <message>Meinten Sie <suggestion>Trial-and-Error</suggestion>?</message>
+                <example correction="Trial-and-Error">Er probierte es mit <marker>Try and Error</marker>.</example>
+            </rule>
+        </rulegroup>
         <rulegroup id="MAKE_UP" name="'Make-up'">
             <url>https://www.duden.de/rechtschreibung/Make_up</url>
             <rule>
@@ -33211,7 +33266,6 @@ Andere Projekte</example>
                 <example correction="Make-ups">Während des Auftragens ihres <marker>Make-Ups</marker> ging etwas schief.</example>
             </rule>
         </rulegroup>
-
         <rulegroup id="STAND_UP" name="'Stand-up'">
             <url>https://www.duden.de/rechtschreibung/Stand_up</url>
             <antipattern><!-- Englische Namen -->
