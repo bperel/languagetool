@@ -235,12 +235,7 @@ class ApiV2 {
     String languageCode = parameters.get("languageCode");
 
     MediaWikiApi mediaWikiApi = new MediaWikiApi(languageCode);
-    String userName;
-    try {
-      userName = mediaWikiApi.getUserName(accessToken);
-    } catch (InterruptedException|ExecutionException e) {
-      throw new RuntimeException("Failed to login : " + e.getMessage());
-    }
+    String userName = mediaWikiApi.getUsername(accessToken);
 
     writeStringResponse("userName", userName, httpExchange);
   }
@@ -276,6 +271,7 @@ class ApiV2 {
     CorpusMatchEntry suggestion = db.getCorpusMatch(suggestionId);
     CorpusArticleEntry article = db.getCorpusArticle(suggestion.getArticleId());
     MediaWikiApi mediaWikiApi = new MediaWikiApi(article.getLanguageCode());
+    String username = mediaWikiApi.getUsername(accessToken);
     try {
       String articleWikitext = mediaWikiApi.getPage(accessToken, article.getTitle());
       String contentWithSuggestionApplied = HtmlTools.getArticleWithAppliedSuggestion(
@@ -289,7 +285,7 @@ class ApiV2 {
       throw new RuntimeException("Failed to edit : " + e.getMessage());
     }
 
-    boolean accepted = db.resolveCorpusMatch(suggestionId, true, null);
+    boolean accepted = db.resolveCorpusMatch(suggestionId, username, true, null);
 
     writeBooleanResponse("accepted", accepted, httpExchange);
   }
@@ -305,7 +301,13 @@ class ApiV2 {
     }
 
     DatabaseAccess db = DatabaseAccess.getInstance();
-    boolean refused = db.resolveCorpusMatch(suggestionId, false, reason);
+    CorpusMatchEntry suggestion = db.getCorpusMatch(suggestionId);
+    CorpusArticleEntry article = db.getCorpusArticle(suggestion.getArticleId());
+    MediaWikiApi mediaWikiApi = new MediaWikiApi(article.getLanguageCode());
+    String accessToken = parameters.get("accessToken");
+    String username = mediaWikiApi.getUsername(accessToken);
+
+    boolean refused = db.resolveCorpusMatch(suggestionId, username, false, reason);
 
     writeBooleanResponse("refused", refused, httpExchange);
   }
