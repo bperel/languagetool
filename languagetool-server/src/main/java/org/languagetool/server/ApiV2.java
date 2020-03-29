@@ -65,42 +65,42 @@ class ApiV2 {
   }
 
   void handleRequest(String path, HttpExchange httpExchange, Map<String, String> parameters, ErrorRequestLimiter errorRequestLimiter, String remoteAddress, HTTPServerConfig config) throws Exception {
-    if (path.equals("languages")) {
-      handleLanguagesRequest(httpExchange);
-    } else if (path.equals("maxtextlength")) {
-      handleMaxTextLengthRequest(httpExchange, config);
-    } else if (path.equals("configinfo")) {
-      handleGetConfigurationInfoRequest(httpExchange, parameters, config);
-    } else if (path.equals("info")) {
-      handleSoftwareInfoRequest(httpExchange, parameters, config);
-    } else if (path.equals("check")) {
-      handleCheckRequest(httpExchange, parameters, errorRequestLimiter, remoteAddress);
-    } else if (path.equals("words")) {
-      handleWordsRequest(httpExchange, parameters, config);
-    } else if (path.equals("words/add")) {
-      handleWordAddRequest(httpExchange, parameters, config);
-    } else if (path.equals("words/delete")) {
-      handleWordDeleteRequest(httpExchange, parameters, config);
-    } else if (path.equals("wikipedia/authorize")) {
-        handleWikipediaAuthorizeRequest(httpExchange, parameters);
+//    if (path.equals("languages")) {
+//      handleLanguagesRequest(httpExchange);
+//    } else if (path.equals("maxtextlength")) {
+//      handleMaxTextLengthRequest(httpExchange, config);
+//    } else if (path.equals("configinfo")) {
+//      handleGetConfigurationInfoRequest(httpExchange, parameters, config);
+//    } else if (path.equals("info")) {
+//      handleSoftwareInfoRequest(httpExchange, parameters, config);
+//    } else if (path.equals("check")) {
+//      handleCheckRequest(httpExchange, parameters, errorRequestLimiter, remoteAddress);
+//    } else if (path.equals("words")) {
+//      handleWordsRequest(httpExchange, parameters, config);
+//    } else if (path.equals("words/add")) {
+//      handleWordAddRequest(httpExchange, parameters, config);
+//    } else if (path.equals("words/delete")) {
+//      handleWordDeleteRequest(httpExchange, parameters, config);
+//    } else if (path.equals("rule/examples")) {
+//      // private (i.e. undocumented) API for our own use only
+//      handleRuleExamplesRequest(httpExchange, parameters);
+//    } else if (path.equals("log")) {
+//      // private (i.e. undocumented) API for our own use only
+//      handleLogRequest(httpExchange, parameters);
+    if (path.equals("wikipedia/authorize")) {
+      handleWikipediaAuthorizeRequest(httpExchange, parameters);
     } else if (path.equals("wikipedia/login")) {
-        handleWikipediaLoginRequest(httpExchange, parameters);
+      handleWikipediaLoginRequest(httpExchange, parameters);
     } else if (path.equals("wikipedia/user")) {
-        handleWikipediaUserRequest(httpExchange, parameters);
+      handleWikipediaUserRequest(httpExchange, parameters);
     } else if (path.equals("wikipedia/suggestions")) {
-        handleWikipediaSuggestionRequest(httpExchange);
+      handleWikipediaSuggestionRequest(httpExchange);
     } else if (path.equals("wikipedia/suggestion")) {
-        handleWikipediaSuggestionDetailsRequest(httpExchange, parameters);
+      handleWikipediaSuggestionDetailsRequest(httpExchange, parameters);
     } else if (path.equals("wikipedia/suggestion/accept")) {
-        handleWikipediaAcceptRequest(httpExchange, parameters);
+      handleWikipediaAcceptRequest(httpExchange, parameters);
     } else if (path.equals("wikipedia/suggestion/refuse")) {
-        handleWikipediaRefuseRequest(httpExchange, parameters);
-    } else if (path.equals("rule/examples")) {
-      // private (i.e. undocumented) API for our own use only
-      handleRuleExamplesRequest(httpExchange, parameters);
-    } else if (path.equals("log")) {
-      // private (i.e. undocumented) API for our own use only
-      handleLogRequest(httpExchange, parameters);
+      handleWikipediaRefuseRequest(httpExchange, parameters);
     } else {
       throw new PathNotFoundException("Unsupported action: '" + path + "'. Please see " + API_DOC_URL);
     }
