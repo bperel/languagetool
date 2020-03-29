@@ -7,7 +7,7 @@ create table access_token
     access_token varchar(255) not null,
     access_token_secret varchar(255) not null,
     constraint access_token_access_token_uindex
-        unique (access_token)
+        unique (language_code, access_token)
 );
 
 create table corpus_article

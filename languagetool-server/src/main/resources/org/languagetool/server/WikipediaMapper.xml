@@ -14,7 +14,7 @@
         UPDATE corpus_match SET applied=#{applied}, applied_date=current_timestamp(), applied_reason=#{reason}, applied_username=#{username} WHERE id=#{id}
     </select>
     <select id="selectAccessToken" resultType="org.languagetool.server.AccessToken">
-        SELECT * FROM access_token WHERE access_token=#{accessToken}
+        SELECT * FROM access_token WHERE access_token=#{accessToken} AND language_code=#{languageCode}
     </select>
     <select id="insertAccessToken">
         INSERT INTO access_token(language_code, username, access_token, access_token_secret) VALUES(#{languageCode}, #{username}, #{accessToken}, #{accessTokenSecret})

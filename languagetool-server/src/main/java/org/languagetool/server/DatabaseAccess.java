@@ -170,12 +170,13 @@ class DatabaseAccess {
     }
   }
 
-  AccessToken getAccessToken(String accessToken) {
+  AccessToken getAccessToken(String languageCode, String accessToken) {
     if (sqlSessionFactory == null) {
       return null;
     }
     try (SqlSession session = sqlSessionFactory.openSession(true)) {
       Map<Object, Object> map = new HashMap<>();
+      map.put("languageCode", languageCode);
       map.put("accessToken", accessToken);
       return session.selectOne("org.languagetool.server.WikipediaMapper.selectAccessToken", map);
     }

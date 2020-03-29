@@ -227,20 +227,30 @@ class ApiV2 {
       String username = mediaWikiApi.getUsernameFromAccessToken();
 
       DatabaseAccess db = DatabaseAccess.getInstance();
-      db.createAccessToken(languageCode, username, accessTokenWithSecret.getToken(), accessTokenWithSecret.getTokenSecret());
+      AccessToken existingToken = db.getAccessToken(languageCode, accessTokenWithSecret.getToken());
+      if (existingToken == null) {
+        db.createAccessToken(languageCode, username, accessTokenWithSecret.getToken(), accessTokenWithSecret.getTokenSecret());
+      }
     } catch (InterruptedException|ExecutionException e) {
       writeStringError("Failed to login : " + e.getMessage(), httpExchange);
       return;
     }
 
-    writeStringResponse("accessToken", mediaWikiApi.getAccessTokenWithSecret().getToken(), httpExchange);
+    HashMap<String, String> fields = new HashMap<>();
+    fields.put("accessToken", mediaWikiApi.getAccessTokenWithSecret().getToken());
+    fields.put("languageCode", languageCode);
+    writeStringHashMapResponse(fields, httpExchange);
   }
 
   private void handleWikipediaUserRequest(HttpExchange httpExchange, Map<String, String> parameters) throws IOException {
     ensureGetMethod(httpExchange, "/wikipedia/user");
-    AccessToken accessTokenData = getAccessTokenData(parameters.get("accessToken"));
+    String languageCode = parameters.get("languageCode");
+    AccessToken accessTokenData = getAccessTokenData(parameters.get("languageCode"), parameters.get("accessToken"));
 
-    writeStringResponse("userName", accessTokenData.getUsername(), httpExchange);
+    HashMap<String, String> fields = new HashMap<>();
+    fields.put("userName", accessTokenData.getUsername());
+    fields.put("languageCode", languageCode);
+    writeStringHashMapResponse(fields, httpExchange);
   }
 
   private void handleWikipediaSuggestionRequest(HttpExchange httpExchange) throws IOException {
@@ -274,7 +284,7 @@ class ApiV2 {
     ensurePostMethod(httpExchange, "/wikipedia/accept");
     ServerTools.setCommonHeaders(httpExchange, JSON_CONTENT_TYPE, allowOriginUrl);
     int suggestionId = Integer.parseInt(parameters.get("suggestion_id"));
-    AccessToken accessTokenData = getAccessTokenData(parameters.get("accessToken"));
+    AccessToken accessTokenData = getAccessTokenData(parameters.get("languageCode"), parameters.get("accessToken"));
 
     DatabaseAccess db = DatabaseAccess.getInstance();
     CorpusMatchEntry suggestion = db.getCorpusMatch(suggestionId);
@@ -311,7 +321,7 @@ class ApiV2 {
       throw new RuntimeException("Invalid refusal reason : " + reason);
     }
 
-    AccessToken accessTokenData = getAccessTokenData(parameters.get("accessToken"));
+    AccessToken accessTokenData = getAccessTokenData(parameters.get("languageCode"), parameters.get("accessToken"));
     String username = accessTokenData.getUsername();
 
     DatabaseAccess db = DatabaseAccess.getInstance();
@@ -335,9 +345,9 @@ class ApiV2 {
     );
   }
 
-  private AccessToken getAccessTokenData(String accessToken) throws RuntimeException {
+  private AccessToken getAccessTokenData(String languageCode, String accessToken) throws RuntimeException {
     DatabaseAccess db = DatabaseAccess.getInstance();
-    AccessToken accessTokenWithData = db.getAccessToken(accessToken);
+    AccessToken accessTokenWithData = db.getAccessToken(languageCode, accessToken);
     if (accessTokenWithData == null) {
       throw new RuntimeException("Can't find access token");
     }
@@ -482,6 +492,7 @@ class ApiV2 {
         g.writeObjectFieldStart("article");
         CorpusArticleEntry article = articles.get(corpusMatchEntry.getArticleId());
         g.writeStringField("title", article.getTitle());
+        g.writeStringField("languageCode", article.getLanguageCode());
         g.writeEndObject();
 
         g.writeEndObject();

@@ -14,7 +14,7 @@ public class MediaWikiApi {
   private static final String API_ENDPOINT_TOKENS = "/w/api.php?action=query&format=json&meta=tokens";
   private static final String API_ENDPOINT_USERINFO = "/w/api.php?action=query&format=json&meta=userinfo";
 
-  public static final String[] SUPPORTED_LANGUAGES = new String[]{"fr"};
+  public static final String[] SUPPORTED_LANGUAGES = new String[]{"ca", "de", "en", "fr", "nl", "pl", "pt", "ru", "uk"};
 
   private static HashMap<String, OAuth10aService> services = new HashMap<>();
   private static HashMap<String, HashMap<String, OAuth1RequestToken>> requestTokens = new HashMap<>();
