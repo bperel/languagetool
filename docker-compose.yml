@@ -33,7 +33,7 @@ services:
       - parsoid
     build:
       context: .
-      dockerfile: Dockerfile.languagetool
+      dockerfile: Dockerfile
       target: languagetool-server
     volumes:
       - ./server.properties:/home/server.properties
