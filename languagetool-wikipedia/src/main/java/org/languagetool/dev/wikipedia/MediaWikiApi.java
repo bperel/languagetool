@@ -14,42 +14,29 @@ public class MediaWikiApi {
   private static final String API_ENDPOINT_TOKENS = "/w/api.php?action=query&format=json&meta=tokens";
   private static final String API_ENDPOINT_USERINFO = "/w/api.php?action=query&format=json&meta=userinfo";
 
-  private static class AccessTokenWithUserData {
-    private OAuth1AccessToken accessToken;
-    private String username;
-
-    public AccessTokenWithUserData(OAuth1AccessToken accessToken, String username) {
-      this.accessToken = accessToken;
-      this.username = username;
-    }
-
-    public OAuth1AccessToken getAccessToken() {
-      return accessToken;
-    }
-
-    public String getUsername() {
-      return username;
-    }
-
-    public void setUsername(String username) {
-      this.username = username;
-    }
-  }
-
   public static final String[] SUPPORTED_LANGUAGES = new String[]{"fr"};
 
   private static HashMap<String, OAuth10aService> services = new HashMap<>();
   private static HashMap<String, HashMap<String, OAuth1RequestToken>> requestTokens = new HashMap<>();
-  private static HashMap<String, HashMap<String, AccessTokenWithUserData>> accessTokensWithUsernames = new HashMap<>();
 
   private String language;
+  private OAuth1AccessToken accessTokenWithSecret;
 
   public MediaWikiApi(String language) {
     this.language = language;
   }
 
+  public MediaWikiApi(String language, String accessToken, String accessTokenSecret) {
+    this.language = language;
+    this.accessTokenWithSecret = new OAuth1AccessToken(accessToken, accessTokenSecret);
+  }
+
   public static String getApiEndpointBase(String language) {
     return "https://" + language + ".wikipedia.org";
+  }
+
+  public OAuth1AccessToken getAccessTokenWithSecret() {
+    return accessTokenWithSecret;
   }
 
   public static void setup(String consumerKey, String consumerSecret) {
@@ -62,7 +49,6 @@ public class MediaWikiApi {
             getApiEndpointBase(language) + "/wiki/"
           )));
         requestTokens.put(language, new HashMap<>());
-        accessTokensWithUsernames.put(language, new HashMap<>());
       }
     }
   }
@@ -89,7 +75,7 @@ public class MediaWikiApi {
     return services.get(language).getAuthorizationUrl(getRequestToken(requestToken));
   }
 
-  public String login(String requestToken, String oauthVerifier) throws InterruptedException, ExecutionException, IOException {
+  public void login(String requestToken, String oauthVerifier) throws InterruptedException, ExecutionException, IOException {
     System.out.println();
 
     if (getRequestToken(requestToken) == null) {
@@ -98,30 +84,27 @@ public class MediaWikiApi {
 
     // Trade the Request Token and Verifier for the Access Token
     System.out.println("Trading the Request Token for an Access Token...");
-    OAuth1AccessToken accessToken = services.get(language).getAccessToken(getRequestToken(requestToken), oauthVerifier);
-    addAccessToken(accessToken);
+    this.accessTokenWithSecret = services.get(language).getAccessToken(getRequestToken(requestToken), oauthVerifier);
     System.out.println("Got the Access Token!");
-    System.out.println("(The raw response looks like this: " + accessToken.getRawResponse() + "')");
+    System.out.println("(The raw response looks like this: " + this.accessTokenWithSecret.getRawResponse() + "')");
     System.out.println();
-
-    return accessToken.getToken();
   }
 
-  public String getPage(String accessToken, String title) throws InterruptedException, ExecutionException, IOException {
+  public String getPage(String title) throws InterruptedException, ExecutionException, IOException {
     HashMap<String, String> getPageParameters = new HashMap<>();
     getPageParameters.put("action", "parse");
     getPageParameters.put("prop", "wikitext");
     getPageParameters.put("format", "json");
     getPageParameters.put("formatversion", "2");
     getPageParameters.put("page", title);
-    Response getPageResponse = callApiWithAccessToken(accessToken, Verb.GET, API_ENDPOINT_BASE, getPageParameters);
+    Response getPageResponse = callApiWithAccessToken(Verb.GET, API_ENDPOINT_BASE, getPageParameters);
 
     HashMap<String, HashMap<String, String>> result = new ObjectMapper().readValue(getPageResponse.getBody(), HashMap.class);
     return result.get("parse").get("wikitext");
   }
 
-  public void edit(String accessToken, String title, String content, String editSummary) throws IOException, InterruptedException, ExecutionException {
-    Response tokenResponse = callApiWithAccessToken(accessToken, Verb.GET, API_ENDPOINT_TOKENS, new HashMap<>());
+  public void edit(String title, String content, String editSummary) throws IOException, InterruptedException, ExecutionException {
+    Response tokenResponse = callApiWithAccessToken(Verb.GET, API_ENDPOINT_TOKENS, new HashMap<>());
 
     HashMap<String, HashMap<String, HashMap<String, String>>> result = new ObjectMapper().readValue(tokenResponse.getBody(), HashMap.class);
     String token = result.get("query").get("tokens").get("csrftoken");
@@ -134,15 +117,11 @@ public class MediaWikiApi {
     editParameters.put("text", content);
     editParameters.put("summary", editSummary);
     editParameters.put("token", token);
-    Response editResponse = callApiWithAccessToken(accessToken, Verb.POST, API_ENDPOINT_BASE, editParameters);
+    Response editResponse = callApiWithAccessToken(Verb.POST, API_ENDPOINT_BASE, editParameters);
     System.out.println("Response : " + editResponse.getBody());
   }
 
-  private Response callApiWithAccessToken(String accessToken, Verb verb, String endpoint, HashMap<String, String> parameters) throws InterruptedException, ExecutionException, IOException {
-    if (getAccessToken(accessToken) == null) {
-      throw new RuntimeException("Can't find access token " + accessToken);
-    }
-
+  private Response callApiWithAccessToken(Verb verb, String endpoint, HashMap<String, String> parameters) throws InterruptedException, ExecutionException, IOException {
     final OAuthRequest request = new OAuthRequest(verb, getApiEndpointBase(language) + endpoint);
     for (String bodyParameterKey : parameters.keySet()) {
       if (verb.equals(Verb.GET)) {
@@ -152,28 +131,14 @@ public class MediaWikiApi {
         request.addBodyParameter(bodyParameterKey, parameters.get(bodyParameterKey));
       }
     }
-    services.get(language).signRequest(getAccessToken(accessToken), request);
+    services.get(language).signRequest(accessTokenWithSecret, request);
     return services.get(language).execute(request);
   }
 
-  public String getUsername(String accessToken) {
-    AccessTokenWithUserData accessTokenWithUserData = accessTokensWithUsernames.get(language).get(accessToken);
-    return accessTokenWithUserData == null ? null : accessTokenWithUserData.getUsername();
-  }
-
-  private OAuth1AccessToken getAccessToken(String accessToken) {
-    AccessTokenWithUserData accessTokenWithUserData = accessTokensWithUsernames.get(language).get(accessToken);
-    return accessTokenWithUserData == null ? null : accessTokenWithUserData.getAccessToken();
-  }
-
-  private void addAccessToken(OAuth1AccessToken accessToken) throws InterruptedException, ExecutionException, IOException {
-
-    AccessTokenWithUserData accessTokenWithUserData = new AccessTokenWithUserData(accessToken, null);
-    accessTokensWithUsernames.get(language).put(accessToken.getToken(), accessTokenWithUserData);
-
-    Response userDataResponse = callApiWithAccessToken(accessToken.getToken(), Verb.GET, API_ENDPOINT_USERINFO, new HashMap<>());
+  public String getUsernameFromAccessToken() throws InterruptedException, ExecutionException, IOException {
+    Response userDataResponse = callApiWithAccessToken(Verb.GET, API_ENDPOINT_USERINFO, new HashMap<>());
     HashMap<String, HashMap<String, HashMap<String, String>>> result = new ObjectMapper().readValue(userDataResponse.getBody(), HashMap.class);
-    accessTokenWithUserData.setUsername(result.get("query").get("userinfo").get("name"));
+    return result.get("query").get("userinfo").get("name");
   }
 
   private OAuth1RequestToken getRequestToken(String requestToken) {

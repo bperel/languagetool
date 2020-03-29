@@ -1,3 +1,15 @@
+create table access_token
+(
+    ID int auto_increment
+        primary key,
+    language_code varchar(15) not null,
+    username varchar(255) not null,
+    access_token varchar(255) not null,
+    access_token_secret varchar(255) not null,
+    constraint access_token_access_token_uindex
+        unique (access_token)
+);
+
 create table corpus_article
 (
     id int auto_increment
@@ -38,3 +50,4 @@ create table corpus_match
 
 create index corpus_match_index_article
     on corpus_match (article_id);
+

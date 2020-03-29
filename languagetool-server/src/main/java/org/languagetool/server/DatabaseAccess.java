@@ -170,6 +170,31 @@ class DatabaseAccess {
     }
   }
 
+  AccessToken getAccessToken(String accessToken) {
+    if (sqlSessionFactory == null) {
+      return null;
+    }
+    try (SqlSession session = sqlSessionFactory.openSession(true)) {
+      Map<Object, Object> map = new HashMap<>();
+      map.put("accessToken", accessToken);
+      return session.selectOne("org.languagetool.server.WikipediaMapper.selectAccessToken", map);
+    }
+  }
+
+  void createAccessToken(String languageCode, String username, String accessToken, String accessTokenSecret) {
+    if (sqlSessionFactory == null) {
+      return;
+    }
+    try (SqlSession session = sqlSessionFactory.openSession(true)) {
+      Map<Object, Object> map = new HashMap<>();
+      map.put("languageCode", languageCode);
+      map.put("username", username);
+      map.put("accessToken", accessToken);
+      map.put("accessTokenSecret", accessTokenSecret);
+      session.insert("org.languagetool.server.WikipediaMapper.insertAccessToken", map);
+    }
+  }
+
   CorpusMatchEntry getCorpusMatch(int suggestionId) {
     if (sqlSessionFactory == null) {
       return null;

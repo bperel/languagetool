@@ -22,6 +22,7 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.scribejava.core.model.OAuth1AccessToken;
 import com.sun.net.httpserver.HttpExchange;
 import org.jetbrains.annotations.NotNull;
 import org.languagetool.JLanguageTool;
@@ -202,7 +203,8 @@ class ApiV2 {
       requestToken = mediaWikiApi.authorize();
       authorizationUrl = mediaWikiApi.getAuthorizationUrl(requestToken);
     } catch (InterruptedException|ExecutionException e) {
-      throw new RuntimeException("Failed to login : " + e.getMessage());
+      writeStringError("Failed to login : " + e.getMessage(), httpExchange);
+      return;
     }
 
     HashMap<String, String> responseFields = new HashMap<>();
@@ -219,25 +221,26 @@ class ApiV2 {
     String oAuthVerifier = parameters.get("oauth_verifier");
 
     MediaWikiApi mediaWikiApi = new MediaWikiApi(languageCode);
-    String accessToken;
     try {
-      accessToken = mediaWikiApi.login(requestToken, oAuthVerifier);
+      mediaWikiApi.login(requestToken, oAuthVerifier);
+      OAuth1AccessToken accessTokenWithSecret = mediaWikiApi.getAccessTokenWithSecret();
+      String username = mediaWikiApi.getUsernameFromAccessToken();
+
+      DatabaseAccess db = DatabaseAccess.getInstance();
+      db.createAccessToken(languageCode, username, accessTokenWithSecret.getToken(), accessTokenWithSecret.getTokenSecret());
     } catch (InterruptedException|ExecutionException e) {
-      throw new RuntimeException("Failed to login : " + e.getMessage());
+      writeStringError("Failed to login : " + e.getMessage(), httpExchange);
+      return;
     }
 
-    writeStringResponse("accessToken", accessToken, httpExchange);
+    writeStringResponse("accessToken", mediaWikiApi.getAccessTokenWithSecret().getToken(), httpExchange);
   }
 
   private void handleWikipediaUserRequest(HttpExchange httpExchange, Map<String, String> parameters) throws IOException {
     ensureGetMethod(httpExchange, "/wikipedia/user");
-    String accessToken = parameters.get("accessToken");
-    String languageCode = parameters.get("languageCode");
+    AccessToken accessTokenData = getAccessTokenData(parameters.get("accessToken"));
 
-    MediaWikiApi mediaWikiApi = new MediaWikiApi(languageCode);
-    String userName = mediaWikiApi.getUsername(accessToken);
-
-    writeStringResponse("userName", userName, httpExchange);
+    writeStringResponse("userName", accessTokenData.getUsername(), httpExchange);
   }
 
   private void handleWikipediaSuggestionRequest(HttpExchange httpExchange) throws IOException {
@@ -256,7 +259,13 @@ class ApiV2 {
   private void handleWikipediaSuggestionDetailsRequest(HttpExchange httpExchange, Map<String, String> parameters) throws IOException {
     ensureGetMethod(httpExchange, "/wikipedia/suggestion");
     int suggestionId = Integer.parseInt(parameters.get("suggestion_id"));
-    List<String> originalAndSuggestedWikitext = getOriginalAndSuggestedWikitext(suggestionId);
+    List<String> originalAndSuggestedWikitext;
+    try {
+      originalAndSuggestedWikitext = getOriginalAndSuggestedWikitext(suggestionId);
+    } catch (HtmlTools.SuggestionNotApplicableException e) {
+      writeStringError("Suggestion not applicable : " + e.getMessage(), httpExchange);
+      return;
+    }
 
     writeSuggestionDetailsResponse("suggestion", originalAndSuggestedWikitext, httpExchange);
   }
@@ -265,24 +274,26 @@ class ApiV2 {
     ensurePostMethod(httpExchange, "/wikipedia/accept");
     ServerTools.setCommonHeaders(httpExchange, JSON_CONTENT_TYPE, allowOriginUrl);
     int suggestionId = Integer.parseInt(parameters.get("suggestion_id"));
-    String accessToken = parameters.get("accessToken");
+    AccessToken accessTokenData = getAccessTokenData(parameters.get("accessToken"));
 
     DatabaseAccess db = DatabaseAccess.getInstance();
     CorpusMatchEntry suggestion = db.getCorpusMatch(suggestionId);
     CorpusArticleEntry article = db.getCorpusArticle(suggestion.getArticleId());
-    MediaWikiApi mediaWikiApi = new MediaWikiApi(article.getLanguageCode());
-    String username = mediaWikiApi.getUsername(accessToken);
+
+    MediaWikiApi mediaWikiApi = new MediaWikiApi(article.getLanguageCode(), accessTokenData.getAccessToken(), accessTokenData.getAccessTokenSecret());
+    String username = accessTokenData.getUsername();
     try {
-      String articleWikitext = mediaWikiApi.getPage(accessToken, article.getTitle());
+      String articleWikitext = mediaWikiApi.getPage(article.getTitle());
       String contentWithSuggestionApplied = HtmlTools.getArticleWithAppliedSuggestion(
         article.getTitle(),
         articleWikitext,
         suggestion.getErrorContext(),
         suggestion.getReplacementSuggestion()
       );
-      mediaWikiApi.edit(accessToken, article.getTitle(), contentWithSuggestionApplied, suggestion.getRuleCategory());
-    } catch (InterruptedException|ExecutionException e) {
-      throw new RuntimeException("Failed to edit : " + e.getMessage());
+      mediaWikiApi.edit(article.getTitle(), contentWithSuggestionApplied, suggestion.getRuleCategory());
+    } catch (InterruptedException|ExecutionException| HtmlTools.SuggestionNotApplicableException e) {
+      writeStringError("Failed to edit : " + e.getMessage(), httpExchange);
+      return;
     }
 
     boolean accepted = db.resolveCorpusMatch(suggestionId, username, true, null);
@@ -300,19 +311,16 @@ class ApiV2 {
       throw new RuntimeException("Invalid refusal reason : " + reason);
     }
 
-    DatabaseAccess db = DatabaseAccess.getInstance();
-    CorpusMatchEntry suggestion = db.getCorpusMatch(suggestionId);
-    CorpusArticleEntry article = db.getCorpusArticle(suggestion.getArticleId());
-    MediaWikiApi mediaWikiApi = new MediaWikiApi(article.getLanguageCode());
-    String accessToken = parameters.get("accessToken");
-    String username = mediaWikiApi.getUsername(accessToken);
+    AccessToken accessTokenData = getAccessTokenData(parameters.get("accessToken"));
+    String username = accessTokenData.getUsername();
 
+    DatabaseAccess db = DatabaseAccess.getInstance();
     boolean refused = db.resolveCorpusMatch(suggestionId, username, false, reason);
 
     writeBooleanResponse("refused", refused, httpExchange);
   }
 
-  private List<String> getOriginalAndSuggestedWikitext(int suggestionId) {
+  private List<String> getOriginalAndSuggestedWikitext(int suggestionId) throws HtmlTools.SuggestionNotApplicableException {
     DatabaseAccess db = DatabaseAccess.getInstance();
     CorpusMatchEntry suggestion = db.getCorpusMatch(suggestionId);
     if (suggestion == null) {
@@ -321,14 +329,19 @@ class ApiV2 {
 
     CorpusArticleEntry article = db.getCorpusArticle(suggestion.getArticleId());
 
-    try {
-      return Arrays.asList(
-        HtmlTools.getStringToReplace(HtmlTools.getLargestErrorContext(suggestion.getErrorContext())),
-        HtmlTools.getErrorContextWithAppliedSuggestion(article.getTitle(), article.getWikitext(), suggestion.getErrorContext(), suggestion.getReplacementSuggestion())
-      );
-    } catch (HtmlTools.SuggestionNotApplicableException e) {
-      throw new RuntimeException(e.getMessage());
+    return Arrays.asList(
+      HtmlTools.getStringToReplace(HtmlTools.getLargestErrorContext(suggestion.getErrorContext())),
+      HtmlTools.getErrorContextWithAppliedSuggestion(article.getTitle(), article.getWikitext(), suggestion.getErrorContext(), suggestion.getReplacementSuggestion())
+    );
+  }
+
+  private AccessToken getAccessTokenData(String accessToken) throws RuntimeException {
+    DatabaseAccess db = DatabaseAccess.getInstance();
+    AccessToken accessTokenWithData = db.getAccessToken(accessToken);
+    if (accessTokenWithData == null) {
+      throw new RuntimeException("Can't find access token");
     }
+    return accessTokenWithData;
   }
 
   private void handleRuleExamplesRequest(HttpExchange httpExchange, Map<String, String> params) throws Exception {
@@ -434,6 +447,16 @@ class ApiV2 {
     sendJson(httpExchange, sw);
   }
 
+  private void writeStringError(String value, HttpExchange httpExchange) throws IOException {
+    StringWriter sw = new StringWriter();
+    try (JsonGenerator g = factory.createGenerator(sw)) {
+      g.writeStartObject();
+      g.writeStringField("error", value);
+      g.writeEndObject();
+    }
+    sendErrorJson(httpExchange, sw);
+  }
+
   private void writeStringHashMapResponse(HashMap<String, String> fields, HttpExchange httpExchange) throws IOException {
     StringWriter sw = new StringWriter();
     try (JsonGenerator g = factory.createGenerator(sw)) {
@@ -501,6 +524,14 @@ class ApiV2 {
     httpExchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, response.getBytes(ENCODING).length);
     httpExchange.getResponseBody().write(response.getBytes(ENCODING));
     ServerMetricsCollector.getInstance().logResponse(HttpURLConnection.HTTP_OK);
+  }
+
+  private void sendErrorJson(HttpExchange httpExchange, StringWriter sw) throws IOException {
+    String response = sw.toString();
+    ServerTools.setCommonHeaders(httpExchange, JSON_CONTENT_TYPE, allowOriginUrl);
+    httpExchange.sendResponseHeaders(HttpURLConnection.HTTP_BAD_REQUEST, response.getBytes(ENCODING).length);
+    httpExchange.getResponseBody().write(response.getBytes(ENCODING));
+    ServerMetricsCollector.getInstance().logResponse(HttpURLConnection.HTTP_BAD_REQUEST);
   }
 
   private void handleLogRequest(HttpExchange httpExchange, Map<String, String> parameters) throws IOException {
