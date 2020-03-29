@@ -157,11 +157,13 @@ public class MediaWikiApi {
   }
 
   public String getUsername(String accessToken) {
-    return accessTokensWithUsernames.get(language).get(accessToken).getUsername();
+    AccessTokenWithUserData accessTokenWithUserData = accessTokensWithUsernames.get(language).get(accessToken);
+    return accessTokenWithUserData == null ? null : accessTokenWithUserData.getUsername();
   }
 
   private OAuth1AccessToken getAccessToken(String accessToken) {
-    return accessTokensWithUsernames.get(language).get(accessToken).getAccessToken();
+    AccessTokenWithUserData accessTokenWithUserData = accessTokensWithUsernames.get(language).get(accessToken);
+    return accessTokenWithUserData == null ? null : accessTokenWithUserData.getAccessToken();
   }
 
   private void addAccessToken(OAuth1AccessToken accessToken) throws InterruptedException, ExecutionException, IOException {
