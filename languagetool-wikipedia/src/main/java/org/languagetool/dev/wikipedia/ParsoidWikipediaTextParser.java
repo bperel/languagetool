@@ -36,8 +36,10 @@ import java.util.zip.GZIPInputStream;
 public class ParsoidWikipediaTextParser {
 
   private final String urlBase;
+  private final String languageCode;
 
-  public ParsoidWikipediaTextParser(String urlBase) {
+  public ParsoidWikipediaTextParser(String languageCode, String urlBase) {
+    this.languageCode = languageCode;
     this.urlBase = urlBase;
   }
 
@@ -60,7 +62,7 @@ public class ParsoidWikipediaTextParser {
   private String convertWikitextToHtml(String inputText) {
     URL url;
     try {
-      url = new URL(this.urlBase + "/wikipedia_fr/v3/transform/wikitext/to/html");
+      url = new URL(this.urlBase + "/wikipedia_" + languageCode + "/v3/transform/wikitext/to/html");
       HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 
       HashMap<String, Object> params = new HashMap<>();

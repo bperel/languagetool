@@ -32,9 +32,8 @@ import javax.xml.parsers.SAXParserFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.regex.Pattern;
 
 /**
@@ -67,7 +66,7 @@ public class WikipediaSentenceSource extends SentenceSource {
   /** @since 3.0 */
   WikipediaSentenceSource(InputStream xmlInput, Language language, Pattern filter, String parsoidUrl, CorpusMatchDatabaseHandler resultHandler) {
     super(language, filter);
-    textParser = new ParsoidWikipediaTextParser(parsoidUrl);
+    textParser = new ParsoidWikipediaTextParser(language.getShortCode(), parsoidUrl);
     sentenceTokenizer = language.getSentenceTokenizer();
     sentences = new ArrayList<>();
     this.language = language;
@@ -122,7 +121,7 @@ public class WikipediaSentenceSource extends SentenceSource {
             try {
               if (resultHandler.getArticleIdFromDb(title, revisionId) == null) {
                 articleCount++;
-                System.out.println("Article #" + articleCount + " : " + title);
+                print("Article #" + articleCount + " : " + title);
                 addArticle(
                   resultHandler,
                   namespace.toString().trim(),
@@ -132,7 +131,7 @@ public class WikipediaSentenceSource extends SentenceSource {
                 );
               }
               else {
-                System.out.println("Article " + title +" with revision " + revisionId + " is already in the DB, ignoring");
+                print("Article " + title +" with revision " + revisionId + " is already in the DB, ignoring");
               }
             } catch (SQLException e) {
               e.printStackTrace();
@@ -162,7 +161,9 @@ public class WikipediaSentenceSource extends SentenceSource {
         }
       };
       try {
+        print("Parsing XML input...");
         saxParser.parse(xmlInput, handler);
+        print("Done.");
       } catch (ParseLimitExceededException ignored) { }
 
     } catch (ParserConfigurationException | SAXException | IOException e) {
@@ -219,9 +220,16 @@ public class WikipediaSentenceSource extends SentenceSource {
         }
       }
     } catch (Exception e) {
-      System.err.println("Could not extract text, skipping document: " + e + ", full stacktrace follows:");
+      print("Could not extract text, skipping document: " + e + ", full stacktrace follows:");
       e.printStackTrace();
     }
+  }
+
+  static void print(String s) {
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS ZZ");
+    dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+    String now = dateFormat.format(new Date());
+    System.out.println(now + " " + s);
   }
 
   static class WikipediaSentence {
