@@ -112,7 +112,7 @@ final class ServerTools {
    */
 
   static void print(String s, PrintStream outputStream) {
-    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss ZZ");
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS ZZ");
     dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
     String now = dateFormat.format(new Date());
     outputStream.println(now + " " + s);
