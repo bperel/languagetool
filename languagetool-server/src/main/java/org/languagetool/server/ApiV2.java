@@ -36,6 +36,7 @@ import org.languagetool.rules.IncorrectExample;
 import org.languagetool.rules.Rule;
 import org.languagetool.rules.TextLevelRule;
 import org.languagetool.tools.HtmlTools;
+import org.languagetool.tools.HtmlTools.SuggestionNotApplicableException;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -272,7 +273,7 @@ class ApiV2 {
     List<String> originalAndSuggestedWikitext;
     try {
       originalAndSuggestedWikitext = getOriginalAndSuggestedWikitext(suggestionId);
-    } catch (HtmlTools.SuggestionNotApplicableException e) {
+    } catch (SuggestionNotApplicableException e) {
       writeStringError("Suggestion not applicable : " + e.getMessage(), httpExchange);
       return;
     }
@@ -301,8 +302,12 @@ class ApiV2 {
         suggestion.getReplacementSuggestion()
       );
       mediaWikiApi.edit(article.getTitle(), contentWithSuggestionApplied, suggestion.getRuleCategory());
-    } catch (InterruptedException|ExecutionException| HtmlTools.SuggestionNotApplicableException e) {
+    } catch (InterruptedException|ExecutionException e) {
       writeStringError("Failed to edit : " + e.getMessage(), httpExchange);
+      return;
+    } catch (SuggestionNotApplicableException e) {
+      boolean refused = db.resolveCorpusMatch(suggestionId, username, false, "original-string-not-found");
+      writeBooleanResponse("refused", refused, httpExchange);
       return;
     }
 
@@ -330,7 +335,7 @@ class ApiV2 {
     writeBooleanResponse("refused", refused, httpExchange);
   }
 
-  private List<String> getOriginalAndSuggestedWikitext(int suggestionId) throws HtmlTools.SuggestionNotApplicableException {
+  private List<String> getOriginalAndSuggestedWikitext(int suggestionId) throws SuggestionNotApplicableException {
     DatabaseAccess db = DatabaseAccess.getInstance();
     CorpusMatchEntry suggestion = db.getCorpusMatch(suggestionId);
     if (suggestion == null) {
