@@ -40,7 +40,7 @@ create table corpus_match
     applied tinyint(1) null,
     applied_date datetime null,
     applied_reason varchar(31) null,
-    applied_username varchar(255) not null,
+    applied_username varchar(255) null,
     constraint corpus_match_unique
         unique (article_id, rule_description, error_context, replacement_suggestion) using hash,
     constraint corpus_match_corpus_article_id_fk
