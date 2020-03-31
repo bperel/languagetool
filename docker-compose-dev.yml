@@ -5,14 +5,12 @@ services:
     container_name: wiper-db
     image: "mariadb:10.4"
     restart: always
-    networks:
-      default:
-        aliases:
-          - db
     environment:
       MYSQL_DATABASE: languagetool
       MYSQL_ROOT_PASSWORD: languagetool
       MYSQL_INITDB_SKIP_TZINFO: "yes"
+    ports:
+      - "8023:3306"
     volumes:
       - wiper-db:/var/lib/mysql
       - ./sql:/docker-entrypoint-initdb.d
@@ -21,10 +19,6 @@ services:
     container_name: parsoid
     image: "thenets/parsoid:0.11"
     restart: always
-    networks:
-      default:
-        aliases:
-          - parsoid
     environment:
       PARSOID_DOMAIN_wikipedia_ca: https://ca.wikipedia.org/w/api.php
       PARSOID_DOMAIN_wikipedia_de: https://de.wikipedia.org/w/api.php
@@ -37,29 +31,21 @@ services:
       PARSOID_DOMAIN_wikipedia_uk: https://uk.wikipedia.org/w/api.php
       PARSOID_NUM_WORKERS: ncpu
       PARSOID_STRICT_SSL: "false"
+    ports:
+      - "8024:8000"
 
   languagetool:
     container_name: languagetool-server
     depends_on:
       - db
       - parsoid
-    image: "bperel/languagetool-wiper"
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: languagetool-server
     volumes:
       - ./server.properties:/home/server.properties
     restart: always
-    networks:
-      default:
-        aliases:
-          - languagetool
-      workspace_global-front-network:
-        aliases:
-          - languagetool
 
 volumes:
   wiper-db:
-
-networks:
-  default:
-    driver: bridge
-  workspace_global-front-network:
-    external: true

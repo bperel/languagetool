@@ -1,4 +1,5 @@
 FROM maven:3-jdk-11 as build
+ENV LANGUAGETOOL_VERSION=4.9
 
 MAINTAINER Bruno Perel <brunoperel@gmail.com>
 
@@ -7,7 +8,6 @@ RUN git clone --depth=1 --single-branch https://github.com/bperel/languagetool
 RUN cd languagetool && mvn install -DskipTests && ./build.sh languagetool-server package -DskipTests
 
 WORKDIR /srv/languagetool-runtime
-ENV LANGUAGETOOL_VERSION=4.9
 RUN unzip /srv/languagetool/languagetool-standalone/target/LanguageTool-$LANGUAGETOOL_VERSION.zip \
  && rm -rf /srv/languagetool
 
