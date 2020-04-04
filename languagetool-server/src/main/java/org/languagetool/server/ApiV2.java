@@ -102,6 +102,8 @@ class ApiV2 {
       handleWikipediaAcceptRequest(httpExchange, parameters);
     } else if (path.equals("wikipedia/suggestion/refuse")) {
       handleWikipediaRefuseRequest(httpExchange, parameters);
+    } else if (path.equals("wikipedia/stats")) {
+      handleWikipediaStatsRequest(httpExchange);
     } else {
       throw new PathNotFoundException("Unsupported action: '" + path + "'. Please see " + API_DOC_URL);
     }
@@ -264,7 +266,7 @@ class ApiV2 {
     for(CorpusMatchEntry suggestion : suggestions) {
       articles.put(suggestion.getArticleId(), db.getCorpusArticle(suggestion.getArticleId()));
     }
-    writeCorpusMatchListResponse("suggestions", suggestions, articles, httpExchange);
+    writeCorpusMatchListResponse(suggestions, articles, httpExchange);
   }
 
   private void handleWikipediaSuggestionDetailsRequest(HttpExchange httpExchange, Map<String, String> parameters) throws IOException {
@@ -333,6 +335,14 @@ class ApiV2 {
     boolean refused = db.resolveCorpusMatch(suggestionId, username, false, reason);
 
     writeBooleanResponse("refused", refused, httpExchange);
+  }
+
+  private void handleWikipediaStatsRequest(HttpExchange httpExchange) throws Exception {
+    ensureGetMethod(httpExchange, "/wikipedia/stats");
+    ServerTools.setCommonHeaders(httpExchange, JSON_CONTENT_TYPE, allowOriginUrl);
+
+    DatabaseAccess db = DatabaseAccess.getInstance();
+    writeStatsListResponse(db.getStats(), httpExchange);
   }
 
   private List<String> getOriginalAndSuggestedWikitext(int suggestionId) throws SuggestionNotApplicableException {
@@ -484,12 +494,12 @@ class ApiV2 {
     sendJson(httpExchange, sw);
   }
 
-  private void writeCorpusMatchListResponse(String fieldName, List<CorpusMatchEntry> corpusMatchEntries, HashMap<Integer, CorpusArticleEntry> articles, HttpExchange httpExchange) throws IOException {
+  private void writeCorpusMatchListResponse(List<CorpusMatchEntry> corpusMatchEntries, HashMap<Integer, CorpusArticleEntry> articles, HttpExchange httpExchange) throws IOException {
     StringWriter sw = new StringWriter();
     try (JsonGenerator g = factory.createGenerator(sw)) {
       g.setCodec(new ObjectMapper());
       g.writeStartObject();
-      g.writeArrayFieldStart(fieldName);
+      g.writeArrayFieldStart("suggestions");
       for (CorpusMatchEntry corpusMatchEntry : corpusMatchEntries) {
         g.writeStartObject();
         g.writeObjectField("suggestion", corpusMatchEntry);
@@ -500,6 +510,25 @@ class ApiV2 {
         g.writeStringField("languageCode", article.getLanguageCode());
         g.writeEndObject();
 
+        g.writeEndObject();
+      }
+      g.writeEndArray();
+      g.writeEndObject();
+    }
+    sendJson(httpExchange, sw);
+  }
+
+  private void writeStatsListResponse(List<DatabaseAccess.DayStatistics> stats, HttpExchange httpExchange) throws IOException {
+    StringWriter sw = new StringWriter();
+    try (JsonGenerator g = factory.createGenerator(sw)) {
+      g.setCodec(new ObjectMapper());
+      g.writeStartObject();
+      g.writeArrayFieldStart("stats");
+      for (DatabaseAccess.DayStatistics stat : stats) {
+        g.writeStartObject();
+        g.writeObjectField("date", stat.getDate());
+        g.writeObjectField("applied", stat.getApplied());
+        g.writeObjectField("count", stat.getCount());
         g.writeEndObject();
       }
       g.writeEndArray();

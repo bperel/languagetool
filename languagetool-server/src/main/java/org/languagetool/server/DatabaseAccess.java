@@ -221,6 +221,15 @@ class DatabaseAccess {
       return affectedRows >= 1;
     }
   }
+
+  List<DayStatistics> getStats() {
+    if (sqlSessionFactory == null) {
+      return null;
+    }
+    try (SqlSession session = sqlSessionFactory.openSession(true)) {
+      return session.selectList("org.languagetool.server.WikipediaMapper.getStats");
+    }
+  }
   
   boolean addWord(String word, Long userId) {
     validateWord(word);
@@ -431,6 +440,30 @@ class DatabaseAccess {
           return stmt.executeQuery(sql.toString());
         }
       }
+    }
+  }
+
+  public static class DayStatistics {
+    private String date;
+    private Boolean applied;
+    private Integer count;
+
+    public DayStatistics(String date, Boolean applied, Integer count) {
+      this.date = date;
+      this.applied = applied;
+      this.count = count;
+    }
+
+    public String getDate() {
+      return date;
+    }
+
+    public Boolean getApplied() {
+      return applied;
+    }
+
+    public Integer getCount() {
+      return count;
     }
   }
 

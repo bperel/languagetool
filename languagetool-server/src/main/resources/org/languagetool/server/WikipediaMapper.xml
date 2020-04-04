@@ -16,6 +16,20 @@
     <select id="selectAccessToken" resultType="org.languagetool.server.AccessToken">
         SELECT * FROM access_token WHERE access_token=#{accessToken} AND language_code=#{languageCode}
     </select>
+    <select id="getStats" resultType="org.languagetool.server.DatabaseAccess$DayStatistics">
+        select distinct date_format(applied_date, '%Y-%m-%d'),
+                        alias.applied,
+                        (select count(*)
+                         from corpus_match
+                         where applied = alias.applied
+                           AND date_format(applied_date, '%Y-%m-%d') =
+                               date_format(resolutions.applied_date, '%Y-%m-%d')
+                        ) as count
+        FROM corpus_match resolutions
+                 JOIN (select 0 as applied union select 1 as applied) as alias
+        WHERE applied_date is not null
+        ORDER BY date_format(applied_date, '%Y-%m-%d'), alias.applied
+    </select>
     <select id="insertAccessToken">
         INSERT INTO access_token(language_code, username, access_token, access_token_secret) VALUES(#{languageCode}, #{username}, #{accessToken}, #{accessTokenSecret})
     </select>
