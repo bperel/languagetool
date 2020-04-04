@@ -119,7 +119,7 @@ public class WikipediaSentenceSource extends SentenceSource {
             String title = this.title.toString().trim();
             int revisionId = Integer.parseInt(this.revisionId.toString().trim());
             try {
-              if (resultHandler.getArticleIdFromDb(title, revisionId) == null) {
+              if (resultHandler.getAnalyzedArticleId(title, revisionId) == null) {
                 articleCount++;
                 print("Article #" + articleCount + " : " + title);
                 addArticle(

@@ -51,10 +51,11 @@ class CorpusMatchDatabaseHandler extends ResultHandler {
   private static final ContextTools smallContextTools;
 
   private PreparedStatement selectCorpusArticleWikitextFromId;
-  private PreparedStatement selectCorpusArticleWithRevisionSt;
+  private PreparedStatement selectAnalyzedCorpusArticleWithRevisionSt;
   private PreparedStatement insertCorpusArticleSt;
   private PreparedStatement insertCorpusMatchSt;
   private PreparedStatement deleteNeverAppliedSuggestionsOfObsoleteArticles;
+  private PreparedStatement updateCorpusArticleMarkAsAnalyzed;
 
   static {
     contextTools = new ContextTools();
@@ -88,18 +89,21 @@ class CorpusMatchDatabaseHandler extends ResultHandler {
         selectCorpusArticleWikitextFromId = conn.prepareStatement("" +
           " SELECT wikitext FROM corpus_article" +
           " WHERE id = ?");
-        selectCorpusArticleWithRevisionSt = conn.prepareStatement("" +
+        selectAnalyzedCorpusArticleWithRevisionSt = conn.prepareStatement("" +
           " SELECT id FROM corpus_article" +
-          " WHERE title = ? AND revision = ?");
+          " WHERE title = ? AND revision = ? AND analyzed = 1");
         insertCorpusArticleSt = conn.prepareStatement("" +
-          " INSERT INTO corpus_article (language_code, title, revision, wikitext, anonymized_html)" +
-          " VALUES (?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
+          " INSERT INTO corpus_article (language_code, title, revision, wikitext, anonymized_html, analyzed)" +
+          " VALUES (?, ?, ?, ?, ?, 0)", Statement.RETURN_GENERATED_KEYS);
         insertCorpusMatchSt = conn.prepareStatement("" +
           " INSERT INTO corpus_match (article_id, ruleid, rule_category, rule_subid, rule_description, message, error_context, small_error_context, replacement_suggestion)" +
           " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
         deleteNeverAppliedSuggestionsOfObsoleteArticles = conn.prepareStatement("" +
           " DELETE FROM corpus_match" +
           " WHERE applied IS NULL AND article_id IN (SELECT id FROM corpus_article WHERE title = ? AND revision <> ? )");
+        updateCorpusArticleMarkAsAnalyzed = conn.prepareStatement("" +
+          " UPDATE corpus_article" +
+          " SET analyzed = 1 WHERE id = ?");
       } catch (SQLException e) {
         throw new RuntimeException(e);
       }
@@ -208,16 +212,21 @@ class CorpusMatchDatabaseHandler extends ResultHandler {
     throw new SQLException("No such article : " + articleId);
   }
 
-  Long getArticleIdFromDb(String title, int revision) throws SQLException {
-    selectCorpusArticleWithRevisionSt.setString(1, title);
-    selectCorpusArticleWithRevisionSt.setInt(2, revision);
+  Long getAnalyzedArticleId(String title, int revision) throws SQLException {
+    selectAnalyzedCorpusArticleWithRevisionSt.setString(1, title);
+    selectAnalyzedCorpusArticleWithRevisionSt.setInt(2, revision);
 
-    ResultSet corpusArticleResultSet = selectCorpusArticleWithRevisionSt.executeQuery();
+    ResultSet corpusArticleResultSet = selectAnalyzedCorpusArticleWithRevisionSt.executeQuery();
     if (corpusArticleResultSet.next()) {
       return corpusArticleResultSet.getLong(1);
     } else {
       return null;
     }
+  }
+
+  public void markArticleAsAnalyzed(int currentArticleId) throws SQLException {
+    updateCorpusArticleMarkAsAnalyzed.setInt(1, currentArticleId);
+    updateCorpusArticleMarkAsAnalyzed.execute();
   }
 
   @Override

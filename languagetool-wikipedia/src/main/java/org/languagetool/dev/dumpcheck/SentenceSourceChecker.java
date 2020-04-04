@@ -221,6 +221,7 @@ public class SentenceSourceChecker {
         Sentence sentence = mixingSource.next();
         try {
           if (currentArticleId != sentence.getArticleId()) {
+            databaseHandler.markArticleAsAnalyzed(currentArticleId);
             wikitext = databaseHandler.getCorpusArticleWikitextFromId(sentence.getArticleId());
           }
 
