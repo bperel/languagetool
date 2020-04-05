@@ -95,7 +95,7 @@ class ApiV2 {
     } else if (path.equals("wikipedia/user")) {
       handleWikipediaUserRequest(httpExchange, parameters);
     } else if (path.equals("wikipedia/suggestions")) {
-      handleWikipediaSuggestionRequest(httpExchange);
+      handleWikipediaSuggestionRequest(httpExchange, parameters);
     } else if (path.equals("wikipedia/suggestion")) {
       handleWikipediaSuggestionDetailsRequest(httpExchange, parameters);
     } else if (path.equals("wikipedia/suggestion/accept")) {
@@ -256,11 +256,12 @@ class ApiV2 {
     writeStringHashMapResponse(fields, httpExchange);
   }
 
-  private void handleWikipediaSuggestionRequest(HttpExchange httpExchange) throws IOException {
+  private void handleWikipediaSuggestionRequest(HttpExchange httpExchange, Map<String, String> parameters) throws IOException {
     ensureGetMethod(httpExchange, "/wikipedia/suggestions");
+    String[] languageCodes = parameters.get("languageCodes").split(",");
 
     DatabaseAccess db = DatabaseAccess.getInstance();
-    List<CorpusMatchEntry> suggestions = db.getCorpusMatches(10);
+    List<CorpusMatchEntry> suggestions = db.getCorpusMatches(Arrays.asList(languageCodes), 10);
 
     HashMap<Integer, CorpusArticleEntry> articles = new HashMap<>();
     for(CorpusMatchEntry suggestion : suggestions) {

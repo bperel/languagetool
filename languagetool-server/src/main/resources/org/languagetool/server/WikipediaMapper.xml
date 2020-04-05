@@ -5,7 +5,12 @@
         SELECT * FROM corpus_article WHERE id=#{id}
     </select>
     <select id="selectNonAppliedWikipediaSuggestions" resultType="org.languagetool.server.CorpusMatchEntry">
-        SELECT * FROM corpus_match m WHERE applied IS NULL ORDER BY length((select wikitext from corpus_article a where m.article_id = a.id)) LIMIT 10
+        SELECT * FROM corpus_match m WHERE article_id in (select id from corpus_article where language_code IN
+        <foreach item="item" index="index" collection="languageCodes"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        ) AND applied IS NULL ORDER BY RAND() LIMIT 10
     </select>
     <select id="selectWikipediaSuggestion" resultType="org.languagetool.server.CorpusMatchEntry">
         SELECT * FROM corpus_match WHERE id=#{id}

@@ -150,12 +150,14 @@ class DatabaseAccess {
     }
   }
 
-  List<CorpusMatchEntry> getCorpusMatches(int limit) {
+  List<CorpusMatchEntry> getCorpusMatches(List<String> languageCodes, int limit) {
     if (sqlSessionFactory == null) {
       return new ArrayList<>();
     }
     try (SqlSession session = sqlSessionFactory.openSession(true)) {
-      return session.selectList("org.languagetool.server.WikipediaMapper.selectNonAppliedWikipediaSuggestions", new HashMap<>(), new RowBounds(0, limit));
+      Map<Object, Object> map = new HashMap<>();
+      map.put("languageCodes", languageCodes);
+      return session.selectList("org.languagetool.server.WikipediaMapper.selectNonAppliedWikipediaSuggestions", map, new RowBounds(0, limit));
     }
   }
 
