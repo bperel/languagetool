@@ -47,21 +47,21 @@
     </build>
 
     <dependencies>
-	<dependency>
-            <groupId>org.languagetool</groupId>
-            <artifactId>language-ar</artifactId>
-            <version>${languagetool.version}</version>
-        </dependency>
+<!--	    <dependency>-->
+<!--            <groupId>org.languagetool</groupId>-->
+<!--            <artifactId>language-ar</artifactId>-->
+<!--            <version>${languagetool.version}</version>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>org.languagetool</groupId>
             <artifactId>language-en</artifactId>
             <version>${languagetool.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.languagetool</groupId>
-            <artifactId>language-fa</artifactId>
-            <version>${languagetool.version}</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.languagetool</groupId>-->
+<!--            <artifactId>language-fa</artifactId>-->
+<!--            <version>${languagetool.version}</version>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>org.languagetool</groupId>
             <artifactId>language-fr</artifactId>
@@ -72,11 +72,11 @@
             <artifactId>language-de</artifactId>
             <version>${languagetool.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.languagetool</groupId>
-            <artifactId>language-de-DE-x-simple-language</artifactId>
-            <version>${languagetool.version}</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.languagetool</groupId>-->
+<!--            <artifactId>language-de-DE-x-simple-language</artifactId>-->
+<!--            <version>${languagetool.version}</version>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>org.languagetool</groupId>
             <artifactId>language-pl</artifactId>
@@ -87,16 +87,16 @@
             <artifactId>language-ca</artifactId>
             <version>${languagetool.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.languagetool</groupId>
-            <artifactId>language-it</artifactId>
-            <version>${languagetool.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.languagetool</groupId>
-            <artifactId>language-br</artifactId>
-            <version>${languagetool.version}</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.languagetool</groupId>-->
+<!--            <artifactId>language-it</artifactId>-->
+<!--            <version>${languagetool.version}</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>org.languagetool</groupId>-->
+<!--            <artifactId>language-br</artifactId>-->
+<!--            <version>${languagetool.version}</version>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>org.languagetool</groupId>
             <artifactId>language-nl</artifactId>
@@ -112,46 +112,46 @@
             <artifactId>language-ru</artifactId>
             <version>${languagetool.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.languagetool</groupId>
-            <artifactId>language-ast</artifactId>
-            <version>${languagetool.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.languagetool</groupId>
-            <artifactId>language-be</artifactId>
-            <version>${languagetool.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.languagetool</groupId>
-            <artifactId>language-zh</artifactId>
-            <version>${languagetool.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.languagetool</groupId>
-            <artifactId>language-da</artifactId>
-            <version>${languagetool.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.languagetool</groupId>
-            <artifactId>language-eo</artifactId>
-            <version>${languagetool.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.languagetool</groupId>
-            <artifactId>language-ga</artifactId>
-            <version>${languagetool.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.languagetool</groupId>
-            <artifactId>language-gl</artifactId>
-            <version>${languagetool.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.languagetool</groupId>
-            <artifactId>language-el</artifactId>
-            <version>${languagetool.version}</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.languagetool</groupId>-->
+<!--            <artifactId>language-ast</artifactId>-->
+<!--            <version>${languagetool.version}</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>org.languagetool</groupId>-->
+<!--            <artifactId>language-be</artifactId>-->
+<!--            <version>${languagetool.version}</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>org.languagetool</groupId>-->
+<!--            <artifactId>language-zh</artifactId>-->
+<!--            <version>${languagetool.version}</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>org.languagetool</groupId>-->
+<!--            <artifactId>language-da</artifactId>-->
+<!--            <version>${languagetool.version}</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>org.languagetool</groupId>-->
+<!--            <artifactId>language-eo</artifactId>-->
+<!--            <version>${languagetool.version}</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>org.languagetool</groupId>-->
+<!--            <artifactId>language-ga</artifactId>-->
+<!--            <version>${languagetool.version}</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>org.languagetool</groupId>-->
+<!--            <artifactId>language-gl</artifactId>-->
+<!--            <version>${languagetool.version}</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>org.languagetool</groupId>-->
+<!--            <artifactId>language-el</artifactId>-->
+<!--            <version>${languagetool.version}</version>-->
+<!--        </dependency>-->
         <!-- commented out in LT 3.7 due to inactivity:
         <dependency>
             <groupId>org.languagetool</groupId>
@@ -159,16 +159,16 @@
             <version>${languagetool.version}</version>
         </dependency>
         -->
-        <dependency>
-            <groupId>org.languagetool</groupId>
-            <artifactId>language-ja</artifactId>
-            <version>${languagetool.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.languagetool</groupId>
-            <artifactId>language-km</artifactId>
-            <version>${languagetool.version}</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.languagetool</groupId>-->
+<!--            <artifactId>language-ja</artifactId>-->
+<!--            <version>${languagetool.version}</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>org.languagetool</groupId>-->
+<!--            <artifactId>language-km</artifactId>-->
+<!--            <version>${languagetool.version}</version>-->
+<!--        </dependency>-->
         <!-- removed as announced at http://forum.languagetool.org/t/removing-support-for-lithuanian-and-malayalam/1238
         <dependency>
             <groupId>org.languagetool</groupId>
@@ -183,21 +183,21 @@
             <version>${languagetool.version}</version>
         </dependency>
         -->
-        <dependency>
-            <groupId>org.languagetool</groupId>
-            <artifactId>language-ro</artifactId>
-            <version>${languagetool.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.languagetool</groupId>
-            <artifactId>language-sk</artifactId>
-            <version>${languagetool.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.languagetool</groupId>
-            <artifactId>language-sl</artifactId>
-            <version>${languagetool.version}</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.languagetool</groupId>-->
+<!--            <artifactId>language-ro</artifactId>-->
+<!--            <version>${languagetool.version}</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>org.languagetool</groupId>-->
+<!--            <artifactId>language-sk</artifactId>-->
+<!--            <version>${languagetool.version}</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>org.languagetool</groupId>-->
+<!--            <artifactId>language-sl</artifactId>-->
+<!--            <version>${languagetool.version}</version>-->
+<!--        </dependency>-->
         <!-- re-add when maintainer is found
         <dependency>
             <groupId>org.languagetool</groupId>
@@ -205,26 +205,26 @@
             <version>${languagetool.version}</version>
         </dependency>
         -->
-        <dependency>
-            <groupId>org.languagetool</groupId>
-            <artifactId>language-es</artifactId>
-            <version>${languagetool.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.languagetool</groupId>
-            <artifactId>language-sv</artifactId>
-            <version>${languagetool.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.languagetool</groupId>
-            <artifactId>language-ta</artifactId>
-            <version>${languagetool.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.languagetool</groupId>
-            <artifactId>language-tl</artifactId>
-            <version>${languagetool.version}</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.languagetool</groupId>-->
+<!--            <artifactId>language-es</artifactId>-->
+<!--            <version>${languagetool.version}</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>org.languagetool</groupId>-->
+<!--            <artifactId>language-sv</artifactId>-->
+<!--            <version>${languagetool.version}</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>org.languagetool</groupId>-->
+<!--            <artifactId>language-ta</artifactId>-->
+<!--            <version>${languagetool.version}</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>org.languagetool</groupId>-->
+<!--            <artifactId>language-tl</artifactId>-->
+<!--            <version>${languagetool.version}</version>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>org.languagetool</groupId>
             <artifactId>language-uk</artifactId>

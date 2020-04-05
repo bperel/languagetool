@@ -18,19 +18,17 @@
  */
 package org.languagetool.rules.patterns;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-
 import org.junit.Ignore;
 import org.junit.Test;
 import org.languagetool.JLanguageTool;
 import org.languagetool.language.*;
 import org.languagetool.rules.RuleMatch;
-import org.languagetool.rules.en.MorfologikAmericanSpellerRule;
-import org.languagetool.rules.en.MorfologikBritishSpellerRule;
+
+import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
 
 public class FalseFriendRuleTest {
 
@@ -56,23 +54,6 @@ public class FalseFriendRuleTest {
     assertErrors(1, "I go to high school in Berlin.", lt);
     List<RuleMatch> matches2 = assertErrors(1, "The chef", lt);
     assertEquals("[boss, chief]", matches2.get(0).getSuggestedReplacements().toString());
-  }
-
-  @Test
-  public void testHintsForDemoLanguage() throws IOException {
-    JLanguageTool lt1 = new JLanguageTool(new BritishEnglish(), new Italian());
-    lt1.disableRule(MorfologikBritishSpellerRule.RULE_ID);
-    List<RuleMatch> matches1 = assertErrors(1, "And forDemoOnly.", lt1);
-    assertEquals("DEMO_ENTRY", matches1.get(0).getRule().getId());
-
-    JLanguageTool lt2 = new JLanguageTool(new English(), new Italian());
-    lt2.disableRule(MorfologikBritishSpellerRule.RULE_ID);
-    List<RuleMatch> matches2 = assertErrors(1, "And forDemoOnly.", lt2);
-    assertEquals("DEMO_ENTRY", matches2.get(0).getRule().getId());
-
-    JLanguageTool lt3 = new JLanguageTool(new AmericanEnglish(), new Italian());
-    lt3.disableRule(MorfologikAmericanSpellerRule.RULE_ID);
-    assertErrors(0, "And forDemoOnly.", lt3);
   }
 
   @Test

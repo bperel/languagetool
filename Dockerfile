@@ -5,12 +5,10 @@ MAINTAINER Bruno Perel <brunoperel@gmail.com>
 
 WORKDIR /srv
 COPY . languagetool
-RUN cd languagetool && mvn install -DskipTests && ./build.sh languagetool-server package -DskipTests
+RUN cd languagetool && mvn --projects languagetool-standalone --also-make package -DskipTests --quiet
 
 WORKDIR /srv/languagetool-runtime
-RUN unzip /srv/languagetool/languagetool-standalone/target/LanguageTool-$LANGUAGETOOL_VERSION.zip \
- && rm -rf /srv/languagetool
-
+RUN unzip /srv/languagetool/languagetool-standalone/target/LanguageTool-$LANGUAGETOOL_VERSION.zip
 
 FROM openjdk:11-jre-buster as languagetool-server
 COPY --from=build /srv/languagetool-runtime /srv/languagetool-runtime

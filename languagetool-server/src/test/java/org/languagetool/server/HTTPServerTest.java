@@ -85,13 +85,9 @@ public class HTTPServerTest {
     // other tests for special characters
     String germanSpecialChars = checkV2(german, "ein kleiner test. Und wieder Erwarten noch was: öäüß+ öäüß.");
     assertTrue("Expected special chars, got: '" + germanSpecialChars + "'", germanSpecialChars.contains("öäüß+"));
-    String romanianSpecialChars = checkV2(new Romanian(), "bla bla șțîâă șțîâă și câteva caractere speciale");
-    assertTrue("Expected special chars, got: '" + romanianSpecialChars + "'", romanianSpecialChars.contains("șțîâă"));
     Polish polish = new Polish();
     String polishSpecialChars = checkV2(polish, "Mówiła długo, żeby tylko mówić mówić długo.");
     assertTrue("Expected special chars, got: '" + polishSpecialChars+ "'", polishSpecialChars.contains("mówić"));
-    // test http POST
-    assertTrue(checkByPOST(new Romanian(), "greșit greșit").contains("greșit"));
     // test supported language listing
     URL url = new URL("http://localhost:" + HTTPTools.getDefaultPort() + "/v2/languages");
     String languagesJson = StringTools.streamToString((InputStream) url.getContent(), "UTF-8");
