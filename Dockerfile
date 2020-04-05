@@ -4,7 +4,7 @@ ENV LANGUAGETOOL_VERSION=4.9
 MAINTAINER Bruno Perel <brunoperel@gmail.com>
 
 WORKDIR /srv
-RUN git clone --depth=1 --single-branch https://github.com/bperel/languagetool
+COPY . languagetool
 RUN cd languagetool && mvn install -DskipTests && ./build.sh languagetool-server package -DskipTests
 
 WORKDIR /srv/languagetool-runtime

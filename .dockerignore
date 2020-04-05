@@ -1,2 +1,5 @@
-*
-!entrypoint-languagetool-server.sh
+.idea
+nwords
+**/target
+*.iml
+*.properties
