@@ -97,7 +97,7 @@ public class WikipediaSentenceSource extends SentenceSource {
           currentQName = qName.toLowerCase();
 
           if (currentQName.equals("revision")) {
-            if (articleCount > 20) {
+            if (articleCount > 200) {
               throw new ParseLimitExceededException(articleCount);
             }
             isRevisionContext = true;
@@ -119,19 +119,26 @@ public class WikipediaSentenceSource extends SentenceSource {
             String title = this.title.toString().trim();
             int revisionId = Integer.parseInt(this.revisionId.toString().trim());
             try {
-              if (resultHandler.getAnalyzedArticleId(title, revisionId) == null) {
-                articleCount++;
-                print("Article #" + articleCount + " : " + title);
-                addArticle(
-                  resultHandler,
-                  namespace.toString().trim(),
-                  title,
-                  revisionId,
-                  text.toString().trim()
-                );
+              Object[] analyzedArticleIdAndAnalyzed = resultHandler.getAnalyzedArticleId(title, revisionId);
+              if (analyzedArticleIdAndAnalyzed != null && analyzedArticleIdAndAnalyzed[1].equals(1L)) {
+                print("Article " + title + " with revision " + revisionId + " is already in the DB, ignoring");
               }
               else {
-                print("Article " + title +" with revision " + revisionId + " is already in the DB, ignoring");
+                articleCount++;
+                print("Article #" + articleCount + " : " + title);
+                if (analyzedArticleIdAndAnalyzed == null) {
+                  addArticle(
+                    resultHandler,
+                    namespace.toString().trim(),
+                    title,
+                    revisionId,
+                    text.toString().trim()
+                  );
+                }
+                else {
+                  print("Article " + title + " with revision " + revisionId + " is in the DB but analysis is not completed yet");
+                  addSentencesFromArticle((Long) analyzedArticleIdAndAnalyzed[0], title, revisionId, (String) analyzedArticleIdAndAnalyzed[2]);
+                }
               }
             } catch (SQLException e) {
               e.printStackTrace();
@@ -214,14 +221,18 @@ public class WikipediaSentenceSource extends SentenceSource {
       String anonymizedHtml = textParser.convertWikitextToHtml(title, text).getAnonymizedHtml();
       Long articleId = resultHandler.createArticle(language.getShortCode(), title, revisionId, text, anonymizedHtml);
 
-      for (String sentence : sentenceTokenizer.tokenize(anonymizedHtml)) {
-        if (acceptSentence(sentence)) {
-          sentences.add(new WikipediaSentence(sentence, title, revisionId, articleId));
-        }
-      }
+      addSentencesFromArticle(articleId, title, revisionId, anonymizedHtml);
     } catch (Exception e) {
       print("Could not extract text, skipping document: " + e + ", full stacktrace follows:");
       e.printStackTrace();
+    }
+  }
+
+  private void addSentencesFromArticle(Long articleId, String title, Integer revisionId, String anonymizedHtml) {
+    for (String sentence : sentenceTokenizer.tokenize(anonymizedHtml)) {
+      if (acceptSentence(sentence)) {
+        sentences.add(new WikipediaSentence(sentence, title, revisionId, articleId));
+      }
     }
   }
 

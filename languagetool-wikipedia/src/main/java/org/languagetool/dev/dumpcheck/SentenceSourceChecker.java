@@ -32,6 +32,8 @@ import org.languagetool.rules.patterns.AbstractPatternRule;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.text.NumberFormat;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -242,19 +244,23 @@ public class SentenceSourceChecker {
             }
             return true;
           }).collect(Collectors.toList());
-          databaseHandler.handleResult(sentence, matches, lang);
-          sentenceCount++;
-          if (sentenceCount % 5000 == 0) {
-            System.err.printf("%s sentences checked...\n", NumberFormat.getNumberInstance(Locale.US).format(sentenceCount));
+          try {
+            databaseHandler.handleResult(sentence, matches, lang);
+            sentenceCount++;
+            if (sentenceCount % 5000 == 0) {
+              System.err.printf("%s sentences checked...\n", NumberFormat.getNumberInstance(Locale.US).format(sentenceCount));
+            }
+            ruleMatchCount += matches.size();
           }
-          ruleMatchCount += matches.size();
+          catch(SQLIntegrityConstraintViolationException ignored) { }
         } catch (DocumentLimitReachedException | ErrorLimitReachedException | IOException e) {
           throw e;
         } catch (Exception e) {
           throw new RuntimeException("Check failed on sentence: " + StringUtils.abbreviate(sentence.getText(), 250), e);
         }
       }
-    } catch (DocumentLimitReachedException | ErrorLimitReachedException e) {
+      databaseHandler.markArticleAsAnalyzed(currentArticleId);
+    } catch (DocumentLimitReachedException | ErrorLimitReachedException | SQLException e) {
       System.out.println(getClass().getSimpleName() + ": " + e);
     } finally {
       lt.shutdown();

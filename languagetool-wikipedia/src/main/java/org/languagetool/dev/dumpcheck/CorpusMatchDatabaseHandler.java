@@ -38,11 +38,18 @@ import java.util.stream.Collectors;
  * Store rule matches to a database.
  * @since 2.4
  */
-class CorpusMatchDatabaseHandler extends ResultHandler {
+class CorpusMatchDatabaseHandler implements AutoCloseable {
+
+  protected static final String MARKER_START = "<err>";
+  protected static final String MARKER_END = "</err>";
+
+  protected int sentenceCount = 0;
+  protected int errorCount = 0;
+
+  private final int maxSentences;
+  private final int maxErrors;
 
   protected static Connection conn;
-  protected static int batchSize;
-  protected static int batchCount = 0;
 
   static final int MAX_CONTEXT_LENGTH = 500;
   private static final int SMALL_CONTEXT_LENGTH = 40;  // do not modify - it would break lookup of errors marked as 'false alarm'
@@ -51,7 +58,7 @@ class CorpusMatchDatabaseHandler extends ResultHandler {
   private static final ContextTools smallContextTools;
 
   private PreparedStatement selectCorpusArticleWikitextFromId;
-  private PreparedStatement selectAnalyzedCorpusArticleWithRevisionSt;
+  private PreparedStatement selectCorpusArticleWithRevisionSt;
   private PreparedStatement insertCorpusArticleSt;
   private PreparedStatement insertCorpusMatchSt;
   private PreparedStatement deleteNeverAppliedSuggestionsOfObsoleteArticles;
@@ -71,7 +78,8 @@ class CorpusMatchDatabaseHandler extends ResultHandler {
   }
 
   CorpusMatchDatabaseHandler(File propertiesFile, int maxSentences, int maxErrors) {
-    super(maxSentences, maxErrors);
+    this.maxSentences = maxSentences;
+    this.maxErrors = maxErrors;
 
     if (conn == null) {
       Properties dbProperties = new Properties();
@@ -80,7 +88,6 @@ class CorpusMatchDatabaseHandler extends ResultHandler {
         String dbUrl = getProperty(dbProperties, "dbUrl");
         String dbUser = getProperty(dbProperties, "dbUsername");
         String dbPassword = getProperty(dbProperties, "dbPassword");
-        batchSize = Integer.decode(dbProperties.getProperty("batchSize", "1"));
         conn = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
       } catch (SQLException | IOException e) {
         throw new RuntimeException(e);
@@ -89,9 +96,9 @@ class CorpusMatchDatabaseHandler extends ResultHandler {
         selectCorpusArticleWikitextFromId = conn.prepareStatement("" +
           " SELECT wikitext FROM corpus_article" +
           " WHERE id = ?");
-        selectAnalyzedCorpusArticleWithRevisionSt = conn.prepareStatement("" +
-          " SELECT id FROM corpus_article" +
-          " WHERE title = ? AND revision = ? AND analyzed = 1");
+        selectCorpusArticleWithRevisionSt = conn.prepareStatement("" +
+          " SELECT id, analyzed, anonymized_html FROM corpus_article" +
+          " WHERE title = ? AND revision = ?");
         insertCorpusArticleSt = conn.prepareStatement("" +
           " INSERT INTO corpus_article (language_code, title, revision, wikitext, anonymized_html, analyzed)" +
           " VALUES (?, ?, ?, ?, ?, 0)", Statement.RETURN_GENERATED_KEYS);
@@ -110,6 +117,18 @@ class CorpusMatchDatabaseHandler extends ResultHandler {
     }
   }
 
+  protected void checkMaxSentences(int i) {
+    if (maxSentences > 0 && sentenceCount >= maxSentences) {
+      throw new DocumentLimitReachedException(maxSentences);
+    }
+  }
+
+  protected void checkMaxErrors(int i) {
+    if (maxErrors > 0 && errorCount >= maxErrors) {
+      throw new ErrorLimitReachedException(maxErrors);
+    }
+  }
+
   private String getProperty(Properties prop, String key) {
     String value = prop.getProperty(key);
     if (value == null) {
@@ -118,8 +137,7 @@ class CorpusMatchDatabaseHandler extends ResultHandler {
     return value;
   }
 
-  @Override
-  protected void handleResult(Sentence sentence, List<RuleMatch> ruleMatches, Language language) {
+  protected void handleResult(Sentence sentence, List<RuleMatch> ruleMatches, Language language) throws SQLIntegrityConstraintViolationException {
     try {
       List<RuleMatch> rulesMatchesWithSuggestions = ruleMatches.stream()
         .filter(match -> !match.getSuggestedReplacements().isEmpty())
@@ -129,12 +147,7 @@ class CorpusMatchDatabaseHandler extends ResultHandler {
         String context = contextTools.getContext(match.getFromPos(), match.getToPos(), sentence.getText());
         String smallContext = smallContextTools.getContext(match.getFromPos(), match.getToPos(), sentence.getText());
 
-        addSentenceToBatch(sentence.getArticleId(), match, context, smallContext);
-        if (++batchCount >= batchSize) {
-          executeBatch();
-          batchCount = 0;
-        }
-
+        createSentence(sentence.getArticleId(), match, context, smallContext);
         checkMaxErrors(++errorCount);
         if (errorCount % 100 == 0) {
           System.out.println("Storing error #" + errorCount + " for text:");
@@ -142,7 +155,8 @@ class CorpusMatchDatabaseHandler extends ResultHandler {
         }
       }
       checkMaxSentences(++sentenceCount);
-    } catch (DocumentLimitReachedException | ErrorLimitReachedException e) {
+    }
+    catch(SQLIntegrityConstraintViolationException | DocumentLimitReachedException | ErrorLimitReachedException e) {
       throw e;
     } catch (Exception e) {
       throw new RuntimeException("Error storing matches for '" + sentence.getTitle() + "'", e);
@@ -170,7 +184,7 @@ class CorpusMatchDatabaseHandler extends ResultHandler {
     throw new SQLException("Couldn't create article " + title);
   }
 
-  private void addSentenceToBatch(long articleId, RuleMatch match, String context, String smallContext) throws SQLException {
+  private void createSentence(long articleId, RuleMatch match, String context, String smallContext) throws SQLException {
 
     Rule rule = match.getRule();
     insertCorpusMatchSt.setLong(1, articleId);
@@ -187,20 +201,7 @@ class CorpusMatchDatabaseHandler extends ResultHandler {
     insertCorpusMatchSt.setString(8, StringUtils.abbreviate(smallContext, 255));
 
     insertCorpusMatchSt.setString(9, match.getSuggestedReplacements().get(0));
-    insertCorpusMatchSt.addBatch();
-  }
-
-  void executeBatch() throws SQLException {
-    boolean autoCommit = conn.getAutoCommit();
-    conn.setAutoCommit(false);
-    try {
-      insertCorpusMatchSt.executeBatch();
-      if (autoCommit) {
-        conn.commit();
-      }
-    } finally {
-      conn.setAutoCommit(autoCommit);
-    }
+    insertCorpusMatchSt.executeQuery();
   }
 
   String getCorpusArticleWikitextFromId(Long articleId) throws SQLException {
@@ -212,13 +213,17 @@ class CorpusMatchDatabaseHandler extends ResultHandler {
     throw new SQLException("No such article : " + articleId);
   }
 
-  Long getAnalyzedArticleId(String title, int revision) throws SQLException {
-    selectAnalyzedCorpusArticleWithRevisionSt.setString(1, title);
-    selectAnalyzedCorpusArticleWithRevisionSt.setInt(2, revision);
+  Object[] getAnalyzedArticleId(String title, int revision) throws SQLException {
+    selectCorpusArticleWithRevisionSt.setString(1, title);
+    selectCorpusArticleWithRevisionSt.setInt(2, revision);
 
-    ResultSet corpusArticleResultSet = selectAnalyzedCorpusArticleWithRevisionSt.executeQuery();
+    ResultSet corpusArticleResultSet = selectCorpusArticleWithRevisionSt.executeQuery();
     if (corpusArticleResultSet.next()) {
-      return corpusArticleResultSet.getLong(1);
+      return new Object[]{
+        corpusArticleResultSet.getLong(1),
+        corpusArticleResultSet.getLong(2),
+        corpusArticleResultSet.getString(3)
+      };
     } else {
       return null;
     }
@@ -231,11 +236,15 @@ class CorpusMatchDatabaseHandler extends ResultHandler {
 
   @Override
   public void close() throws Exception {
-    for (PreparedStatement preparedStatement : Arrays.asList(insertCorpusArticleSt, insertCorpusMatchSt)) {
+    for (PreparedStatement preparedStatement : Arrays.asList(
+      selectCorpusArticleWikitextFromId,
+      selectCorpusArticleWithRevisionSt,
+      insertCorpusArticleSt,
+      insertCorpusMatchSt,
+      deleteNeverAppliedSuggestionsOfObsoleteArticles,
+      updateCorpusArticleMarkAsAnalyzed
+    )) {
       if (preparedStatement != null) {
-        if (batchCount > 0) {
-          executeBatch();
-        }
         preparedStatement.close();
       }
     }
