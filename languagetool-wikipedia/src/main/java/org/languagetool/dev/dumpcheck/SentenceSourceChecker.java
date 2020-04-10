@@ -217,15 +217,20 @@ public class SentenceSourceChecker {
       String parsoidUrl = getProperty(properties, "parsoidUrl");
       MixingSentenceSource mixingSource = MixingSentenceSource.create(fileNames, lang, filter, parsoidUrl, databaseHandler);
 
-      int currentArticleId = -1;
+      Long currentArticleId = null;
       String wikitext = null;
       while (mixingSource.hasNext()) {
         Sentence sentence = mixingSource.next();
         try {
-          if (currentArticleId != sentence.getArticleId()) {
-            databaseHandler.markArticleAsAnalyzed(currentArticleId);
+          if (!sentence.getArticleId().equals(currentArticleId)) {
+            if (currentArticleId != null) {
+              databaseHandler.markArticleAsAnalyzed(currentArticleId);
+              databaseHandler.deleteAlreadyAppliedSuggestionsInNewArticleRevisions(currentArticleId);
+            }
             wikitext = databaseHandler.getCorpusArticleWikitextFromId(sentence.getArticleId());
           }
+
+          currentArticleId = sentence.getArticleId();
 
           String finalWikitext = wikitext;
           List<RuleMatch> matches = lt.check(sentence.getText()).stream().filter(match -> {
@@ -245,7 +250,7 @@ public class SentenceSourceChecker {
             return true;
           }).collect(Collectors.toList());
           try {
-            databaseHandler.handleResult(sentence, matches, lang);
+            databaseHandler.handleResult(sentence, matches);
             sentenceCount++;
             if (sentenceCount % 5000 == 0) {
               System.err.printf("%s sentences checked...\n", NumberFormat.getNumberInstance(Locale.US).format(sentenceCount));
@@ -260,6 +265,7 @@ public class SentenceSourceChecker {
         }
       }
       databaseHandler.markArticleAsAnalyzed(currentArticleId);
+      databaseHandler.deleteAlreadyAppliedSuggestionsInNewArticleRevisions(currentArticleId);
     } catch (DocumentLimitReachedException | ErrorLimitReachedException | SQLException e) {
       System.out.println(getClass().getSimpleName() + ": " + e);
     } finally {

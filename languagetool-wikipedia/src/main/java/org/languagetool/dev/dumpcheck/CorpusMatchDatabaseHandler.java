@@ -19,7 +19,6 @@
 package org.languagetool.dev.dumpcheck;
 
 import org.apache.commons.lang3.StringUtils;
-import org.languagetool.Language;
 import org.languagetool.rules.Rule;
 import org.languagetool.rules.RuleMatch;
 import org.languagetool.rules.patterns.AbstractPatternRule;
@@ -62,6 +61,7 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
   private PreparedStatement insertCorpusArticleSt;
   private PreparedStatement insertCorpusMatchSt;
   private PreparedStatement deleteNeverAppliedSuggestionsOfObsoleteArticles;
+  private PreparedStatement deleteAlreadyAppliedSuggestionsInNewArticleRevisions;
   private PreparedStatement updateCorpusArticleMarkAsAnalyzed;
 
   static {
@@ -108,6 +108,19 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
         deleteNeverAppliedSuggestionsOfObsoleteArticles = conn.prepareStatement("" +
           " DELETE FROM corpus_match" +
           " WHERE applied IS NULL AND article_id IN (SELECT id FROM corpus_article WHERE title = ? AND revision <> ? )");
+        deleteAlreadyAppliedSuggestionsInNewArticleRevisions = conn.prepareStatement("" +
+          " DELETE from corpus_match WHERE article_id = ? AND id IN " +
+          " (SELECT m.id" +
+          "  FROM corpus_match m, corpus_match m2" +
+          "  WHERE m.id > m2.id" +
+          "    AND (select concat(a.title, '__', a.language_code) from corpus_article a where a.id = m.article_id) =" +
+          "        (select concat(a2.title, '__', a2.language_code) from corpus_article a2 where a2.id = m2.article_id)" +
+          "    AND m.ruleid = m2.ruleid" +
+          "    AND m.rule_subid = m2.rule_subid" +
+          "    AND m.error_context = m2.error_context" +
+          "    AND m.applied is null" +
+          "    AND m2.applied is not null" +
+          " )");
         updateCorpusArticleMarkAsAnalyzed = conn.prepareStatement("" +
           " UPDATE corpus_article" +
           " SET analyzed = 1 WHERE id = ?");
@@ -117,13 +130,13 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
     }
   }
 
-  protected void checkMaxSentences(int i) {
+  protected void checkMaxSentences() {
     if (maxSentences > 0 && sentenceCount >= maxSentences) {
       throw new DocumentLimitReachedException(maxSentences);
     }
   }
 
-  protected void checkMaxErrors(int i) {
+  protected void checkMaxErrors() {
     if (maxErrors > 0 && errorCount >= maxErrors) {
       throw new ErrorLimitReachedException(maxErrors);
     }
@@ -137,7 +150,7 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
     return value;
   }
 
-  protected void handleResult(Sentence sentence, List<RuleMatch> ruleMatches, Language language) throws SQLIntegrityConstraintViolationException {
+  protected void handleResult(Sentence sentence, List<RuleMatch> ruleMatches) throws SQLIntegrityConstraintViolationException {
     try {
       List<RuleMatch> rulesMatchesWithSuggestions = ruleMatches.stream()
         .filter(match -> !match.getSuggestedReplacements().isEmpty())
@@ -148,13 +161,15 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
         String smallContext = smallContextTools.getContext(match.getFromPos(), match.getToPos(), sentence.getText());
 
         createSentence(sentence.getArticleId(), match, context, smallContext);
-        checkMaxErrors(++errorCount);
+        ++errorCount;
+        checkMaxErrors();
         if (errorCount % 100 == 0) {
           System.out.println("Storing error #" + errorCount + " for text:");
           System.out.println("  " + sentence.getText());
         }
       }
-      checkMaxSentences(++sentenceCount);
+      ++sentenceCount;
+      checkMaxSentences();
     }
     catch(SQLIntegrityConstraintViolationException | DocumentLimitReachedException | ErrorLimitReachedException e) {
       throw e;
@@ -166,7 +181,16 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
   void deleteNeverAppliedSuggestionsOfObsoleteArticles(String title, int revision) throws SQLException {
     deleteNeverAppliedSuggestionsOfObsoleteArticles.setString(1, title);
     deleteNeverAppliedSuggestionsOfObsoleteArticles.setInt(2, revision);
-    deleteNeverAppliedSuggestionsOfObsoleteArticles.execute();
+    System.out.println("deleteNeverAppliedSuggestionsOfObsoleteArticles : deleted rows = "
+      + deleteNeverAppliedSuggestionsOfObsoleteArticles.executeUpdate()
+    );
+  }
+
+  void deleteAlreadyAppliedSuggestionsInNewArticleRevisions(Long articleId) throws SQLException {
+    deleteAlreadyAppliedSuggestionsInNewArticleRevisions.setLong(1, articleId);
+    System.out.println("deleteAlreadyAppliedSuggestionsInNewArticleRevisions : deleted rows = "
+      + deleteAlreadyAppliedSuggestionsInNewArticleRevisions.executeUpdate()
+    );
   }
 
   Long createArticle(String languageCode, String title, int revision, String wikitext, String anonymizedHtml) throws SQLException {
@@ -229,8 +253,8 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
     }
   }
 
-  public void markArticleAsAnalyzed(int currentArticleId) throws SQLException {
-    updateCorpusArticleMarkAsAnalyzed.setInt(1, currentArticleId);
+  public void markArticleAsAnalyzed(Long currentArticleId) throws SQLException {
+    updateCorpusArticleMarkAsAnalyzed.setLong(1, currentArticleId);
     updateCorpusArticleMarkAsAnalyzed.execute();
   }
 
@@ -242,6 +266,7 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
       insertCorpusArticleSt,
       insertCorpusMatchSt,
       deleteNeverAppliedSuggestionsOfObsoleteArticles,
+      deleteAlreadyAppliedSuggestionsInNewArticleRevisions,
       updateCorpusArticleMarkAsAnalyzed
     )) {
       if (preparedStatement != null) {
