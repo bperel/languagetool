@@ -35,6 +35,8 @@ import org.languagetool.rules.CorrectExample;
 import org.languagetool.rules.IncorrectExample;
 import org.languagetool.rules.Rule;
 import org.languagetool.rules.TextLevelRule;
+import org.languagetool.server.DatabaseAccess.ContributionStatisticsPerMonth;
+import org.languagetool.server.DatabaseAccess.DayStatistics;
 import org.languagetool.tools.HtmlTools;
 import org.languagetool.tools.HtmlTools.SuggestionNotApplicableException;
 
@@ -343,7 +345,7 @@ class ApiV2 {
     ServerTools.setCommonHeaders(httpExchange, JSON_CONTENT_TYPE, allowOriginUrl);
 
     DatabaseAccess db = DatabaseAccess.getInstance();
-    writeStatsListResponse(db.getStats(), httpExchange);
+    writeStatsListResponse(db.getDecisionStats(), db.getContributorsStats(), httpExchange);
   }
 
   private List<String> getOriginalAndSuggestedWikitext(int suggestionId) throws SuggestionNotApplicableException {
@@ -519,16 +521,26 @@ class ApiV2 {
     sendJson(httpExchange, sw);
   }
 
-  private void writeStatsListResponse(List<DatabaseAccess.DayStatistics> stats, HttpExchange httpExchange) throws IOException {
+  private void writeStatsListResponse(List<DayStatistics> decisionsStats, List<ContributionStatisticsPerMonth> contributorsStats, HttpExchange httpExchange) throws IOException {
     StringWriter sw = new StringWriter();
     try (JsonGenerator g = factory.createGenerator(sw)) {
       g.setCodec(new ObjectMapper());
       g.writeStartObject();
-      g.writeArrayFieldStart("stats");
-      for (DatabaseAccess.DayStatistics stat : stats) {
+      g.writeArrayFieldStart("decisions");
+      for (DayStatistics stat : decisionsStats) {
         g.writeStartObject();
         g.writeObjectField("date", stat.getDate());
         g.writeObjectField("applied", stat.getApplied());
+        g.writeObjectField("count", stat.getCount());
+        g.writeEndObject();
+      }
+      g.writeEndArray();
+      g.writeArrayFieldStart("contributors");
+      for (ContributionStatisticsPerMonth stat : contributorsStats) {
+        g.writeStartObject();
+        g.writeObjectField("month", stat.getDate());
+        g.writeObjectField("language", stat.getLanguage());
+        g.writeObjectField("username", stat.getUsername());
         g.writeObjectField("count", stat.getCount());
         g.writeEndObject();
       }

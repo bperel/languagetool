@@ -224,12 +224,21 @@ class DatabaseAccess {
     }
   }
 
-  List<DayStatistics> getStats() {
+  List<DayStatistics> getDecisionStats() {
     if (sqlSessionFactory == null) {
       return null;
     }
     try (SqlSession session = sqlSessionFactory.openSession(true)) {
-      return session.selectList("org.languagetool.server.WikipediaMapper.getStats");
+      return session.selectList("org.languagetool.server.WikipediaMapper.getDecisionStats");
+    }
+  }
+
+  List<ContributionStatisticsPerMonth> getContributorsStats() {
+    if (sqlSessionFactory == null) {
+      return null;
+    }
+    try (SqlSession session = sqlSessionFactory.openSession(true)) {
+      return session.selectList("org.languagetool.server.WikipediaMapper.getContributionStats");
     }
   }
   
@@ -446,9 +455,9 @@ class DatabaseAccess {
   }
 
   public static class DayStatistics {
-    private String date;
-    private Boolean applied;
-    private Integer count;
+    private final String date;
+    private final Boolean applied;
+    private final Integer count;
 
     public DayStatistics(String date, Boolean applied, Integer count) {
       this.date = date;
@@ -462,6 +471,36 @@ class DatabaseAccess {
 
     public Boolean getApplied() {
       return applied;
+    }
+
+    public Integer getCount() {
+      return count;
+    }
+  }
+
+  public static class ContributionStatisticsPerMonth {
+    private final String date;
+    private final String language;
+    private final String username;
+    private final Integer count;
+
+    public ContributionStatisticsPerMonth(String date, String language, String username, Integer count) {
+      this.date = date;
+      this.language = language;
+      this.username = username;
+      this.count = count;
+    }
+
+    public String getDate() {
+      return date;
+    }
+
+    public String getLanguage() {
+      return language;
+    }
+
+    public String getUsername() {
+      return username;
     }
 
     public Integer getCount() {
