@@ -511,6 +511,7 @@ class ApiV2 {
         CorpusArticleEntry article = articles.get(corpusMatchEntry.getArticleId());
         g.writeStringField("title", article.getTitle());
         g.writeStringField("languageCode", article.getLanguageCode());
+        g.writeStringField("url", article.getUrl());
         g.writeEndObject();
 
         g.writeEndObject();

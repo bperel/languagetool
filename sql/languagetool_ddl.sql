@@ -19,6 +19,8 @@ create table corpus_article
     revision int not null,
     wikitext mediumtext null,
     anonymized_html mediumtext not null,
+    analyzed tinyint(1) not null,
+    url varchar(300) as (concat('https://', `language_code`,'.wikipedia.org/wiki/',`title`)) stored,
     constraint corpus_article_uindex
         unique (title, revision)
 )
