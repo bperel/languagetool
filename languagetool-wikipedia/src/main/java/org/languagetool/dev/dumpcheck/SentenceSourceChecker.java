@@ -77,7 +77,7 @@ public class SentenceSourceChecker {
         addDisabledRules(languageCode, disabledRuleIds, disabledRules);
       }
     }
-    int maxArticles = Integer.parseInt(commandLine.getOptionValue("max-sentences", "0"));
+    int maxArticles = Integer.parseInt(commandLine.getOptionValue("max-sentences", "50"));
     int maxErrors = Integer.parseInt(commandLine.getOptionValue("max-errors", "0"));
     int contextSize = Integer.parseInt(commandLine.getOptionValue("context-size", "50"));
     String[] ruleIds = commandLine.hasOption('r') ? commandLine.getOptionValue('r').split(",") : null;
@@ -264,8 +264,11 @@ public class SentenceSourceChecker {
           throw new RuntimeException("Check failed on sentence: " + StringUtils.abbreviate(sentence.getText(), 250), e);
         }
       }
-      databaseHandler.markArticleAsAnalyzed(currentArticleId);
-      databaseHandler.deleteAlreadyAppliedSuggestionsInNewArticleRevisions(currentArticleId);
+
+      if (currentArticleId != null) {
+        databaseHandler.markArticleAsAnalyzed(currentArticleId);
+        databaseHandler.deleteAlreadyAppliedSuggestionsInNewArticleRevisions(currentArticleId);
+      }
     } catch (DocumentLimitReachedException | ErrorLimitReachedException | SQLException e) {
       System.out.println(getClass().getSimpleName() + ": " + e);
     } finally {
