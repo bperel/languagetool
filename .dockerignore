@@ -1,5 +1,6 @@
-.idea
-nwords
+*
+!.git
+!languagetool-*
+!pom.xml
+!*.sh
 **/target
-*.iml
-*.properties

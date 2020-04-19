@@ -5,6 +5,10 @@ services:
     container_name: wiper-db
     image: "mariadb:10.4"
     restart: always
+    networks:
+      default:
+        aliases:
+          - db
     environment:
       MYSQL_DATABASE: languagetool
       MYSQL_ROOT_PASSWORD: languagetool
@@ -38,14 +42,30 @@ services:
     container_name: languagetool-server
     depends_on:
       - db
-      - parsoid
     build:
       context: .
       dockerfile: Dockerfile
       target: languagetool-server
     volumes:
       - ./server.properties:/home/server.properties
+      - dumps:/home/dumps
+    restart: always
+
+  import:
+    container_name: wiper-import
+    depends_on:
+      - db
+      - parsoid
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: languagetool-wikipedia
+    volumes:
+      - dumps:/home/dumps
+      - ./nwords:/home/nwords
+      - ./server.prod.properties:/home/server.properties
     restart: always
 
 volumes:
   wiper-db:
+  dumps:

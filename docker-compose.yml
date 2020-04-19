@@ -42,7 +42,6 @@ services:
     container_name: languagetool-server
     depends_on:
       - db
-      - parsoid
     image: "bperel/languagetool-wiper"
     volumes:
       - ./server.properties:/home/server.properties
@@ -55,8 +54,25 @@ services:
         aliases:
           - languagetool
 
+  import:
+    container_name: wiper-import
+    depends_on:
+      - db
+      - parsoid
+    image: "bperel/languagetool-wiper-wikipedia"
+    volumes:
+      - dumps:/home/dumps
+      - ./nwords:/home/nwords
+      - ./server.properties:/home/server.properties
+    restart: always
+    networks:
+      default:
+        aliases:
+          - import
+
 volumes:
   wiper-db:
+  dumps:
 
 networks:
   default:
