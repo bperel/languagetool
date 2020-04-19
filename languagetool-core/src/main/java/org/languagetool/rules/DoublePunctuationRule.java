@@ -18,12 +18,15 @@
  */
 package org.languagetool.rules;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ResourceBundle;
-
 import org.languagetool.AnalyzedSentence;
 import org.languagetool.AnalyzedTokenReadings;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.ResourceBundle;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * A rule that matches ".." (but not "..." etc) and ",,".
@@ -32,10 +35,21 @@ import org.languagetool.AnalyzedTokenReadings;
  */
 public class DoublePunctuationRule extends Rule {
 
+  private static final Pattern BIBCODE_REGEX = Pattern.compile("\\d{4}[A-Za-z.&]{5}[\\w.]{4}[ELPQ-Z.][\\d.]{4}[A-Z]");
+
   public DoublePunctuationRule(ResourceBundle messages) {
     super(messages);
     super.setCategory(Categories.PUNCTUATION.getCategory(messages));
     setLocQualityIssueType(ITSIssueType.Typographical);
+  }
+
+  private boolean tokenIsInBibcode(AnalyzedTokenReadings token, HashMap<Integer, Integer> bibCodePositions) {
+    for (Integer bibCodeStart : bibCodePositions.keySet()) {
+      if (token.getStartPos() >= bibCodeStart && token.getEndPos() <= bibCodePositions.get(bibCodeStart)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   @Override
@@ -54,6 +68,12 @@ public class DoublePunctuationRule extends Rule {
 
   @Override
   public final RuleMatch[] match(AnalyzedSentence sentence) {
+    Matcher matcher = BIBCODE_REGEX.matcher(sentence.getText());
+    HashMap<Integer, Integer> bibCodePositions= new HashMap<>();
+    while(matcher.find()) {
+      bibCodePositions.put(matcher.start(), matcher.end());
+    }
+
     List<RuleMatch> ruleMatches = new ArrayList<>();
     AnalyzedTokenReadings[] tokens = sentence.getTokensWithoutWhitespace();
     int startPos = 0;
@@ -78,7 +98,7 @@ public class DoublePunctuationRule extends Rule {
         dotCount = 0;
         startPos = tokens[i].getStartPos();
       }
-      if (dotCount == 2 && !".".equals(nextToken) && !"?".equals(prevToken) && !"!".equals(prevToken)) {
+      if (dotCount == 2 && !".".equals(nextToken) && !"?".equals(prevToken) && !"!".equals(prevToken) && !tokenIsInBibcode(tokens[i], bibCodePositions)) {
         int fromPos = Math.max(0, startPos - 1);
         RuleMatch ruleMatch = new RuleMatch(this, sentence, fromPos, startPos + 1,
             getDotMessage(), messages.getString("double_dots_short"));

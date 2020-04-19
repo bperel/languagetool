@@ -50,6 +50,8 @@ public class DoublePunctuationRuleTest {
     assertEquals(0, matches.length);
     matches = rule.match(langTool.getAnalyzedSentence("This, is, a test sentence."));
     assertEquals(0, matches.length);
+    matches = rule.match(langTool.getAnalyzedSentence("This is a bibcode:1922PA.....30..469R."));
+    assertEquals(0, matches.length);
 
     // errors:
     matches = rule.match(langTool.getAnalyzedSentence("This,, is a test sentence."));
