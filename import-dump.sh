@@ -12,6 +12,7 @@ for wiki in $wikis; do
   curl -s "https://dumps.wikimedia.org/${wiki}wiki/$latestdump/dumpstatus.json" \
   | jq '.jobs.articlesmultistreamdump.files | keys[]' \
   | grep -Po '(?<=").+xml[^"]+' \
+  | head -n 1 \
   | while read -r file; do
     echo "File : $file"
     if [ -f "$file.done" ]; then
@@ -31,8 +32,6 @@ for wiki in $wikis; do
       fi
       java -jar /srv/languagetool-wikipedia/*/languagetool-wikipedia.jar check-data $nwordsargument -f `pwd`/$file -l $wiki -d /home/server.properties \
         && touch "$file.done" && rm -f $file
-
-      continue # For now, only process one file per language
     fi
   done
 done
