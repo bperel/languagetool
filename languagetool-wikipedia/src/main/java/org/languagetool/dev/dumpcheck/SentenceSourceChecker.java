@@ -77,7 +77,7 @@ public class SentenceSourceChecker {
         addDisabledRules(languageCode, disabledRuleIds, disabledRules);
       }
     }
-    int maxArticles = Integer.parseInt(commandLine.getOptionValue("max-sentences", "50"));
+    int maxArticles = Integer.parseInt(commandLine.getOptionValue("max-sentences", "0"));
     int maxErrors = Integer.parseInt(commandLine.getOptionValue("max-errors", "0"));
     int contextSize = Integer.parseInt(commandLine.getOptionValue("context-size", "50"));
     String[] ruleIds = commandLine.hasOption('r') ? commandLine.getOptionValue('r').split(",") : null;
