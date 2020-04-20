@@ -107,7 +107,7 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
           " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
         deleteNeverAppliedSuggestionsOfObsoleteArticles = conn.prepareStatement("" +
           " DELETE FROM corpus_match" +
-          " WHERE applied IS NULL AND article_id IN (SELECT id FROM corpus_article WHERE title = ? AND revision <> ? )");
+          " WHERE applied IS NULL AND article_id IN (SELECT id FROM corpus_article WHERE title = ? AND language_code = ? AND revision <> ? )");
         deleteAlreadyAppliedSuggestionsInNewArticleRevisions = conn.prepareStatement("" +
           " DELETE from corpus_match WHERE article_id = ? AND id IN " +
           " (SELECT m.id" +
@@ -178,9 +178,10 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
     }
   }
 
-  void deleteNeverAppliedSuggestionsOfObsoleteArticles(String title, int revision) throws SQLException {
+  void deleteNeverAppliedSuggestionsOfObsoleteArticles(String title, String languageCode, int revision) throws SQLException {
     deleteNeverAppliedSuggestionsOfObsoleteArticles.setString(1, title);
-    deleteNeverAppliedSuggestionsOfObsoleteArticles.setInt(2, revision);
+    deleteNeverAppliedSuggestionsOfObsoleteArticles.setString(2, languageCode);
+    deleteNeverAppliedSuggestionsOfObsoleteArticles.setInt(3, revision);
     System.out.println("deleteNeverAppliedSuggestionsOfObsoleteArticles : deleted rows = "
       + deleteNeverAppliedSuggestionsOfObsoleteArticles.executeUpdate()
     );

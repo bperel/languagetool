@@ -217,7 +217,7 @@ public class WikipediaSentenceSource extends SentenceSource {
         redirectSkipCount++;
       }
 
-      resultHandler.deleteNeverAppliedSuggestionsOfObsoleteArticles(title, revisionId);
+      resultHandler.deleteNeverAppliedSuggestionsOfObsoleteArticles(title, language.getShortCode(), revisionId);
       String anonymizedHtml = textParser.convertWikitextToHtml(title, text).getAnonymizedHtml();
       Long articleId = resultHandler.createArticle(language.getShortCode(), title, revisionId, text, anonymizedHtml);
 
