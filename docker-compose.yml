@@ -59,7 +59,7 @@ services:
     depends_on:
       - db
       - parsoid
-    image: "bperel/languagetool-wiper-wikipedia"
+    image: "bperel/languagetool-wiper-import"
     volumes:
       - dumps:/home/dumps
       - ./nwords:/home/nwords
