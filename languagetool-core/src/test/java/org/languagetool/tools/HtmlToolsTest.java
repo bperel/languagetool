@@ -29,8 +29,8 @@ public class HtmlToolsTest {
     String wikiText = "avec la ''monarchie de Habsbourg'' et la ''Confédération germanique''.";
     String errorContext = "la <tag>monarchie <err>de Habsbourg</err></tag> et la <tag>Confédération germanique</tag>.";
     String suggestion = "d'Habsbourg";
-    String replacedText = HtmlTools.getErrorContextWithAppliedSuggestion("", wikiText, errorContext, suggestion);
+    String replacedText = HtmlTools.getArticleWithAppliedSuggestion("", wikiText, errorContext, suggestion);
 
-    assertEquals(replacedText, "la ''monarchie d'Habsbourg'' et la ''Confédération germanique''.");
+    assertEquals("avec la ''monarchie d'Habsbourg'' et la ''Confédération germanique''.", replacedText);
   }
 }
