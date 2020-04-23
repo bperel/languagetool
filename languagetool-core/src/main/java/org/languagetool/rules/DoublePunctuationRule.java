@@ -35,7 +35,7 @@ import java.util.regex.Pattern;
  */
 public class DoublePunctuationRule extends Rule {
 
-  private static final Pattern BIBCODE_REGEX = Pattern.compile("\\d{4}[A-Za-z.&]{5}[\\w.]{4}[ELPQ-Z.][\\d.]{4}[A-Z]");
+  private static final Pattern BIBCODE_REGEX = Pattern.compile("\\b\\d{4}\\D\\S{13}[A-Z.:]\\b");
 
   public DoublePunctuationRule(ResourceBundle messages) {
     super(messages);
