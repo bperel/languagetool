@@ -30,7 +30,7 @@ for wiki in $wikis; do
       else
         nwordsargument=
       fi
-      java -jar /srv/languagetool-wikipedia/*/languagetool-wikipedia.jar check-data $nwordsargument -f `pwd`/$file -l $wiki -d /home/server.properties \
+      java -jar /srv/languagetool-wikipedia/*/languagetool-wikipedia.jar check-data $nwordsargument -f `pwd`/$file -l $wiki -d /home/server.properties --rule-properties=/home/disabled_rules.properties \
         && touch "$file.done" && rm -f $file
     fi
   done
