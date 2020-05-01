@@ -198,6 +198,17 @@ class DatabaseAccess {
     }
   }
 
+  public void removeAccessToken(String accessToken) {
+    if (sqlSessionFactory == null) {
+      return;
+    }
+    try (SqlSession session = sqlSessionFactory.openSession(true)) {
+      Map<Object, Object> map = new HashMap<>();
+      map.put("accessToken", accessToken);
+      session.delete("org.languagetool.server.WikipediaMapper.deleteAccessToken", map);
+    }
+  }
+
   CorpusMatchEntry getCorpusMatch(int suggestionId) {
     if (sqlSessionFactory == null) {
       return null;

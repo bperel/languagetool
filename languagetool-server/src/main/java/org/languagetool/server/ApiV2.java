@@ -94,6 +94,8 @@ class ApiV2 {
       handleWikipediaAuthorizeRequest(httpExchange, parameters);
     } else if (path.equals("wikipedia/login")) {
       handleWikipediaLoginRequest(httpExchange, parameters);
+    } else if (path.equals("wikipedia/logout")) {
+      handleWikipediaLogoutRequest(httpExchange, parameters);
     } else if (path.equals("wikipedia/user")) {
       handleWikipediaUserRequest(httpExchange, parameters);
     } else if (path.equals("wikipedia/suggestions")) {
@@ -245,6 +247,16 @@ class ApiV2 {
     fields.put("accessToken", mediaWikiApi.getAccessTokenWithSecret().getToken());
     fields.put("languageCode", languageCode);
     writeStringHashMapResponse(fields, httpExchange);
+  }
+
+  private void handleWikipediaLogoutRequest(HttpExchange httpExchange, Map<String, String> parameters) throws IOException {
+    ensureGetMethod(httpExchange, "/wikipedia/logout");
+    String accessToken = parameters.get("accessToken");
+
+    DatabaseAccess db = DatabaseAccess.getInstance();
+    db.removeAccessToken(accessToken);
+
+    writeBooleanResponse("success", true, httpExchange);
   }
 
   private void handleWikipediaUserRequest(HttpExchange httpExchange, Map<String, String> parameters) throws IOException {
