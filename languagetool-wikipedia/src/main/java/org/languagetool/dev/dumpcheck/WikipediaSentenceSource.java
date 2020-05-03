@@ -47,7 +47,7 @@ import java.util.regex.Pattern;
  */
 public class WikipediaSentenceSource extends SentenceSource {
 
-  private static final boolean ONLY_ARTICLES = false;
+  private static final boolean ONLY_ARTICLES = true;
   private static final String ARTICLE_NAMESPACE = "0";
 
   private final ParsoidWikipediaTextParser textParser;
