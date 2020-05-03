@@ -27,7 +27,7 @@ COPY ./import-dump.sh /home
 RUN chmod +x /home/import-dump.sh \
  && apt-get update && apt-get install --no-install-recommends -y jq curl cron procps libxml-xpath-perl && apt-get clean
 
-RUN echo "0 1 * * * pgrep -f /home/import-dump.sh > /dev/null 2> /dev/null || /home/import-dump.sh > /dev/stdout" > /etc/cron.d/import
+RUN echo "0 1 * * * pgrep -f /home/import-dump.sh > /dev/null 2> /dev/null || /home/import-dump.sh &> /proc/1/fd/1" > /etc/cron.d/import
 RUN crontab /etc/cron.d/import
 
 CMD ["cron", "-f"]
