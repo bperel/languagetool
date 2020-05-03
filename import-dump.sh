@@ -12,7 +12,6 @@ for wiki in $wikis; do
   curl -s "https://dumps.wikimedia.org/${wiki}wiki/$latestdump/dumpstatus.json" \
   | jq '.jobs.articlesmultistreamdump.files | keys[]' \
   | grep -Po '(?<=").+xml[^"]+' \
-  | head -n 1 \
   | while read -r file; do
     echo "File : $file"
     if [ -f "$file.done" ]; then
@@ -31,7 +30,7 @@ for wiki in $wikis; do
         nwordsargument=
       fi
       java -jar /srv/languagetool-wikipedia/*/languagetool-wikipedia.jar check-data $nwordsargument -f `pwd`/$file -l $wiki -d /home/server.properties --rule-properties=/home/disabled_rules.properties \
-        && touch "$file.done" && rm -f $file
+        && touch "$file.done" && rm -f $file && break
     fi
   done
 done
