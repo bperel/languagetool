@@ -252,6 +252,15 @@ class DatabaseAccess {
       return session.selectList("org.languagetool.server.WikipediaMapper.getContributionStats");
     }
   }
+
+  List<PendingSuggestionsPerLanguageCode> getPendingSuggestionsStats() {
+    if (sqlSessionFactory == null) {
+      return null;
+    }
+    try (SqlSession session = sqlSessionFactory.openSession(true)) {
+      return session.selectList("org.languagetool.server.WikipediaMapper.getPendingSuggestionsPerLanguageCode");
+    }
+  }
   
   boolean addWord(String word, Long userId) {
     validateWord(word);
@@ -491,13 +500,13 @@ class DatabaseAccess {
 
   public static class ContributionStatisticsPerMonth {
     private final String date;
-    private final String language;
+    private final String languageCode;
     private final String username;
     private final Integer count;
 
-    public ContributionStatisticsPerMonth(String date, String language, String username, Integer count) {
+    public ContributionStatisticsPerMonth(String date, String languageCode, String username, Integer count) {
       this.date = date;
-      this.language = language;
+      this.languageCode = languageCode;
       this.username = username;
       this.count = count;
     }
@@ -506,12 +515,30 @@ class DatabaseAccess {
       return date;
     }
 
-    public String getLanguage() {
-      return language;
+    public String getLanguageCode() {
+      return languageCode;
     }
 
     public String getUsername() {
       return username;
+    }
+
+    public Integer getCount() {
+      return count;
+    }
+  }
+
+  public static class PendingSuggestionsPerLanguageCode {
+    private final String languageCode;
+    private final Integer count;
+
+    public PendingSuggestionsPerLanguageCode(String languageCode, Integer count) {
+      this.languageCode = languageCode;
+      this.count = count;
+    }
+
+    public String getLanguageCode() {
+      return languageCode;
     }
 
     public Integer getCount() {

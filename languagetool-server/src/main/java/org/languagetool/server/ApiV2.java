@@ -37,6 +37,7 @@ import org.languagetool.rules.Rule;
 import org.languagetool.rules.TextLevelRule;
 import org.languagetool.server.DatabaseAccess.ContributionStatisticsPerMonth;
 import org.languagetool.server.DatabaseAccess.DayStatistics;
+import org.languagetool.server.DatabaseAccess.PendingSuggestionsPerLanguageCode;
 import org.languagetool.tools.HtmlTools;
 import org.languagetool.tools.HtmlTools.SuggestionNotApplicableException;
 
@@ -253,8 +254,7 @@ class ApiV2 {
     ensureGetMethod(httpExchange, "/wikipedia/logout");
     String accessToken = parameters.get("accessToken");
 
-    DatabaseAccess db = DatabaseAccess.getInstance();
-    db.removeAccessToken(accessToken);
+    DatabaseAccess.getInstance().removeAccessToken(accessToken);
 
     writeBooleanResponse("success", true, httpExchange);
   }
@@ -357,7 +357,7 @@ class ApiV2 {
     ServerTools.setCommonHeaders(httpExchange, JSON_CONTENT_TYPE, allowOriginUrl);
 
     DatabaseAccess db = DatabaseAccess.getInstance();
-    writeStatsListResponse(db.getDecisionStats(), db.getContributorsStats(), httpExchange);
+    writeStatsListResponse(db.getDecisionStats(), db.getContributorsStats(), db.getPendingSuggestionsStats(), httpExchange);
   }
 
   private List<String> getOriginalAndSuggestedWikitext(int suggestionId) throws SuggestionNotApplicableException {
@@ -534,7 +534,12 @@ class ApiV2 {
     sendJson(httpExchange, sw);
   }
 
-  private void writeStatsListResponse(List<DayStatistics> decisionsStats, List<ContributionStatisticsPerMonth> contributorsStats, HttpExchange httpExchange) throws IOException {
+  private void writeStatsListResponse(
+    List<DayStatistics> decisionsStats,
+    List<ContributionStatisticsPerMonth> contributorsStats,
+    List<PendingSuggestionsPerLanguageCode> pendingSuggestionsStats,
+    HttpExchange httpExchange
+  ) throws IOException {
     StringWriter sw = new StringWriter();
     try (JsonGenerator g = factory.createGenerator(sw)) {
       g.setCodec(new ObjectMapper());
@@ -552,8 +557,16 @@ class ApiV2 {
       for (ContributionStatisticsPerMonth stat : contributorsStats) {
         g.writeStartObject();
         g.writeObjectField("month", stat.getDate());
-        g.writeObjectField("language", stat.getLanguage());
+        g.writeObjectField("language", stat.getLanguageCode());
         g.writeObjectField("username", stat.getUsername());
+        g.writeObjectField("count", stat.getCount());
+        g.writeEndObject();
+      }
+      g.writeEndArray();
+      g.writeArrayFieldStart("pendingSuggestions");
+      for (PendingSuggestionsPerLanguageCode stat : pendingSuggestionsStats) {
+        g.writeStartObject();
+        g.writeObjectField("language", stat.getLanguageCode());
         g.writeObjectField("count", stat.getCount());
         g.writeEndObject();
       }
