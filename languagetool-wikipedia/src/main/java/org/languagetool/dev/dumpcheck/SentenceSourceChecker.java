@@ -245,6 +245,7 @@ public class SentenceSourceChecker {
             try {
               getErrorContextWithAppliedSuggestion(sentence.getTitle(), finalWikitext, context, suggestions.get(0));
             } catch (SuggestionNotApplicableException e) {
+              System.out.println(e.getMessage());
               return false;
             }
             return true;
@@ -345,7 +346,7 @@ public class SentenceSourceChecker {
   private void disableRulesForWiki(JLanguageTool lt) {
     List<Rule> allActiveRules = lt.getAllActiveRules();
     for (Rule rule : allActiveRules) {
-      if (rule.isDictionaryBasedSpellingRule()) { // TODO disable WHITESPACE_RULE
+      if (rule.isDictionaryBasedSpellingRule()) {
         lt.disableRule(rule.getId());
       }
     }
