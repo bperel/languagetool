@@ -21,16 +21,45 @@ package org.languagetool.tools;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 public class HtmlToolsTest {
 
   @Test
-  public void testCalculateLargestContextWithoutTags() throws HtmlTools.SuggestionNotApplicableException {
+  public void testGetArticleWithAppliedSuggestion() throws HtmlTools.SuggestionNotApplicableException {
     String wikiText = "avec la ''monarchie de Habsbourg'' et la ''Confédération germanique''.";
     String errorContext = "la <tag>monarchie <err>de Habsbourg</err></tag> et la <tag>Confédération germanique</tag>.";
     String suggestion = "d'Habsbourg";
     String replacedText = HtmlTools.getArticleWithAppliedSuggestion("", wikiText, errorContext, suggestion);
 
     assertEquals("avec la ''monarchie d'Habsbourg'' et la ''Confédération germanique''.", replacedText);
+  }
+
+  @Test
+  public void testGetArticleWithAppliedSuggestionThrowIfArticleTitleInMatch() {
+    String errorContext = "Le <tag>programme</tag> Hello <err>World</err>.";
+    String suggestion = "Word";
+
+    try {
+      HtmlTools.getArticleWithAppliedSuggestion("Hello World", "", errorContext, suggestion);
+      fail("Should have thrown SuggestionNotApplicableException");
+    }
+    catch (HtmlTools.SuggestionNotApplicableException e) {
+      assertEquals("The title of the article is included in the match ' Hello World.' in the wikitext of article 'Hello World'", e.getMessage());
+    }
+  }
+
+  @Test
+  public void testGetArticleWithAppliedSuggestionThrowIfArticleTitleIsMatch() {
+    String errorContext = "Le <tag>programme</tag> <err>Hello World</err>.";
+    String suggestion = "Salut Word";
+
+    try {
+      HtmlTools.getArticleWithAppliedSuggestion("Hello World", "", errorContext, suggestion);
+      fail("Should have thrown SuggestionNotApplicableException");
+    }
+    catch (HtmlTools.SuggestionNotApplicableException e) {
+      assertEquals("The title of the article is included in the match ' Hello World.' in the wikitext of article 'Hello World'", e.getMessage());
+    }
   }
 }

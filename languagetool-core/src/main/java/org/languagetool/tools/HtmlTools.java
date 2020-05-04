@@ -110,6 +110,16 @@ public class HtmlTools {
     String largestErrorContextWithoutHtmlTags = getLargestErrorContext(suggestionErrorContext);
     String stringToReplace = getStringToReplace(largestErrorContextWithoutHtmlTags);
 
+    int errorStartPosition = largestErrorContextWithoutHtmlTags.indexOf("<err>");
+    int errorEndPosition = largestErrorContextWithoutHtmlTags.indexOf("</err>") - "<err>".length();
+    int articleTitleStartPosition = largestErrorContextWithoutHtmlTags.replaceAll("</?err>", "").indexOf(articleTitle);
+
+    if ( articleTitleStartPosition > -1
+      && errorStartPosition >= articleTitleStartPosition && (articleTitleStartPosition + articleTitle.length()) >= errorEndPosition
+    ) {
+      throw new SuggestionNotApplicableException(String.format("The title of the article is included in the match '%s' in the wikitext of article '%s'", stringToReplace, articleTitle));
+    }
+
     boolean hasMatch = articleWikitext.contains(stringToReplace);
     boolean hasMultipleMatches = hasMatch && articleWikitext.indexOf(stringToReplace) != articleWikitext.lastIndexOf(stringToReplace);
 
