@@ -244,6 +244,15 @@ class DatabaseAccess {
     }
   }
 
+  List<MonthStatistics> getMonthlyDecisionPercentage() {
+    if (sqlSessionFactory == null) {
+      return null;
+    }
+    try (SqlSession session = sqlSessionFactory.openSession(true)) {
+      return session.selectList("org.languagetool.server.WikipediaMapper.getDecisionStatsPercentageMonth");
+    }
+  }
+
   List<ContributionStatisticsPerMonth> getContributorsStats() {
     if (sqlSessionFactory == null) {
       return null;
@@ -495,6 +504,24 @@ class DatabaseAccess {
 
     public Integer getCount() {
       return count;
+    }
+  }
+
+  public static class MonthStatistics {
+    private final String month;
+    private final Float appliedPercentage;
+
+    public MonthStatistics(String month, Float appliedPercentage) {
+      this.month = month;
+      this.appliedPercentage = appliedPercentage;
+    }
+
+    public String getMonth() {
+      return month;
+    }
+
+    public Float getAppliedPercentage() {
+      return appliedPercentage;
     }
   }
 

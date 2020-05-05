@@ -30,6 +30,12 @@
         GROUP BY date_format(applied_date, '%Y-%m-%d'), applied
         ORDER BY date_format(applied_date, '%Y-%m-%d'), applied
     </select>
+    <select id="getDecisionStatsPercentageMonth" resultType="org.languagetool.server.DatabaseAccess$MonthStatistics">
+        select distinct date_format(applied_date, '%Y-%m') AS month, 100 * AVG(applied)
+        FROM corpus_match months
+        where applied_date is not null
+        group by month;
+    </select>
     <select id="getContributionStats" resultType="org.languagetool.server.DatabaseAccess$ContributionStatisticsPerMonth">
         SELECT date_format(applied_date, '%Y-%m') as month, language_code, applied_username, count(*)
         FROM corpus_match

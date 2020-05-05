@@ -37,6 +37,7 @@ import org.languagetool.rules.Rule;
 import org.languagetool.rules.TextLevelRule;
 import org.languagetool.server.DatabaseAccess.ContributionStatisticsPerMonth;
 import org.languagetool.server.DatabaseAccess.DayStatistics;
+import org.languagetool.server.DatabaseAccess.MonthStatistics;
 import org.languagetool.server.DatabaseAccess.PendingSuggestionsPerLanguageCode;
 import org.languagetool.tools.HtmlTools;
 import org.languagetool.tools.HtmlTools.SuggestionNotApplicableException;
@@ -273,13 +274,16 @@ class ApiV2 {
   private void handleWikipediaSuggestionRequest(HttpExchange httpExchange, Map<String, String> parameters) throws IOException {
     ensureGetMethod(httpExchange, "/wikipedia/suggestions");
     String[] languageCodes = parameters.get("languageCodes").split(",");
-
-    DatabaseAccess db = DatabaseAccess.getInstance();
-    List<CorpusMatchEntry> suggestions = db.getCorpusMatches(Arrays.asList(languageCodes), 10);
-
     HashMap<Integer, CorpusArticleEntry> articles = new HashMap<>();
-    for(CorpusMatchEntry suggestion : suggestions) {
-      articles.put(suggestion.getArticleId(), db.getCorpusArticle(suggestion.getArticleId()));
+    List<CorpusMatchEntry> suggestions = new ArrayList<>();
+
+    if (languageCodes.length > 0) {
+      DatabaseAccess db = DatabaseAccess.getInstance();
+      suggestions = db.getCorpusMatches(Arrays.asList(languageCodes), 10);
+
+      for (CorpusMatchEntry suggestion : suggestions) {
+        articles.put(suggestion.getArticleId(), db.getCorpusArticle(suggestion.getArticleId()));
+      }
     }
     writeCorpusMatchListResponse(suggestions, articles, httpExchange);
   }
@@ -357,7 +361,7 @@ class ApiV2 {
     ServerTools.setCommonHeaders(httpExchange, JSON_CONTENT_TYPE, allowOriginUrl);
 
     DatabaseAccess db = DatabaseAccess.getInstance();
-    writeStatsListResponse(db.getDecisionStats(), db.getContributorsStats(), db.getPendingSuggestionsStats(), httpExchange);
+    writeStatsListResponse(db.getDecisionStats(), db.getMonthlyDecisionPercentage(), db.getContributorsStats(), db.getPendingSuggestionsStats(), httpExchange);
   }
 
   private List<String> getOriginalAndSuggestedWikitext(int suggestionId) throws SuggestionNotApplicableException {
@@ -536,6 +540,7 @@ class ApiV2 {
 
   private void writeStatsListResponse(
     List<DayStatistics> decisionsStats,
+    List<MonthStatistics> monthlyDecisionPercentage,
     List<ContributionStatisticsPerMonth> contributorsStats,
     List<PendingSuggestionsPerLanguageCode> pendingSuggestionsStats,
     HttpExchange httpExchange
@@ -550,6 +555,14 @@ class ApiV2 {
         g.writeObjectField("date", stat.getDate());
         g.writeObjectField("applied", stat.getApplied());
         g.writeObjectField("count", stat.getCount());
+        g.writeEndObject();
+      }
+      g.writeEndArray();
+      g.writeArrayFieldStart("decisionPercentages");
+      for (MonthStatistics stat : monthlyDecisionPercentage) {
+        g.writeStartObject();
+        g.writeObjectField("month", stat.getMonth());
+        g.writeObjectField("appliedPercentage", stat.getAppliedPercentage());
         g.writeEndObject();
       }
       g.writeEndArray();
