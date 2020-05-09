@@ -244,12 +244,12 @@ class DatabaseAccess {
     }
   }
 
-  List<MonthStatistics> getMonthlyDecisionPercentage() {
+  List<WeekStatistics> getMonthlyDecisionPercentage() {
     if (sqlSessionFactory == null) {
       return null;
     }
     try (SqlSession session = sqlSessionFactory.openSession(true)) {
-      return session.selectList("org.languagetool.server.WikipediaMapper.getDecisionStatsPercentageMonth");
+      return session.selectList("org.languagetool.server.WikipediaMapper.getDecisionStatsPercentageWeek");
     }
   }
 
@@ -507,11 +507,11 @@ class DatabaseAccess {
     }
   }
 
-  public static class MonthStatistics {
+  public static class WeekStatistics {
     private final String month;
     private final Float appliedPercentage;
 
-    public MonthStatistics(String month, Float appliedPercentage) {
+    public WeekStatistics(String month, Float appliedPercentage) {
       this.month = month;
       this.appliedPercentage = appliedPercentage;
     }

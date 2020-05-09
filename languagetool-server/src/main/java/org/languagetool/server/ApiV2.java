@@ -37,8 +37,8 @@ import org.languagetool.rules.Rule;
 import org.languagetool.rules.TextLevelRule;
 import org.languagetool.server.DatabaseAccess.ContributionStatisticsPerMonth;
 import org.languagetool.server.DatabaseAccess.DayStatistics;
-import org.languagetool.server.DatabaseAccess.MonthStatistics;
 import org.languagetool.server.DatabaseAccess.PendingSuggestionsPerLanguageCode;
+import org.languagetool.server.DatabaseAccess.WeekStatistics;
 import org.languagetool.tools.HtmlTools;
 import org.languagetool.tools.HtmlTools.SuggestionNotApplicableException;
 
@@ -540,7 +540,7 @@ class ApiV2 {
 
   private void writeStatsListResponse(
     List<DayStatistics> decisionsStats,
-    List<MonthStatistics> monthlyDecisionPercentage,
+    List<WeekStatistics> monthlyDecisionPercentage,
     List<ContributionStatisticsPerMonth> contributorsStats,
     List<PendingSuggestionsPerLanguageCode> pendingSuggestionsStats,
     HttpExchange httpExchange
@@ -559,7 +559,7 @@ class ApiV2 {
       }
       g.writeEndArray();
       g.writeArrayFieldStart("decisionPercentages");
-      for (MonthStatistics stat : monthlyDecisionPercentage) {
+      for (WeekStatistics stat : monthlyDecisionPercentage) {
         g.writeStartObject();
         g.writeObjectField("month", stat.getMonth());
         g.writeObjectField("appliedPercentage", stat.getAppliedPercentage());
