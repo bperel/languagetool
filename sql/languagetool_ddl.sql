@@ -52,6 +52,15 @@ create table corpus_match
 )
     charset=utf8mb4;
 
+create index corpus_match_applied_date_index
+    on corpus_match (applied_date);
+
+create index corpus_match_applied_index
+    on corpus_match (applied);
+
 create index corpus_match_index_article
     on corpus_match (article_id);
+
+create index corpus_match_rule_article_id_version_index
+    on corpus_match (rule_category, rule_description, languagetool_version, article_id);
 
