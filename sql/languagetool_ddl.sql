@@ -18,6 +18,7 @@ create table corpus_article
     title varchar(255) not null,
     revision int not null,
     wikitext mediumtext null,
+    html mediumtext null,
     anonymized_html mediumtext not null,
     analyzed tinyint(1) not null,
     url varchar(300) as (concat('https://',`language_code`,'.wikipedia.org/wiki/',`title`)) stored,

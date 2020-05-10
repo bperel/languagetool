@@ -19,10 +19,9 @@ public class HtmlTools {
   public static class HtmlAnonymizer {
     public static final String DEFAULT_TAG = "tag";
 
-    private long articleId;
     private String title;
     private String wikiText;
-    private String originalHtml;
+    private String html;
     private String anonymizedHtml;
 
     public HtmlAnonymizer() { }
@@ -31,7 +30,7 @@ public class HtmlTools {
       HtmlAnonymizer instance = new HtmlAnonymizer();
       instance.title = title;
       instance.wikiText = wikiText;
-      instance.originalHtml = html;
+      instance.html = html;
 
       return instance;
     }
@@ -40,7 +39,7 @@ public class HtmlTools {
       DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
       dbf.setValidating(false);
       DocumentBuilder db = dbf.newDocumentBuilder();
-      Document doc = db.parse(new InputSource(new StringReader(originalHtml)));
+      Document doc = db.parse(new InputSource(new StringReader(html)));
 
       anonymizeNode(doc, doc.getDocumentElement());
 
@@ -77,16 +76,12 @@ public class HtmlTools {
       return title;
     }
 
-    public long getArticleId() {
-      return articleId;
-    }
-
-    public void setArticleId(long articleId) {
-      this.articleId = articleId;
-    }
-
     public String getWikitext() {
       return wikiText;
+    }
+
+    public String getHtml() {
+      return html;
     }
 
     public String getAnonymizedHtml() {

@@ -22,6 +22,7 @@ import org.jetbrains.annotations.NotNull;
 import org.languagetool.Language;
 import org.languagetool.dev.wikipedia.ParsoidWikipediaTextParser;
 import org.languagetool.tokenizers.Tokenizer;
+import org.languagetool.tools.HtmlTools;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -207,19 +208,21 @@ public class WikipediaSentenceSource extends SentenceSource {
     return "wikipedia";
   }
 
-  private void addArticle(CorpusMatchDatabaseHandler resultHandler, String namespace, String title, Integer revisionId, String text) {
+  private void addArticle(CorpusMatchDatabaseHandler resultHandler, String namespace, String title, Integer revisionId, String wikitext) {
     if (ONLY_ARTICLES && !ARTICLE_NAMESPACE.equals(namespace)) {
       namespaceSkipCount++;
     }
 
     try {
-      if (text.trim().toLowerCase().startsWith("#redirect")) {
+      if (wikitext.trim().toLowerCase().startsWith("#redirect")) {
         redirectSkipCount++;
       }
 
       resultHandler.deleteNeverAppliedSuggestionsOfObsoleteArticles(title, language.getShortCode(), revisionId);
-      String anonymizedHtml = textParser.convertWikitextToHtml(title, text).getAnonymizedHtml();
-      Long articleId = resultHandler.createArticle(language.getShortCode(), title, revisionId, text, anonymizedHtml);
+      HtmlTools.HtmlAnonymizer htmlAnonymizer = textParser.convertWikitextToHtml(title, wikitext);
+      String html = htmlAnonymizer.getHtml();
+      String anonymizedHtml = htmlAnonymizer.getAnonymizedHtml();
+      Long articleId = resultHandler.createArticle(language.getShortCode(), title, revisionId, wikitext, html, anonymizedHtml);
 
       addSentencesFromArticle(articleId, title, revisionId, anonymizedHtml);
     } catch (Exception e) {

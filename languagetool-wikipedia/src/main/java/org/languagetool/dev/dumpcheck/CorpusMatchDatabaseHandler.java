@@ -101,8 +101,8 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
           " SELECT id, analyzed, anonymized_html FROM corpus_article" +
           " WHERE title = ? AND revision = ?");
         insertCorpusArticleSt = conn.prepareStatement("" +
-          " INSERT INTO corpus_article (language_code, title, revision, wikitext, anonymized_html, analyzed)" +
-          " VALUES (?, ?, ?, ?, ?, 0)", Statement.RETURN_GENERATED_KEYS);
+          " INSERT INTO corpus_article (language_code, title, revision, wikitext, html, anonymized_html, analyzed)" +
+          " VALUES (?, ?, ?, ?, ?, ?, 0)", Statement.RETURN_GENERATED_KEYS);
         insertCorpusMatchSt = conn.prepareStatement("" +
           " INSERT INTO corpus_match (article_id, ruleid, rule_category, rule_subid, rule_description, message, error_context, small_error_context, replacement_suggestion, languagetool_version)" +
           " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
@@ -195,12 +195,13 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
     );
   }
 
-  Long createArticle(String languageCode, String title, int revision, String wikitext, String anonymizedHtml) throws SQLException {
+  Long createArticle(String languageCode, String title, int revision, String wikitext, String html, String anonymizedHtml) throws SQLException {
     insertCorpusArticleSt.setString(1, languageCode);
     insertCorpusArticleSt.setString(2, title);
     insertCorpusArticleSt.setInt(3, revision);
     insertCorpusArticleSt.setString(4, wikitext);
-    insertCorpusArticleSt.setString(5, anonymizedHtml);
+    insertCorpusArticleSt.setString(5, html);
+    insertCorpusArticleSt.setString(6, anonymizedHtml);
     insertCorpusArticleSt.execute();
     ResultSet generatedKeys = insertCorpusArticleSt.getGeneratedKeys();
     if (generatedKeys.next()) {
