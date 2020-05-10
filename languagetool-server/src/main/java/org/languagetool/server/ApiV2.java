@@ -35,10 +35,7 @@ import org.languagetool.rules.CorrectExample;
 import org.languagetool.rules.IncorrectExample;
 import org.languagetool.rules.Rule;
 import org.languagetool.rules.TextLevelRule;
-import org.languagetool.server.DatabaseAccess.ContributionStatisticsPerMonth;
-import org.languagetool.server.DatabaseAccess.DayStatistics;
-import org.languagetool.server.DatabaseAccess.PendingSuggestionsPerLanguageCode;
-import org.languagetool.server.DatabaseAccess.WeekStatistics;
+import org.languagetool.server.DatabaseAccess.*;
 import org.languagetool.tools.HtmlTools;
 import org.languagetool.tools.HtmlTools.SuggestionNotApplicableException;
 
@@ -361,7 +358,7 @@ class ApiV2 {
     ServerTools.setCommonHeaders(httpExchange, JSON_CONTENT_TYPE, allowOriginUrl);
 
     DatabaseAccess db = DatabaseAccess.getInstance();
-    writeStatsListResponse(db.getDecisionStats(), db.getMonthlyDecisionPercentage(), db.getContributorsStats(), db.getPendingSuggestionsStats(), httpExchange);
+    writeStatsListResponse(db.getDecisionStats(), db.getMonthlyDecisionPercentage(), db.getContributorsStats(), db.getPendingSuggestionsStats(), db.getMostRefusedSuggestionCategoriesPerLanguageCode(), httpExchange);
   }
 
   private List<String> getOriginalAndSuggestedWikitext(int suggestionId) throws SuggestionNotApplicableException {
@@ -543,6 +540,7 @@ class ApiV2 {
     List<WeekStatistics> monthlyDecisionPercentage,
     List<ContributionStatisticsPerMonth> contributorsStats,
     List<PendingSuggestionsPerLanguageCode> pendingSuggestionsStats,
+    List<RefusedSuggestionCategoryPerLanguageCode> mostRefusedSuggestionCategoriesStats,
     HttpExchange httpExchange
   ) throws IOException {
     StringWriter sw = new StringWriter();
@@ -581,6 +579,19 @@ class ApiV2 {
         g.writeStartObject();
         g.writeObjectField("language", stat.getLanguageCode());
         g.writeObjectField("count", stat.getCount());
+        g.writeEndObject();
+      }
+      g.writeEndArray();
+      g.writeArrayFieldStart("mostRefusedSuggestionCategories");
+      for (RefusedSuggestionCategoryPerLanguageCode stat : mostRefusedSuggestionCategoriesStats) {
+        g.writeStartObject();
+        g.writeObjectField("languagetoolVersion", stat.getLanguagetoolVersion());
+        g.writeObjectField("languageCode", stat.getLanguageCode());
+        g.writeObjectField("ruleCategory", stat.getRuleCategory());
+        g.writeObjectField("ruleDescription", stat.getRuleDescription());
+        g.writeObjectField("count", stat.getCount());
+        g.writeObjectField("sampleErrorContext", stat.getSampleErrorContext());
+        g.writeObjectField("sampleReplacementSuggestion", stat.getSampleReplacementSuggestion());
         g.writeEndObject();
       }
       g.writeEndArray();

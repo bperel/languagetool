@@ -270,6 +270,15 @@ class DatabaseAccess {
       return session.selectList("org.languagetool.server.WikipediaMapper.getPendingSuggestionsPerLanguageCode");
     }
   }
+
+  List<RefusedSuggestionCategoryPerLanguageCode> getMostRefusedSuggestionCategoriesPerLanguageCode() {
+    if (sqlSessionFactory == null) {
+      return null;
+    }
+    try (SqlSession session = sqlSessionFactory.openSession(true)) {
+      return session.selectList("org.languagetool.server.WikipediaMapper.getMostRefusedSuggestionCategoriesPerLanguageCode");
+    }
+  }
   
   boolean addWord(String word, Long userId) {
     validateWord(word);
@@ -573,4 +582,54 @@ class DatabaseAccess {
     }
   }
 
+  public static class RefusedSuggestionCategoryPerLanguageCode {
+    private final String languagetoolVersion;
+    private final String languageCode;
+    private final String ruleCategory;
+    private final String ruleDescription;
+    private final Integer count;
+    private final String sampleErrorContext;
+    private final String sampleReplacementSuggestion;
+
+    public RefusedSuggestionCategoryPerLanguageCode(String languagetoolVersion, String languageCode, String ruleCategory, String ruleDescription, Integer count, String sampleErrorContextAndReplacementSuggestion) {
+      this.languagetoolVersion = languagetoolVersion;
+      this.languageCode = languageCode;
+      this.ruleCategory = ruleCategory;
+      this.ruleDescription = ruleDescription;
+      this.count = count;
+
+      String sampleFieldDelimiter = "%%";
+      int splitPosition = sampleErrorContextAndReplacementSuggestion.lastIndexOf(sampleFieldDelimiter);
+      this.sampleErrorContext = sampleErrorContextAndReplacementSuggestion.substring(0, splitPosition);
+      this.sampleReplacementSuggestion = sampleErrorContextAndReplacementSuggestion.substring(splitPosition + sampleFieldDelimiter.length());
+    }
+
+    public String getLanguagetoolVersion() {
+      return languagetoolVersion;
+    }
+
+    public String getLanguageCode() {
+      return languageCode;
+    }
+
+    public String getRuleCategory() {
+      return ruleCategory;
+    }
+
+    public String getRuleDescription() {
+      return ruleDescription;
+    }
+
+    public Integer getCount() {
+      return count;
+    }
+
+    public String getSampleErrorContext() {
+      return sampleErrorContext;
+    }
+
+    public String getSampleReplacementSuggestion() {
+      return sampleReplacementSuggestion;
+    }
+  }
 }
