@@ -20,7 +20,7 @@ create table corpus_article
     wikitext mediumtext null,
     anonymized_html mediumtext not null,
     analyzed tinyint(1) not null,
-    url varchar(300) as (concat('https://', `language_code`,'.wikipedia.org/wiki/',`title`)) stored,
+    url varchar(300) as (concat('https://',`language_code`,'.wikipedia.org/wiki/',`title`)) stored,
     constraint corpus_article_uindex
         unique (title, revision)
 )
@@ -43,6 +43,7 @@ create table corpus_match
     applied_date datetime null,
     applied_reason varchar(31) null,
     applied_username varchar(255) null,
+    languagetool_version varchar(5) default '4.9.1' not null,
     constraint corpus_match_unique
         unique (article_id, rule_description, error_context, replacement_suggestion) using hash,
     constraint corpus_match_corpus_article_id_fk

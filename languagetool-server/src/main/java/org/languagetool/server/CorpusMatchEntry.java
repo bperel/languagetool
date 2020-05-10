@@ -39,8 +39,9 @@ public class CorpusMatchEntry {
   private final Boolean applied;
   private final Date appliedDate;
   private final String appliedReason;
+  private final String languagetoolVersion;
 
-  public CorpusMatchEntry(Integer id, Integer articleId, String ruleid, String ruleCategory, String ruleSubid, String ruleDescription, String message, String errorContext, String smallErrorContext, String replacementSuggestion, Boolean applied, Date appliedDate, String appliedReason) {
+  public CorpusMatchEntry(Integer id, Integer articleId, String ruleid, String ruleCategory, String ruleSubid, String ruleDescription, String message, String errorContext, String smallErrorContext, String replacementSuggestion, Boolean applied, Date appliedDate, String appliedReason, String languagetoolVersion) {
     this.id = id;
     this.articleId = articleId;
     this.ruleid = ruleid;
@@ -54,6 +55,7 @@ public class CorpusMatchEntry {
     this.applied = applied;
     this.appliedDate = appliedDate;
     this.appliedReason = appliedReason;
+    this.languagetoolVersion = languagetoolVersion;
   }
 
   public Integer getId() {
@@ -106,5 +108,9 @@ public class CorpusMatchEntry {
 
   public String getAppliedReason() {
     return appliedReason;
+  }
+
+  public String getLanguagetoolVersion() {
+    return languagetoolVersion;
   }
 }

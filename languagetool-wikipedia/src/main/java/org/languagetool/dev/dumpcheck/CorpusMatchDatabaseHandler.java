@@ -19,6 +19,7 @@
 package org.languagetool.dev.dumpcheck;
 
 import org.apache.commons.lang3.StringUtils;
+import org.languagetool.JLanguageTool;
 import org.languagetool.rules.Rule;
 import org.languagetool.rules.RuleMatch;
 import org.languagetool.rules.patterns.AbstractPatternRule;
@@ -103,8 +104,8 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
           " INSERT INTO corpus_article (language_code, title, revision, wikitext, anonymized_html, analyzed)" +
           " VALUES (?, ?, ?, ?, ?, 0)", Statement.RETURN_GENERATED_KEYS);
         insertCorpusMatchSt = conn.prepareStatement("" +
-          " INSERT INTO corpus_match (article_id, ruleid, rule_category, rule_subid, rule_description, message, error_context, small_error_context, replacement_suggestion)" +
-          " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+          " INSERT INTO corpus_match (article_id, ruleid, rule_category, rule_subid, rule_description, message, error_context, small_error_context, replacement_suggestion, languagetool_version)" +
+          " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         deleteNeverAppliedSuggestionsOfObsoleteArticles = conn.prepareStatement("" +
           " DELETE FROM corpus_match" +
           " WHERE applied IS NULL AND article_id IN (SELECT id FROM corpus_article WHERE title = ? AND language_code = ? AND revision <> ? )");
@@ -226,6 +227,7 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
     insertCorpusMatchSt.setString(8, StringUtils.abbreviate(smallContext, 255));
 
     insertCorpusMatchSt.setString(9, match.getSuggestedReplacements().get(0));
+    insertCorpusMatchSt.setString(10, JLanguageTool.VERSION);
     insertCorpusMatchSt.executeQuery();
   }
 
