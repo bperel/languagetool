@@ -46,26 +46,40 @@ public class HtmlTools {
       anonymizedHtml = getStringFromDocument(doc);
     }
 
-    private void anonymizeNode(Document doc, Node node) {
+    private boolean anonymizeNode(Document doc, Node node) {
       if (node.getNodeType() != Node.ELEMENT_NODE) {
-        return;
+        return false;
       }
       String nodeName = node.getNodeName();
-      if (!nodeName.equals(DEFAULT_TAG)) { // This node has not already been handled
-        doc.renameNode(node, null, DEFAULT_TAG);
 
-        NamedNodeMap attributes = node.getAttributes();
-        if (attributes != null) {
-          while (attributes.getLength() > 0) {
-            removeAttribute(node, attributes.item(0));
+      switch(nodeName) {
+        case DEFAULT_TAG: // This node has already been handled
+          break;
+        case "head":
+        case "style":
+        case "pre":
+          node.getParentNode().removeChild(node);
+          return true;
+        default:
+          doc.renameNode(node, null, DEFAULT_TAG);
+
+          NamedNodeMap attributes = node.getAttributes();
+          if (attributes != null) {
+            while (attributes.getLength() > 0) {
+              removeAttribute(node, attributes.item(0));
+            }
           }
-        }
-      }
 
-      NodeList childNodes = node.getChildNodes();
-      for (int i = 0; i < childNodes.getLength(); i++) {
-        anonymizeNode(doc, childNodes.item(i));
+          NodeList childNodes = node.getChildNodes();
+          for (int i = 0; i < childNodes.getLength(); i++) {
+            boolean nodeHasBeenRemoved = anonymizeNode(doc, childNodes.item(i));
+            if (nodeHasBeenRemoved) {
+              i--;
+            }
+          }
+        break;
       }
+      return false;
     }
 
     private void removeAttribute(Node element, Node attribute) {
