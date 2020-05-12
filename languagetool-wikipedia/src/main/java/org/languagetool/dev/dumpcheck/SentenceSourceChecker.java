@@ -36,6 +36,7 @@ import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.text.NumberFormat;
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -233,23 +234,9 @@ public class SentenceSourceChecker {
           currentArticleId = sentence.getArticleId();
 
           String finalWikitext = wikitext;
-          List<RuleMatch> matches = lt.check(sentence.getText()).stream().filter(match -> {
-            String context = CorpusMatchDatabaseHandler.contextTools.getContext(match.getFromPos(), match.getToPos(), sentence.getText());
-            if (context.length() > MAX_CONTEXT_LENGTH) {
-              return false;
-            }
-            List<String> suggestions = match.getSuggestedReplacements();
-            if (suggestions.isEmpty()) {
-              return false;
-            }
-            try {
-              getErrorContextWithAppliedSuggestion(sentence.getTitle(), finalWikitext, context, suggestions.get(0));
-            } catch (SuggestionNotApplicableException e) {
-              System.out.println(e.getMessage());
-              return false;
-            }
-            return true;
-          }).collect(Collectors.toList());
+          List<RuleMatch> matches = lt.check(sentence.getText()).stream().filter(
+            filterMatch(sentence, finalWikitext)
+          ).collect(Collectors.toList());
           try {
             databaseHandler.handleResult(sentence, matches);
             sentenceCount++;
@@ -285,6 +272,28 @@ public class SentenceSourceChecker {
         e.printStackTrace();
       }
     }
+  }
+
+  private Predicate<RuleMatch> filterMatch(Sentence sentence, String finalWikitext) {
+    return match -> {
+      String context = CorpusMatchDatabaseHandler.contextTools.getContext(match.getFromPos(), match.getToPos(), sentence.getText());
+      if (context.length() > MAX_CONTEXT_LENGTH) {
+        return false;
+      }
+      List<String> suggestions = match.getSuggestedReplacements();
+      if (suggestions.isEmpty()
+       || suggestions.get(0).matches("^\\(.+\\)$") // This kind of suggestions are expecting user input
+      ) {
+        return false;
+      }
+      try {
+        getErrorContextWithAppliedSuggestion(sentence.getTitle(), finalWikitext, context, suggestions.get(0));
+      } catch (SuggestionNotApplicableException e) {
+        System.out.println(e.getMessage());
+        return false;
+      }
+      return true;
+    };
   }
 
   private void enableOnlySpecifiedRules(String[] ruleIds, JLanguageTool lt) {
