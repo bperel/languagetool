@@ -139,7 +139,12 @@ public class HtmlTools {
       }
       else {
         System.out.println(String.format("Found a match for '%s' in the wikitext of article '%s'", stringToReplace, articleTitle));
-        return largestErrorContextWithoutHtmlTags.replaceAll("<err>.+?</err>", suggestion);
+        try {
+          return largestErrorContextWithoutHtmlTags.replaceAll("<err>.+?</err>", suggestion);
+        }
+        catch(RuntimeException e) {
+          throw new SuggestionNotApplicableException("Can't replace '" + stringToReplace + "' with the suggestion '"+suggestion+"'");
+        }
       }
     }
     else {
