@@ -9,6 +9,11 @@ for wiki in $wikis; do
   | grep -Po "(?<=${wiki}wiki/)([^/]+)"`
 
   echo "Latest dump : $latestdump"
+
+  echo "Retrieving sha1sums..."
+  curl -s "https://dumps.wikimedia.org/${wiki}wiki/$latestdump/${wiki}wiki-$latestdump-sha1sums.txt" > sha1sums.txt
+  echo "Done."
+
   curl -s "https://dumps.wikimedia.org/${wiki}wiki/$latestdump/dumpstatus.json" \
   | jq '.jobs.articlesmultistreamdump.files | keys[]' \
   | grep -Po '(?<=").+xml[^"]+' \
@@ -17,7 +22,7 @@ for wiki in $wikis; do
     if [ -f "$file.done" ]; then
       echo "File already downloaded and processed, skipping"
     else
-      if bzip2 -t "$file"; then
+      if grep `sha1sum $file` sha1sums.txt; then
         echo "File already downloaded but not processed, reprocessing"
       else
         url="https://dumps.wikimedia.org/${wiki}wiki/$latestdump/$file"
