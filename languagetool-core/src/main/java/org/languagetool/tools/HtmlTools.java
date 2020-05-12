@@ -112,7 +112,8 @@ public class HtmlTools {
   private static String getStringFromDocument(Document doc) {
     DOMImplementationLS domImplementation = (DOMImplementationLS) doc.getImplementation();
     LSSerializer lsSerializer = domImplementation.createLSSerializer();
-    return lsSerializer.writeToString(doc);
+    lsSerializer.getDomConfig().setParameter("xml-declaration", false);
+    return lsSerializer.writeToString(doc).replaceFirst("<!DOCTYPE html>\n?", "");
   }
 
   public static String getErrorContextWithAppliedSuggestion(String articleTitle, String articleWikitext, String suggestionErrorContext, String suggestion) throws SuggestionNotApplicableException {
