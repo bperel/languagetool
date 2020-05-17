@@ -32,7 +32,6 @@ import java.sql.*;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
-import java.util.stream.Collectors;
 
 /**
  * Store rule matches to a database.
@@ -151,12 +150,8 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
     return value;
   }
 
-  protected void handleResult(Sentence sentence, List<RuleMatch> ruleMatches) throws SQLIntegrityConstraintViolationException {
+  protected void handleResult(Sentence sentence, List<RuleMatch> rulesMatchesWithSuggestions) throws SQLIntegrityConstraintViolationException {
     try {
-      List<RuleMatch> rulesMatchesWithSuggestions = ruleMatches.stream()
-        .filter(match -> !match.getSuggestedReplacements().isEmpty())
-        .collect(Collectors.toList());
-
       for (RuleMatch match : rulesMatchesWithSuggestions) {
         String context = contextTools.getContext(match.getFromPos(), match.getToPos(), sentence.getText());
         String smallContext = smallContextTools.getContext(match.getFromPos(), match.getToPos(), sentence.getText());
