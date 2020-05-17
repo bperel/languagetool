@@ -160,7 +160,7 @@ public class HtmlTools {
   }
 
   public static String getLargestErrorContext(String errorContext) {
-    String LARGEST_ERROR_CONTEXT_REGEX = "^.*?([^>]+<err>(?:(?!</err>).)+</err>[^<]*)<?.*$";
+    String LARGEST_ERROR_CONTEXT_REGEX = "^.*?([^>]*<err>(?:(?!</err>).)+</err>[^<]*)<?.*$";
     return errorContext.replaceAll(LARGEST_ERROR_CONTEXT_REGEX, "$1");
   }
 

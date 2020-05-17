@@ -36,6 +36,16 @@ public class HtmlToolsTest {
   }
 
   @Test
+  public void testGetArticleWithAppliedSuggestionWithTagBeforeErrorContext() throws HtmlTools.SuggestionNotApplicableException {
+    String wikiText = "avec la ''monarchie'' de Habsbourg et la Confédération germanique.";
+    String errorContext = "la <tag>monarchie</tag><err> de Habsbourg</err> et la Confédération germanique.";
+    String suggestion = " d'Habsbourg";
+    String replacedText = HtmlTools.getArticleWithAppliedSuggestion("", wikiText, errorContext, suggestion);
+
+    assertEquals("avec la ''monarchie'' d'Habsbourg et la Confédération germanique.", replacedText);
+  }
+
+  @Test
   public void testGetArticleWithAppliedSuggestionThrowIfArticleTitleInMatch() {
     String errorContext = "Le <tag>programme</tag> Hello <err>World</err>.";
     String suggestion = "Word";
