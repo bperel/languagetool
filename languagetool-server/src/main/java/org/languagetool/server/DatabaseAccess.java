@@ -632,4 +632,28 @@ class DatabaseAccess {
       return sampleReplacementSuggestion;
     }
   }
+
+  public static class OriginalAndSuggestedTexts {
+    private final String originalWikitext;
+    private final String suggestedWikitext;
+    private final String originalHtml;
+
+    public OriginalAndSuggestedTexts(String originalWikitext, String suggestedWikitext, String originalHtml) {
+      this.originalWikitext = originalWikitext;
+      this.suggestedWikitext = suggestedWikitext;
+      this.originalHtml = originalHtml;
+    }
+
+    public String getOriginalWikitext() {
+      return originalWikitext;
+    }
+
+    public String getSuggestedWikitext() {
+      return suggestedWikitext;
+    }
+
+    public String getOriginalHtml() {
+      return originalHtml;
+    }
+  }
 }

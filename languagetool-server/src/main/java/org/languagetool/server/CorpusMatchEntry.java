@@ -35,13 +35,14 @@ public class CorpusMatchEntry {
   private final String message;
   private final String errorContext;
   private final String smallErrorContext;
+  private final String htmlErrorContext;
   private final String replacementSuggestion;
   private final Boolean applied;
   private final Date appliedDate;
   private final String appliedReason;
   private final String languagetoolVersion;
 
-  public CorpusMatchEntry(Integer id, Integer articleId, String ruleid, String ruleCategory, String ruleSubid, String ruleDescription, String message, String errorContext, String smallErrorContext, String replacementSuggestion, Boolean applied, Date appliedDate, String appliedReason, String languagetoolVersion) {
+  public CorpusMatchEntry(Integer id, Integer articleId, String ruleid, String ruleCategory, String ruleSubid, String ruleDescription, String message, String errorContext, String smallErrorContext, String htmlErrorContext, String replacementSuggestion, Boolean applied, Date appliedDate, String appliedReason, String languagetoolVersion) {
     this.id = id;
     this.articleId = articleId;
     this.ruleid = ruleid;
@@ -51,6 +52,7 @@ public class CorpusMatchEntry {
     this.message = message;
     this.errorContext = errorContext;
     this.smallErrorContext = smallErrorContext;
+    this.htmlErrorContext = htmlErrorContext;
     this.replacementSuggestion = replacementSuggestion;
     this.applied = applied;
     this.appliedDate = appliedDate;
@@ -92,6 +94,10 @@ public class CorpusMatchEntry {
 
   public String getSmallErrorContext() {
     return smallErrorContext;
+  }
+
+  public String getHtmlErrorContext() {
+    return htmlErrorContext;
   }
 
   public String getReplacementSuggestion() {

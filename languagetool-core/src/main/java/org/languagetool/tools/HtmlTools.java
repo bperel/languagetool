@@ -109,7 +109,7 @@ public class HtmlTools {
     }
   }
 
-  private static String getStringFromDocument(Document doc) {
+  public static String getStringFromDocument(Document doc) {
     DOMImplementationLS domImplementation = (DOMImplementationLS) doc.getImplementation();
     LSSerializer lsSerializer = domImplementation.createLSSerializer();
     lsSerializer.getDomConfig().setParameter("xml-declaration", false);

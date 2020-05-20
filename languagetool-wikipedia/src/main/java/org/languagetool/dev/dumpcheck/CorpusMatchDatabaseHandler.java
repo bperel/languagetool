@@ -20,8 +20,8 @@ package org.languagetool.dev.dumpcheck;
 
 import org.apache.commons.lang3.StringUtils;
 import org.languagetool.JLanguageTool;
+import org.languagetool.dev.dumpcheck.SentenceSourceChecker.RuleMatchWithHtmlContexts;
 import org.languagetool.rules.Rule;
-import org.languagetool.rules.RuleMatch;
 import org.languagetool.rules.patterns.AbstractPatternRule;
 import org.languagetool.tools.ContextTools;
 
@@ -54,9 +54,9 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
   private static final int SMALL_CONTEXT_LENGTH = 40;  // do not modify - it would break lookup of errors marked as 'false alarm'
 
   static final ContextTools contextTools;
-  private static final ContextTools smallContextTools;
+  static final ContextTools smallContextTools;
 
-  private PreparedStatement selectCorpusArticleWikitextFromId;
+  private PreparedStatement selectFullCorpusArticleFromIdSt;
   private PreparedStatement selectCorpusArticleWithRevisionSt;
   private PreparedStatement insertCorpusArticleSt;
   private PreparedStatement insertCorpusMatchSt;
@@ -93,18 +93,18 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
         throw new RuntimeException(e);
       }
       try {
-        selectCorpusArticleWikitextFromId = conn.prepareStatement("" +
-          " SELECT wikitext FROM corpus_article" +
-          " WHERE id = ?");
         selectCorpusArticleWithRevisionSt = conn.prepareStatement("" +
           " SELECT id, analyzed, anonymized_html FROM corpus_article" +
           " WHERE title = ? AND revision = ?");
+        selectFullCorpusArticleFromIdSt = conn.prepareStatement("" +
+          " SELECT wikitext, html FROM corpus_article" +
+          " WHERE id = ?");
         insertCorpusArticleSt = conn.prepareStatement("" +
           " INSERT INTO corpus_article (language_code, title, revision, wikitext, html, anonymized_html, analyzed)" +
           " VALUES (?, ?, ?, ?, ?, ?, 0)", Statement.RETURN_GENERATED_KEYS);
         insertCorpusMatchSt = conn.prepareStatement("" +
-          " INSERT INTO corpus_match (article_id, ruleid, rule_category, rule_subid, rule_description, message, error_context, small_error_context, replacement_suggestion, languagetool_version)" +
-          " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+          " INSERT INTO corpus_match (article_id, ruleid, rule_category, rule_subid, rule_description, message, error_context, small_error_context, html_error_context, replacement_suggestion, languagetool_version)" +
+          " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         deleteNeverAppliedSuggestionsOfObsoleteArticles = conn.prepareStatement("" +
           " DELETE FROM corpus_match" +
           " WHERE applied IS NULL AND article_id IN (SELECT id FROM corpus_article WHERE title = ? AND language_code = ? AND revision <> ? )");
@@ -150,9 +150,9 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
     return value;
   }
 
-  protected void handleResult(Sentence sentence, List<RuleMatch> rulesMatchesWithSuggestions) throws SQLIntegrityConstraintViolationException {
+  protected void handleResult(Sentence sentence, List<RuleMatchWithHtmlContexts> rulesMatchesWithSuggestions) throws SQLIntegrityConstraintViolationException {
     try {
-      for (RuleMatch match : rulesMatchesWithSuggestions) {
+      for (RuleMatchWithHtmlContexts match : rulesMatchesWithSuggestions) {
         String context = contextTools.getContext(match.getFromPos(), match.getToPos(), sentence.getText());
         String smallContext = smallContextTools.getContext(match.getFromPos(), match.getToPos(), sentence.getText());
 
@@ -206,7 +206,7 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
     throw new SQLException("Couldn't create article " + title);
   }
 
-  private void createSentence(long articleId, RuleMatch match, String context, String smallContext) throws SQLException {
+  private void createSentence(long articleId, RuleMatchWithHtmlContexts match, String context, String smallContext) throws SQLException {
 
     Rule rule = match.getRule();
     insertCorpusMatchSt.setLong(1, articleId);
@@ -219,19 +219,23 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
     }
     insertCorpusMatchSt.setString(5, rule.getDescription());
     insertCorpusMatchSt.setString(6, StringUtils.abbreviate(match.getMessage(), 255));
-    insertCorpusMatchSt.setString(7, context);
-    insertCorpusMatchSt.setString(8, StringUtils.abbreviate(smallContext, 255));
+    insertCorpusMatchSt.setString(7, match.getTextContext());
+    insertCorpusMatchSt.setString(8, StringUtils.abbreviate(match.getSmallTextContext(), 255));
+    insertCorpusMatchSt.setString(9, match.getHtmlContext());
 
-    insertCorpusMatchSt.setString(9, match.getSuggestedReplacements().get(0));
-    insertCorpusMatchSt.setString(10, JLanguageTool.VERSION);
+    insertCorpusMatchSt.setString(10, match.getSuggestedReplacements().get(0));
+    insertCorpusMatchSt.setString(11, JLanguageTool.VERSION);
     insertCorpusMatchSt.executeQuery();
   }
 
-  String getCorpusArticleWikitextFromId(Long articleId) throws SQLException {
-    selectCorpusArticleWikitextFromId.setLong(1, articleId);
-    ResultSet corpusArticleResultSet = selectCorpusArticleWikitextFromId.executeQuery();
+  String[] getCorpusArticleWikitextFromId(Long articleId) throws SQLException {
+    selectFullCorpusArticleFromIdSt.setLong(1, articleId);
+    ResultSet corpusArticleResultSet = selectFullCorpusArticleFromIdSt.executeQuery();
     if (corpusArticleResultSet.next()) {
-      return corpusArticleResultSet.getString(1);
+      return new String[]{
+        corpusArticleResultSet.getString(1),
+        corpusArticleResultSet.getString(2)
+      };
     }
     throw new SQLException("No such article : " + articleId);
   }
@@ -260,7 +264,7 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
   @Override
   public void close() throws Exception {
     for (PreparedStatement preparedStatement : Arrays.asList(
-      selectCorpusArticleWikitextFromId,
+      selectFullCorpusArticleFromIdSt,
       selectCorpusArticleWithRevisionSt,
       insertCorpusArticleSt,
       insertCorpusMatchSt,

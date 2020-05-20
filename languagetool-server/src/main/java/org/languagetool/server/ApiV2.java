@@ -288,15 +288,15 @@ class ApiV2 {
   private void handleWikipediaSuggestionDetailsRequest(HttpExchange httpExchange, Map<String, String> parameters) throws IOException {
     ensureGetMethod(httpExchange, "/wikipedia/suggestion");
     int suggestionId = Integer.parseInt(parameters.get("suggestion_id"));
-    List<String> originalAndSuggestedWikitext;
+    OriginalAndSuggestedTexts originalAndSuggestedWikitext;
     try {
-      originalAndSuggestedWikitext = getOriginalAndSuggestedWikitext(suggestionId);
+      originalAndSuggestedWikitext = getOriginalAndSuggestedTexts(suggestionId);
     } catch (SuggestionNotApplicableException e) {
       writeStringError("Suggestion not applicable : " + e.getMessage(), httpExchange);
       return;
     }
 
-    writeSuggestionDetailsResponse("suggestion", originalAndSuggestedWikitext, httpExchange);
+    writeSuggestionDetailsResponse(originalAndSuggestedWikitext, httpExchange);
   }
 
   private void handleWikipediaAcceptRequest(HttpExchange httpExchange, Map<String, String> parameters) throws Exception {
@@ -361,7 +361,7 @@ class ApiV2 {
     writeStatsListResponse(db.getDecisionStats(), db.getMonthlyDecisionPercentage(), db.getContributorsStats(), db.getPendingSuggestionsStats(), db.getMostRefusedSuggestionCategoriesPerLanguageCode(), httpExchange);
   }
 
-  private List<String> getOriginalAndSuggestedWikitext(int suggestionId) throws SuggestionNotApplicableException {
+  private OriginalAndSuggestedTexts getOriginalAndSuggestedTexts(int suggestionId) throws SuggestionNotApplicableException {
     DatabaseAccess db = DatabaseAccess.getInstance();
     CorpusMatchEntry suggestion = db.getCorpusMatch(suggestionId);
     if (suggestion == null) {
@@ -370,9 +370,10 @@ class ApiV2 {
 
     CorpusArticleEntry article = db.getCorpusArticle(suggestion.getArticleId());
 
-    return Arrays.asList(
+    return new OriginalAndSuggestedTexts(
       HtmlTools.getStringToReplace(HtmlTools.getLargestErrorContext(suggestion.getErrorContext())),
-      HtmlTools.getErrorContextWithAppliedSuggestion(article.getTitle(), article.getWikitext(), suggestion.getErrorContext(), suggestion.getReplacementSuggestion())
+      HtmlTools.getErrorContextWithAppliedSuggestion(article.getTitle(), article.getWikitext(), suggestion.getErrorContext(), suggestion.getReplacementSuggestion()),
+      suggestion.getHtmlErrorContext()
     );
   }
 
@@ -600,13 +601,14 @@ class ApiV2 {
     sendJson(httpExchange, sw);
   }
 
-  private void writeSuggestionDetailsResponse(String fieldName, List<String> originalAndSuggestedWikitext, HttpExchange httpExchange) throws IOException {
+  private void writeSuggestionDetailsResponse(OriginalAndSuggestedTexts originalAndSuggestedTexts, HttpExchange httpExchange) throws IOException {
     StringWriter sw = new StringWriter();
     try (JsonGenerator g = factory.createGenerator(sw)) {
       g.setCodec(new ObjectMapper());
       g.writeStartObject();
-      g.writeStringField("originalWikitext", originalAndSuggestedWikitext.get(0));
-      g.writeStringField("suggestedWikitext", originalAndSuggestedWikitext.get(1));
+      g.writeStringField("originalWikitext", originalAndSuggestedTexts.getOriginalWikitext());
+      g.writeStringField("suggestedWikitext", originalAndSuggestedTexts.getSuggestedWikitext());
+      g.writeStringField("originalHtml", originalAndSuggestedTexts.getOriginalHtml());
       g.writeEndObject();
     }
     sendJson(httpExchange, sw);

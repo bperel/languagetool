@@ -20,23 +20,32 @@ package org.languagetool.dev.dumpcheck;
 
 import org.apache.commons.cli.*;
 import org.apache.commons.lang3.StringUtils;
-import org.languagetool.JLanguageTool;
-import org.languagetool.Language;
-import org.languagetool.Languages;
-import org.languagetool.MultiThreadedJLanguageTool;
+import org.languagetool.*;
 import org.languagetool.rules.CategoryId;
 import org.languagetool.rules.Rule;
 import org.languagetool.rules.RuleMatch;
 import org.languagetool.rules.patterns.AbstractPatternRule;
+import org.languagetool.tools.HtmlTools;
+import org.w3c.dom.*;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.StringReader;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.text.NumberFormat;
 import java.util.*;
-import java.util.function.Predicate;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -219,7 +228,10 @@ public class SentenceSourceChecker {
       MixingSentenceSource mixingSource = MixingSentenceSource.create(fileNames, lang, filter, parsoidUrl, databaseHandler);
 
       Long currentArticleId = null;
-      String wikitext = null;
+      String currentArticleWikitext = null;
+      String currentArticleHtml = null;
+
+      RuleMatchWithHtmlContexts.lt = lt;
       while (mixingSource.hasNext()) {
         Sentence sentence = mixingSource.next();
         try {
@@ -228,15 +240,13 @@ public class SentenceSourceChecker {
               databaseHandler.markArticleAsAnalyzed(currentArticleId);
               databaseHandler.deleteAlreadyAppliedSuggestionsInNewArticleRevisions(currentArticleId);
             }
-            wikitext = databaseHandler.getCorpusArticleWikitextFromId(sentence.getArticleId());
+            String[] wikitextAndHtml = databaseHandler.getCorpusArticleWikitextFromId(sentence.getArticleId());
+            currentArticleWikitext = wikitextAndHtml[0];
+            currentArticleHtml = wikitextAndHtml[1];
           }
-
           currentArticleId = sentence.getArticleId();
 
-          String finalWikitext = wikitext;
-          List<RuleMatch> matches = lt.check(sentence.getText()).stream().filter(
-            filterMatch(sentence, finalWikitext)
-          ).collect(Collectors.toList());
+          List<RuleMatchWithHtmlContexts> matches = RuleMatchWithHtmlContexts.getMatches(sentence, currentArticleWikitext, currentArticleHtml);
           try {
             databaseHandler.handleResult(sentence, matches);
             sentenceCount++;
@@ -272,28 +282,6 @@ public class SentenceSourceChecker {
         e.printStackTrace();
       }
     }
-  }
-
-  private Predicate<RuleMatch> filterMatch(Sentence sentence, String finalWikitext) {
-    return match -> {
-      String context = CorpusMatchDatabaseHandler.contextTools.getContext(match.getFromPos(), match.getToPos(), sentence.getText());
-      if (context.length() > MAX_CONTEXT_LENGTH) {
-        return false;
-      }
-      List<String> suggestions = match.getSuggestedReplacements();
-      if (suggestions.isEmpty()
-       || suggestions.get(0).matches("^\\(.+\\)$") // This kind of suggestions are expecting user input
-      ) {
-        return false;
-      }
-      try {
-        getErrorContextWithAppliedSuggestion(sentence.getTitle(), finalWikitext, context, suggestions.get(0));
-      } catch (SuggestionNotApplicableException e) {
-        System.out.println(e.getMessage());
-        return false;
-      }
-      return true;
-    };
   }
 
   private void enableOnlySpecifiedRules(String[] ruleIds, JLanguageTool lt) {
@@ -360,6 +348,163 @@ public class SentenceSourceChecker {
       }
     }
     System.out.println("All spelling rules are disabled");
+  }
+
+  static class RuleMatchWithHtmlContexts extends RuleMatch {
+    public static MultiThreadedJLanguageTool lt = null;
+
+    public static DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+    static {
+      dbf.setValidating(false);
+    }
+
+    public static XPath xPath = XPathFactory.newInstance().newXPath();
+
+    private static Long currentArticleId;
+    private static Document currentArticleDocument;
+
+    public String smallTextContext;
+    public String textContext;
+    public String largeTextContext;
+    public String htmlContext;
+
+    public RuleMatchWithHtmlContexts(Rule rule, AnalyzedSentence sentence, int fromPos, int toPos, String message, String shortMessage, List<String> suggestions) {
+      super(rule, sentence, fromPos, toPos, message, shortMessage, suggestions);
+    }
+
+    public static List<RuleMatchWithHtmlContexts> getMatches(Sentence sentence, String currentArticleWikitext, String currentArticleHtml) throws IOException {
+      List<RuleMatchWithHtmlContexts> matches = lt.check(sentence.getText()).stream()
+        .map(mapRuleAddTextContext(sentence, currentArticleWikitext))
+        .filter(Objects::nonNull).collect(Collectors.toList());
+
+      if (!matches.isEmpty()) {
+        try {
+          if (!sentence.getArticleId().equals(currentArticleId)) {
+            DocumentBuilder db = dbf.newDocumentBuilder();
+            currentArticleId = sentence.getArticleId();
+            currentArticleDocument = db.parse(new InputSource(new StringReader(currentArticleHtml)));
+          }
+          return matches.stream().map(mapRuleAddHtmlContext())
+            .filter(Objects::nonNull).collect(Collectors.toList());
+        } catch (SAXException | IOException | ParserConfigurationException e) {
+          e.printStackTrace();
+        }
+      }
+      return matches;
+    }
+
+    private static Function<RuleMatchWithHtmlContexts, RuleMatchWithHtmlContexts> mapRuleAddHtmlContext() {
+      return match -> {
+        try {
+          String largestErrorContextWithoutHtmlTags = HtmlTools.getLargestErrorContext(match.getLargeTextContext());
+          String stringToReplace = HtmlTools.getStringToReplace(largestErrorContextWithoutHtmlTags);
+          NodeList nodeList = (NodeList) xPath.compile("//text()[contains(.,\""+stringToReplace+"\")]").evaluate(currentArticleDocument, XPathConstants.NODESET);
+          switch (nodeList.getLength()) {
+            case 0:
+              System.out.println("Can't find match in HTML : " + stringToReplace);
+              break;
+            case 1:
+              match.setHtmlContext(getSimplifiedHtmlContext(dbf.newDocumentBuilder().newDocument(), nodeList.item(0), null));
+              return match;
+            default:
+              System.out.println("Found more than 1 match (" + nodeList.getLength()+ " in HTML : " + stringToReplace);
+          }
+        } catch (XPathExpressionException | ParserConfigurationException e) {
+          e.printStackTrace();
+        }
+
+        return null;
+      };
+    }
+
+    private static String getSimplifiedHtmlContext(Document doc, Node node, Node childElement) {
+      if (node instanceof Text) {
+        Node simpleElement = doc.createTextNode(node.getTextContent());
+        return getSimplifiedHtmlContext(doc, node.getParentNode(), simpleElement);
+      }
+      else {
+        Element simpleElement;
+        if (node.getParentNode() == null) {
+          doc.appendChild(childElement);
+          return HtmlTools.getStringFromDocument(doc);
+        }
+        else {
+          simpleElement = doc.createElement(node.getNodeName());
+          simpleElement.appendChild(childElement);
+
+          NamedNodeMap attributes = node.getAttributes();
+          for (int i = 0; i < attributes.getLength(); i++) {
+            simpleElement.setAttribute(attributes.item(i).getNodeName(), attributes.item(i).getTextContent());
+          }
+          return getSimplifiedHtmlContext(doc, node.getParentNode(), simpleElement);
+        }
+      }
+    }
+
+    private static Function<RuleMatch, RuleMatchWithHtmlContexts> mapRuleAddTextContext(Sentence sentence, String finalWikitext) {
+      return match -> {
+        String context = CorpusMatchDatabaseHandler.contextTools.getContext(match.getFromPos(), match.getToPos(), sentence.getText());
+        if (context.length() > MAX_CONTEXT_LENGTH) {
+          return null;
+        }
+        String smallContext = CorpusMatchDatabaseHandler.smallContextTools.getContext(match.getFromPos(), match.getToPos(), sentence.getText());
+
+        List<String> suggestions = match.getSuggestedReplacements();
+        if (suggestions.isEmpty()
+          || suggestions.get(0).matches("^\\(.+\\)$") // This kind of suggestions are expecting user input
+        ) {
+          return null;
+        }
+        try {
+          getErrorContextWithAppliedSuggestion(sentence.getTitle(), finalWikitext, context, suggestions.get(0));
+
+          String largestErrorContextWithoutHtmlTags = HtmlTools.getLargestErrorContext(context);
+
+          RuleMatchWithHtmlContexts matchWithHtmlContext = new RuleMatchWithHtmlContexts(
+            match.getRule(), match.getSentence(), match.getFromPos(), match.getToPos(), match.getMessage(), match.getShortMessage(), match.getSuggestedReplacements()
+          );
+          matchWithHtmlContext.setSmallTextContext(smallContext);
+          matchWithHtmlContext.setTextContext(context);
+          matchWithHtmlContext.setLargeTextContext(HtmlTools.getStringToReplace(largestErrorContextWithoutHtmlTags));
+          return matchWithHtmlContext;
+        } catch (SuggestionNotApplicableException e) {
+          System.out.println(e.getMessage());
+          return null;
+        }
+      };
+    }
+
+    public String getSmallTextContext() {
+      return smallTextContext;
+    }
+
+    public void setSmallTextContext(String smallTextContext) {
+      this.smallTextContext = smallTextContext;
+    }
+
+    public String getTextContext() {
+      return textContext;
+    }
+
+    public void setTextContext(String textContext) {
+      this.textContext = textContext;
+    }
+
+    public String getLargeTextContext() {
+      return largeTextContext;
+    }
+
+    public void setLargeTextContext(String largeTextContext) {
+      this.largeTextContext = largeTextContext;
+    }
+
+    public String getHtmlContext() {
+      return htmlContext;
+    }
+
+    public void setHtmlContext(String htmlContext) {
+      this.htmlContext = htmlContext;
+    }
   }
 
 }

@@ -39,6 +39,7 @@ create table corpus_match
     message varchar(255) not null,
     error_context mediumtext not null,
     small_error_context mediumtext not null,
+    html_error_context mediumtext null,
     replacement_suggestion varchar(255) not null,
     applied tinyint(1) null,
     applied_date datetime null,
