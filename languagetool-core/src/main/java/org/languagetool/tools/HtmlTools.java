@@ -12,16 +12,22 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 import java.io.IOException;
 import java.io.StringReader;
 
 public class HtmlTools {
   public static class HtmlAnonymizer {
     public static final String DEFAULT_TAG = "tag";
+    private static final XPath xPath = XPathFactory.newInstance().newXPath();
 
     private String title;
     private String wikiText;
     private String html;
+    private String cssUrl;
     private String anonymizedHtml;
 
     public HtmlAnonymizer() { }
@@ -40,6 +46,11 @@ public class HtmlTools {
       dbf.setValidating(false);
       DocumentBuilder db = dbf.newDocumentBuilder();
       Document doc = db.parse(new InputSource(new StringReader(html)));
+      try {
+        cssUrl = (String) xPath.compile("/html/head/link[@rel='stylesheet']/@href").evaluate(doc, XPathConstants.STRING);
+      } catch (XPathExpressionException e) {
+        System.err.println("No css stylesheet detected in " + title);
+      }
 
       anonymizeNode(doc, doc.getDocumentElement());
 
@@ -100,6 +111,10 @@ public class HtmlTools {
 
     public String getAnonymizedHtml() {
       return anonymizedHtml;
+    }
+
+    public String getCssUrl() {
+      return cssUrl;
     }
   }
 

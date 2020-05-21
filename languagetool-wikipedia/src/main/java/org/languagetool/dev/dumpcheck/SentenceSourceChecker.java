@@ -230,6 +230,7 @@ public class SentenceSourceChecker {
       Long currentArticleId = null;
       String currentArticleWikitext = null;
       String currentArticleHtml = null;
+      String currentArticleCssUrl = null;
 
       RuleMatchWithHtmlContexts.lt = lt;
       while (mixingSource.hasNext()) {
@@ -240,13 +241,14 @@ public class SentenceSourceChecker {
               databaseHandler.markArticleAsAnalyzed(currentArticleId);
               databaseHandler.deleteAlreadyAppliedSuggestionsInNewArticleRevisions(currentArticleId);
             }
-            String[] wikitextAndHtml = databaseHandler.getCorpusArticleWikitextFromId(sentence.getArticleId());
-            currentArticleWikitext = wikitextAndHtml[0];
-            currentArticleHtml = wikitextAndHtml[1];
+            String[] wikitextHtmlCssUrl = databaseHandler.getCorpusArticleFromId(sentence.getArticleId());
+            currentArticleWikitext = wikitextHtmlCssUrl[0];
+            currentArticleHtml = wikitextHtmlCssUrl[1];
+            currentArticleCssUrl = wikitextHtmlCssUrl[2];
           }
           currentArticleId = sentence.getArticleId();
 
-          List<RuleMatchWithHtmlContexts> matches = RuleMatchWithHtmlContexts.getMatches(sentence, currentArticleWikitext, currentArticleHtml);
+          List<RuleMatchWithHtmlContexts> matches = RuleMatchWithHtmlContexts.getMatches(sentence, currentArticleWikitext, currentArticleHtml, currentArticleCssUrl);
           try {
             databaseHandler.handleResult(sentence, matches);
             sentenceCount++;
@@ -353,14 +355,15 @@ public class SentenceSourceChecker {
   static class RuleMatchWithHtmlContexts extends RuleMatch {
     public static MultiThreadedJLanguageTool lt = null;
 
-    public static DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+    public static final DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
     static {
       dbf.setValidating(false);
     }
 
-    public static XPath xPath = XPathFactory.newInstance().newXPath();
+    public static final XPath xPath = XPathFactory.newInstance().newXPath();
 
     private static Long currentArticleId;
+    private static String currentArticleCssUrl;
     private static Document currentArticleDocument;
 
     public String smallTextContext;
@@ -372,9 +375,9 @@ public class SentenceSourceChecker {
       super(rule, sentence, fromPos, toPos, message, shortMessage, suggestions);
     }
 
-    public static List<RuleMatchWithHtmlContexts> getMatches(Sentence sentence, String currentArticleWikitext, String currentArticleHtml) throws IOException {
+    public static List<RuleMatchWithHtmlContexts> getMatches(Sentence sentence, String articleWikitext, String articleHtml, String articleCssUrl) throws IOException {
       List<RuleMatchWithHtmlContexts> matches = lt.check(sentence.getText()).stream()
-        .map(mapRuleAddTextContext(sentence, currentArticleWikitext))
+        .map(mapRuleAddTextContext(sentence, articleWikitext))
         .filter(Objects::nonNull).collect(Collectors.toList());
 
       if (!matches.isEmpty()) {
@@ -382,7 +385,8 @@ public class SentenceSourceChecker {
           if (!sentence.getArticleId().equals(currentArticleId)) {
             DocumentBuilder db = dbf.newDocumentBuilder();
             currentArticleId = sentence.getArticleId();
-            currentArticleDocument = db.parse(new InputSource(new StringReader(currentArticleHtml)));
+            currentArticleCssUrl = articleCssUrl;
+            currentArticleDocument = db.parse(new InputSource(new StringReader(articleHtml)));
           }
           return matches.stream().map(mapRuleAddHtmlContext())
             .filter(Objects::nonNull).collect(Collectors.toList());
@@ -430,12 +434,23 @@ public class SentenceSourceChecker {
         }
         else {
           simpleElement = doc.createElement(node.getNodeName());
+
+          if (node.getNodeName().equals("html")) {
+            Element headElement = doc.createElement("head");
+            Element cssElement = doc.createElement("link");
+            cssElement.setAttribute("rel", "stylesheet");
+            cssElement.setAttribute("href", currentArticleCssUrl);
+            headElement.appendChild(cssElement);
+            simpleElement.appendChild(headElement);
+          }
+
           simpleElement.appendChild(childElement);
 
           NamedNodeMap attributes = node.getAttributes();
           for (int i = 0; i < attributes.getLength(); i++) {
             simpleElement.setAttribute(attributes.item(i).getNodeName(), attributes.item(i).getTextContent());
           }
+
           return getSimplifiedHtmlContext(doc, node.getParentNode(), simpleElement);
         }
       }

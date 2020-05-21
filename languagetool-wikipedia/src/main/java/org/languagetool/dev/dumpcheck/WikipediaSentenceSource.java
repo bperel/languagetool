@@ -222,7 +222,8 @@ public class WikipediaSentenceSource extends SentenceSource {
       HtmlTools.HtmlAnonymizer htmlAnonymizer = textParser.convertWikitextToHtml(title, wikitext);
       String html = htmlAnonymizer.getHtml();
       String anonymizedHtml = htmlAnonymizer.getAnonymizedHtml();
-      Long articleId = resultHandler.createArticle(language.getShortCode(), title, revisionId, wikitext, html, anonymizedHtml);
+      String cssUrl = htmlAnonymizer.getCssUrl();
+      Long articleId = resultHandler.createArticle(language.getShortCode(), title, revisionId, wikitext, html, anonymizedHtml, cssUrl);
 
       addSentencesFromArticle(articleId, title, revisionId, anonymizedHtml);
     } catch (Exception e) {
