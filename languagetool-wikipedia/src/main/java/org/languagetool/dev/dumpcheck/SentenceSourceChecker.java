@@ -423,8 +423,8 @@ public class SentenceSourceChecker {
 
     private static String getSimplifiedHtmlContext(Document doc, Node node, Node childElement) {
       if (node instanceof Text) {
-        Node simpleElement = doc.createTextNode(node.getTextContent());
-        return getSimplifiedHtmlContext(doc, node.getParentNode(), simpleElement);
+        Node surroundingElement = doc.importNode(node.getParentNode(), true);
+        return getSimplifiedHtmlContext(doc, node.getParentNode().getParentNode(), surroundingElement);
       }
       else {
         Element simpleElement;
@@ -445,14 +445,17 @@ public class SentenceSourceChecker {
           }
 
           simpleElement.appendChild(childElement);
-
-          NamedNodeMap attributes = node.getAttributes();
-          for (int i = 0; i < attributes.getLength(); i++) {
-            simpleElement.setAttribute(attributes.item(i).getNodeName(), attributes.item(i).getTextContent());
-          }
+          copyAttributes(node, simpleElement);
 
           return getSimplifiedHtmlContext(doc, node.getParentNode(), simpleElement);
         }
+      }
+    }
+
+    private static void copyAttributes(Node from, Element to) {
+      NamedNodeMap attributes = from.getAttributes();
+      for (int i = 0; i < attributes.getLength(); i++) {
+        to.setAttribute(attributes.item(i).getNodeName(), attributes.item(i).getTextContent());
       }
     }
 
