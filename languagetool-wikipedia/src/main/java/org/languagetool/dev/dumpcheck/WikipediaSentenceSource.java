@@ -222,12 +222,14 @@ public class WikipediaSentenceSource extends SentenceSource {
 
       resultHandler.deleteNeverAppliedSuggestionsOfObsoleteArticles(title, language.getShortCode(), revisionId);
       HtmlTools.HtmlAnonymizer htmlAnonymizer = textParser.convertWikitextToHtml(title, wikitext);
-      String html = htmlAnonymizer.getHtml();
-      String anonymizedHtml = htmlAnonymizer.getAnonymizedHtml();
-      String cssUrl = htmlAnonymizer.getCssUrl();
-      Long articleId = resultHandler.createArticle(language.getShortCode(), title, revisionId, wikitext, html, anonymizedHtml, cssUrl);
+      if (htmlAnonymizer != null) {
+        String html = htmlAnonymizer.getHtml();
+        String anonymizedHtml = htmlAnonymizer.getAnonymizedHtml();
+        String cssUrl = htmlAnonymizer.getCssUrl();
+        Long articleId = resultHandler.createArticle(language.getShortCode(), title, revisionId, wikitext, html, anonymizedHtml, cssUrl);
 
-      addSentencesFromArticle(articleId, title, revisionId, anonymizedHtml);
+        addSentencesFromArticle(articleId, title, revisionId, anonymizedHtml);
+      }
     } catch (Exception e) {
       print("Could not extract text, skipping document: " + e + ", full stacktrace follows:");
       e.printStackTrace();
