@@ -211,6 +211,8 @@ public class WikipediaSentenceSource extends SentenceSource {
   private void addArticle(CorpusMatchDatabaseHandler resultHandler, String namespace, String title, Integer revisionId, String wikitext) {
     if (ONLY_ARTICLES && !ARTICLE_NAMESPACE.equals(namespace)) {
       namespaceSkipCount++;
+      print("Article ignored because it doesn't belong to the main namespace : " + namespace);
+      return;
     }
 
     try {
