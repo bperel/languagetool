@@ -411,7 +411,7 @@ public class SentenceSourceChecker {
               match.setHtmlContext(getSimplifiedHtmlContext(dbf.newDocumentBuilder().newDocument(), nodeList.item(0), null));
               return match;
             default:
-              System.out.println("Found more than 1 match (" + nodeList.getLength()+ " in HTML : " + stringToReplace);
+              System.out.println("Found more than 1 match (" + nodeList.getLength()+ " in HTML) : " + stringToReplace);
           }
         } catch (XPathExpressionException | ParserConfigurationException e) {
           e.printStackTrace();
