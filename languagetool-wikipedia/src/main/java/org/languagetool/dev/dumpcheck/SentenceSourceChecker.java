@@ -402,16 +402,17 @@ public class SentenceSourceChecker {
         try {
           String largestErrorContextWithoutHtmlTags = HtmlTools.getLargestErrorContext(match.getLargeTextContext());
           String stringToReplace = HtmlTools.getStringToReplace(largestErrorContextWithoutHtmlTags);
-          NodeList nodeList = (NodeList) xPath.compile("//text()[contains(.,\""+stringToReplace+"\")]").evaluate(currentArticleDocument, XPathConstants.NODESET);
+          NodeList nodeList = (NodeList) xPath.compile(getXpathExpression(stringToReplace)).evaluate(currentArticleDocument, XPathConstants.NODESET);
           switch (nodeList.getLength()) {
             case 0:
-              System.out.println("Can't find match in HTML : " + stringToReplace);
+              System.out.println("No HTML match for '" + stringToReplace + "'");
               break;
             case 1:
+              System.out.println("Found an HTML match for '" + stringToReplace +"'");
               match.setHtmlContext(getSimplifiedHtmlContext(dbf.newDocumentBuilder().newDocument(), nodeList.item(0), null));
               return match;
             default:
-              System.out.println("Found more than 1 match (" + nodeList.getLength()+ " in HTML) : " + stringToReplace);
+              System.out.println("Found more than 1 HTML match (" + nodeList.getLength()+ ") for '" + stringToReplace +"'");
           }
         } catch (XPathExpressionException | ParserConfigurationException e) {
           e.printStackTrace();
@@ -452,13 +453,6 @@ public class SentenceSourceChecker {
       }
     }
 
-    private static void copyAttributes(Node from, Element to) {
-      NamedNodeMap attributes = from.getAttributes();
-      for (int i = 0; i < attributes.getLength(); i++) {
-        to.setAttribute(attributes.item(i).getNodeName(), attributes.item(i).getTextContent());
-      }
-    }
-
     private static Function<RuleMatch, RuleMatchWithHtmlContexts> mapRuleAddTextContext(Sentence sentence, String finalWikitext) {
       return match -> {
         String context = CorpusMatchDatabaseHandler.contextTools.getContext(match.getFromPos(), match.getToPos(), sentence.getText());
@@ -490,6 +484,28 @@ public class SentenceSourceChecker {
           return null;
         }
       };
+    }
+
+    private static void copyAttributes(Node from, Element to) {
+      NamedNodeMap attributes = from.getAttributes();
+      for (int i = 0; i < attributes.getLength(); i++) {
+        to.setAttribute(attributes.item(i).getNodeName(), attributes.item(i).getTextContent());
+      }
+    }
+
+    private static String getXpathExpression(String value)
+    {
+      String textExpression;
+      if (!value.contains("'")) {
+        textExpression = '\'' + value + '\'';
+      }
+      else if (!value.contains("\"")) {
+        textExpression = '"' + value + '"';
+      }
+      else {
+        textExpression = "concat('" + value.replace("'", "',\"'\",'") + "')";
+      }
+      return "//text()[contains(.,"+textExpression+")]";
     }
 
     public String getSmallTextContext() {
