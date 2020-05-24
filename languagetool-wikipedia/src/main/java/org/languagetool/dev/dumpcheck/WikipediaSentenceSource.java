@@ -124,6 +124,12 @@ public class WikipediaSentenceSource extends SentenceSource {
               return;
             }
 
+            String text = this.text.toString().trim();
+            if (text.length() > 250000) {
+              print("Article ignored because it is too large : " + text.length() + "characters");
+              return;
+            }
+
             String title = this.title.toString().trim();
             int revisionId = Integer.parseInt(this.revisionId.toString().trim());
             try {
