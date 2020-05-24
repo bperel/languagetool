@@ -117,6 +117,13 @@ public class WikipediaSentenceSource extends SentenceSource {
         @Override
         public void endElement(String uri, String localName, String qName) {
           if (qName.toLowerCase().equals("page")) {
+            String namespace = this.namespace.toString().trim();
+            if (ONLY_ARTICLES && !ARTICLE_NAMESPACE.equals(namespace)) {
+              namespaceSkipCount++;
+              print("Article ignored because it doesn't belong to the main namespace : " + namespace);
+              return;
+            }
+
             String title = this.title.toString().trim();
             int revisionId = Integer.parseInt(this.revisionId.toString().trim());
             try {
@@ -130,7 +137,6 @@ public class WikipediaSentenceSource extends SentenceSource {
                 if (analyzedArticleIdAndAnalyzed == null) {
                   addArticle(
                     resultHandler,
-                    namespace.toString().trim(),
                     title,
                     revisionId,
                     text.toString().trim()
@@ -208,13 +214,7 @@ public class WikipediaSentenceSource extends SentenceSource {
     return "wikipedia";
   }
 
-  private void addArticle(CorpusMatchDatabaseHandler resultHandler, String namespace, String title, Integer revisionId, String wikitext) {
-    if (ONLY_ARTICLES && !ARTICLE_NAMESPACE.equals(namespace)) {
-      namespaceSkipCount++;
-      print("Article ignored because it doesn't belong to the main namespace : " + namespace);
-      return;
-    }
-
+  private void addArticle(CorpusMatchDatabaseHandler resultHandler, String title, Integer revisionId, String wikitext) {
     try {
       if (wikitext.trim().toLowerCase().startsWith("#redirect")) {
         redirectSkipCount++;
