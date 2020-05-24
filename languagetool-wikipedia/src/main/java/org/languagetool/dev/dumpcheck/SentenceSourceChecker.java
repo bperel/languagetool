@@ -380,13 +380,13 @@ public class SentenceSourceChecker {
         .map(mapRuleAddTextContext(sentence, articleWikitext))
         .filter(Objects::nonNull).collect(Collectors.toList());
 
-      if (!matches.isEmpty()) {
+      if (!matches.isEmpty() && articleHtml != null) {
         try {
           if (!sentence.getArticleId().equals(currentArticleId)) {
-            DocumentBuilder db = dbf.newDocumentBuilder();
+            DocumentBuilder docBuilder = dbf.newDocumentBuilder();
             currentArticleId = sentence.getArticleId();
             currentArticleCssUrl = articleCssUrl;
-            currentArticleDocument = db.parse(new InputSource(new StringReader(articleHtml)));
+            currentArticleDocument = docBuilder.parse(new InputSource(new StringReader(articleHtml)));
           }
           return matches.stream().map(mapRuleAddHtmlContext())
             .filter(Objects::nonNull).collect(Collectors.toList());
