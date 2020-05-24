@@ -38,7 +38,7 @@ public class ParsoidWikipediaTextParser {
   private final String urlBase;
   private final String languageCode;
 
-  private static final int TIMEOUT = 60;
+  private static final int TIMEOUT = 60000;
 
   public ParsoidWikipediaTextParser(String languageCode, String urlBase) {
     this.languageCode = languageCode;
