@@ -38,6 +38,8 @@ public class ParsoidWikipediaTextParser {
   private final String urlBase;
   private final String languageCode;
 
+  private static final int TIMEOUT = 60;
+
   public ParsoidWikipediaTextParser(String languageCode, String urlBase) {
     this.languageCode = languageCode;
     this.urlBase = urlBase;
@@ -75,6 +77,8 @@ public class ParsoidWikipediaTextParser {
       conn.setUseCaches(false);
       conn.setRequestProperty("Accept-Encoding", "gzip");
       conn.setRequestProperty("Content-Type", "application/json");
+      conn.setConnectTimeout(TIMEOUT);
+      conn.setReadTimeout(TIMEOUT);
 
       PrintWriter out = new PrintWriter(new OutputStreamWriter(conn.getOutputStream(), StandardCharsets.UTF_8));
       out.print(requestBody);
