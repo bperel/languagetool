@@ -56,7 +56,6 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
   static final ContextTools contextTools;
   static final ContextTools smallContextTools;
 
-  private PreparedStatement selectFullCorpusArticleFromIdSt;
   private PreparedStatement selectCorpusArticleWithRevisionSt;
   private PreparedStatement insertCorpusArticleSt;
   private PreparedStatement insertCorpusMatchSt;
@@ -94,11 +93,8 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
       }
       try {
         selectCorpusArticleWithRevisionSt = conn.prepareStatement("" +
-          " SELECT id, analyzed, anonymized_html FROM corpus_article" +
+          " SELECT id, analyzed, wikitext, css_url, html, anonymized_html FROM corpus_article" +
           " WHERE title = ? AND revision = ?");
-        selectFullCorpusArticleFromIdSt = conn.prepareStatement("" +
-          " SELECT wikitext, html, css_url FROM corpus_article" +
-          " WHERE id = ?");
         insertCorpusArticleSt = conn.prepareStatement("" +
           " INSERT INTO corpus_article (language_code, title, revision, wikitext, html, anonymized_html, css_url, analyzed)" +
           " VALUES (?, ?, ?, ?, ?, ?, ?, 0)", Statement.RETURN_GENERATED_KEYS);
@@ -153,10 +149,7 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
   protected void handleResult(Sentence sentence, List<RuleMatchWithHtmlContexts> rulesMatchesWithSuggestions) throws SQLIntegrityConstraintViolationException {
     try {
       for (RuleMatchWithHtmlContexts match : rulesMatchesWithSuggestions) {
-        String context = contextTools.getContext(match.getFromPos(), match.getToPos(), sentence.getText());
-        String smallContext = smallContextTools.getContext(match.getFromPos(), match.getToPos(), sentence.getText());
-
-        createSentence(sentence.getArticleId(), match, context, smallContext);
+        createSentence(sentence.getArticleId(), match);
         ++errorCount;
         checkMaxErrors();
         if (errorCount % 100 == 0) {
@@ -207,7 +200,7 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
     throw new SQLException("Couldn't create article " + title);
   }
 
-  private void createSentence(long articleId, RuleMatchWithHtmlContexts match, String context, String smallContext) throws SQLException {
+  private void createSentence(long articleId, RuleMatchWithHtmlContexts match) throws SQLException {
 
     Rule rule = match.getRule();
     insertCorpusMatchSt.setLong(1, articleId);
@@ -229,20 +222,7 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
     insertCorpusMatchSt.executeQuery();
   }
 
-  String[] getCorpusArticleFromId(Long articleId) throws SQLException {
-    selectFullCorpusArticleFromIdSt.setLong(1, articleId);
-    ResultSet corpusArticleResultSet = selectFullCorpusArticleFromIdSt.executeQuery();
-    if (corpusArticleResultSet.next()) {
-      return new String[]{
-        corpusArticleResultSet.getString(1),
-        corpusArticleResultSet.getString(2),
-        corpusArticleResultSet.getString(3)
-      };
-    }
-    throw new SQLException("No such article : " + articleId);
-  }
-
-  Object[] getAnalyzedArticleId(String title, int revision) throws SQLException {
+  Object[] getAnalyzedArticle(String title, int revision) throws SQLException {
     selectCorpusArticleWithRevisionSt.setString(1, title);
     selectCorpusArticleWithRevisionSt.setInt(2, revision);
 
@@ -251,7 +231,10 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
       return new Object[]{
         corpusArticleResultSet.getLong(1),
         corpusArticleResultSet.getLong(2),
-        corpusArticleResultSet.getString(3)
+        corpusArticleResultSet.getString(3),
+        corpusArticleResultSet.getString(4),
+        corpusArticleResultSet.getString(5),
+        corpusArticleResultSet.getString(6)
       };
     } else {
       return null;
@@ -266,7 +249,6 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
   @Override
   public void close() throws Exception {
     for (PreparedStatement preparedStatement : Arrays.asList(
-      selectFullCorpusArticleFromIdSt,
       selectCorpusArticleWithRevisionSt,
       insertCorpusArticleSt,
       insertCorpusMatchSt,

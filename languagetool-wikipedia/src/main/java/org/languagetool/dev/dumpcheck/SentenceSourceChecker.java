@@ -41,9 +41,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.StringReader;
-import java.sql.SQLException;
-import java.sql.SQLIntegrityConstraintViolationException;
-import java.text.NumberFormat;
 import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Pattern;
@@ -218,72 +215,14 @@ public class SentenceSourceChecker {
     //System.out.println("Version: " + JLanguageTool.VERSION + " (" + JLanguageTool.BUILD_DATE + ")");
 
     CorpusMatchDatabaseHandler databaseHandler = new CorpusMatchDatabaseHandler(propFile, maxSentences, maxErrors);
-    int ruleMatchCount = 0;
-    int sentenceCount = 0;
-    try {
-      FileInputStream inStream = new FileInputStream(propFile);
-      Properties properties = new Properties();
-      properties.load(inStream);
-      String parsoidUrl = getProperty(properties, "parsoidUrl");
-      MixingSentenceSource mixingSource = MixingSentenceSource.create(fileNames, lang, filter, parsoidUrl, databaseHandler);
+    FileInputStream inStream = new FileInputStream(propFile);
+    Properties properties = new Properties();
+    properties.load(inStream);
+    String parsoidUrl = getProperty(properties, "parsoidUrl");
 
-      Long currentArticleId = null;
-      String currentArticleWikitext = null;
-      String currentArticleHtml = null;
-      String currentArticleCssUrl = null;
-
-      RuleMatchWithHtmlContexts.lt = lt;
-      while (mixingSource.hasNext()) {
-        Sentence sentence = mixingSource.next();
-        try {
-          if (!sentence.getArticleId().equals(currentArticleId)) {
-            if (currentArticleId != null) {
-              databaseHandler.markArticleAsAnalyzed(currentArticleId);
-              databaseHandler.deleteAlreadyAppliedSuggestionsInNewArticleRevisions(currentArticleId);
-            }
-            String[] wikitextHtmlCssUrl = databaseHandler.getCorpusArticleFromId(sentence.getArticleId());
-            currentArticleWikitext = wikitextHtmlCssUrl[0];
-            currentArticleHtml = wikitextHtmlCssUrl[1];
-            currentArticleCssUrl = wikitextHtmlCssUrl[2];
-          }
-          currentArticleId = sentence.getArticleId();
-
-          List<RuleMatchWithHtmlContexts> matches = RuleMatchWithHtmlContexts.getMatches(sentence, currentArticleWikitext, currentArticleHtml, currentArticleCssUrl);
-          try {
-            databaseHandler.handleResult(sentence, matches);
-            sentenceCount++;
-            if (sentenceCount % 5000 == 0) {
-              System.err.printf("%s sentences checked...\n", NumberFormat.getNumberInstance(Locale.US).format(sentenceCount));
-            }
-            ruleMatchCount += matches.size();
-          }
-          catch(SQLIntegrityConstraintViolationException ignored) { }
-        } catch (DocumentLimitReachedException | ErrorLimitReachedException | IOException e) {
-          throw e;
-        } catch (Exception e) {
-          throw new RuntimeException("Check failed on sentence: " + StringUtils.abbreviate(sentence.getText(), 250), e);
-        }
-      }
-
-      if (currentArticleId != null) {
-        databaseHandler.markArticleAsAnalyzed(currentArticleId);
-        databaseHandler.deleteAlreadyAppliedSuggestionsInNewArticleRevisions(currentArticleId);
-      }
-    } catch (DocumentLimitReachedException | ErrorLimitReachedException | SQLException e) {
-      System.out.println(getClass().getSimpleName() + ": " + e);
-    } finally {
-      lt.shutdown();
-      float matchesPerSentence = (float)ruleMatchCount / sentenceCount;
-      System.out.printf(lang + ": %d total matches\n", ruleMatchCount);
-      System.out.printf(Locale.ENGLISH, lang + ": ø%.2f rule matches per sentence\n", matchesPerSentence);
-      long runTimeMillis = System.currentTimeMillis() - startTime;
-      //System.out.printf(Locale.ENGLISH, lang + ": Time: %.2f minutes\n", runTimeMillis/1000.0/60.0);
-      try {
-        databaseHandler.close();
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
-    }
+    RuleMatchWithHtmlContexts.lt = lt;
+    MixingSentenceSource.create(fileNames, lang, filter, parsoidUrl, databaseHandler);
+    RuleMatchWithHtmlContexts.lt.shutdown();
   }
 
   private void enableOnlySpecifiedRules(String[] ruleIds, JLanguageTool lt) {

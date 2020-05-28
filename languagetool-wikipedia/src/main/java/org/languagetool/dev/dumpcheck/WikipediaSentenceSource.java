@@ -18,8 +18,10 @@
  */
 package org.languagetool.dev.dumpcheck;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.languagetool.Language;
+import org.languagetool.dev.dumpcheck.SentenceSourceChecker.RuleMatchWithHtmlContexts;
 import org.languagetool.dev.wikipedia.ParsoidWikipediaTextParser;
 import org.languagetool.tokenizers.Tokenizer;
 import org.languagetool.tools.HtmlTools;
@@ -33,6 +35,7 @@ import javax.xml.parsers.SAXParserFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -55,21 +58,26 @@ public class WikipediaSentenceSource extends SentenceSource {
   private final Tokenizer sentenceTokenizer;
   private final List<WikipediaSentence> sentences;
   private final Language language;
+  private final CorpusMatchDatabaseHandler databaseHandler;
 
   private int articleCount = 0;
   private int namespaceSkipCount = 0;
   private int redirectSkipCount = 0;
+
+  public int ruleMatchCount = 0;
+  public int sentenceCount = 0;
 
   WikipediaSentenceSource(InputStream xmlInput, Language language) {
     this(xmlInput, language, null, null, null);
   }
 
   /** @since 3.0 */
-  WikipediaSentenceSource(InputStream xmlInput, Language language, Pattern filter, String parsoidUrl, CorpusMatchDatabaseHandler resultHandler) {
+  WikipediaSentenceSource(InputStream xmlInput, Language language, Pattern filter, String parsoidUrl, CorpusMatchDatabaseHandler databaseHandler) {
     super(language, filter);
     textParser = new ParsoidWikipediaTextParser(language.getShortCode(), parsoidUrl);
     sentenceTokenizer = language.getSentenceTokenizer();
     sentences = new ArrayList<>();
+    this.databaseHandler = databaseHandler;
     this.language = language;
 
     try {
@@ -133,25 +141,26 @@ public class WikipediaSentenceSource extends SentenceSource {
             String title = this.title.toString().trim();
             int revisionId = Integer.parseInt(this.revisionId.toString().trim());
             try {
-              Object[] analyzedArticleIdAndAnalyzed = resultHandler.getAnalyzedArticleId(title, revisionId);
-              if (analyzedArticleIdAndAnalyzed != null && analyzedArticleIdAndAnalyzed[1].equals(1L)) {
+              Object[] article = databaseHandler.getAnalyzedArticle(title, revisionId);
+              if (article != null && article[1].equals(1L)) {
                 print("Article " + title + " with revision " + revisionId + " is already in the DB, ignoring");
               }
               else {
                 articleCount++;
                 print("Article #" + articleCount + " : " + title);
-                if (analyzedArticleIdAndAnalyzed == null) {
-                  addArticle(
-                    resultHandler,
-                    title,
-                    revisionId,
-                    text.toString().trim()
-                  );
+                if (article == null) {
+                  article = addArticle(title, revisionId, text.trim());
                 }
                 else {
                   print("Article " + title + " with revision " + revisionId + " is in the DB but analysis is not completed yet");
-                  addSentencesFromArticle((Long) analyzedArticleIdAndAnalyzed[0], title, revisionId, (String) analyzedArticleIdAndAnalyzed[2]);
                 }
+                assert article != null;
+                addSentencesFromArticle((Long) article[0], title, revisionId, (String) article[5]);
+                Long articleId = (Long) article[0];
+
+                processSentences((String) article[2], (String) article[3], (String) article[4]);
+                databaseHandler.markArticleAsAnalyzed(articleId);
+                databaseHandler.deleteAlreadyAppliedSuggestionsInNewArticleRevisions(articleId);
               }
             } catch (SQLException e) {
               e.printStackTrace();
@@ -188,6 +197,35 @@ public class WikipediaSentenceSource extends SentenceSource {
 
     } catch (ParserConfigurationException | SAXException | IOException e) {
       throw new RuntimeException(e);
+    } finally {
+      float matchesPerSentence = (float)ruleMatchCount / sentenceCount;
+      System.out.printf(language + ": %d total matches\n", ruleMatchCount);
+      System.out.printf(Locale.ENGLISH, language + ": ø%.2f rule matches per sentence\n", matchesPerSentence);
+      try {
+        databaseHandler.close();
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    }
+  }
+
+  private void processSentences(String wikitext, String cssUrl, String html) {
+    while (this.hasNext()) {
+      Sentence sentence = this.next();
+      try {
+        List<RuleMatchWithHtmlContexts> matches = RuleMatchWithHtmlContexts.getMatches(sentence, wikitext, html, cssUrl);
+
+        try {
+          databaseHandler.handleResult(sentence, matches);
+          sentenceCount++;
+          ruleMatchCount += matches.size();
+        }
+        catch(SQLIntegrityConstraintViolationException ignored) { }
+      } catch (DocumentLimitReachedException | ErrorLimitReachedException e) {
+        System.out.println(getClass().getSimpleName() + ": " + e);
+      } catch (Exception e) {
+        System.out.println("Check failed on sentence: " + StringUtils.abbreviate(sentence.getText(), 250));
+      }
     }
   }
 
@@ -220,26 +258,27 @@ public class WikipediaSentenceSource extends SentenceSource {
     return "wikipedia";
   }
 
-  private void addArticle(CorpusMatchDatabaseHandler resultHandler, String title, Integer revisionId, String wikitext) {
+  private Object[] addArticle(String title, Integer revisionId, String wikitext) {
     try {
       if (wikitext.trim().toLowerCase().startsWith("#redirect")) {
         redirectSkipCount++;
       }
 
-      resultHandler.deleteNeverAppliedSuggestionsOfObsoleteArticles(title, language.getShortCode(), revisionId);
+      databaseHandler.deleteNeverAppliedSuggestionsOfObsoleteArticles(title, language.getShortCode(), revisionId);
       HtmlTools.HtmlAnonymizer htmlAnonymizer = textParser.convertWikitextToHtml(title, wikitext);
       if (htmlAnonymizer != null) {
         String html = htmlAnonymizer.getHtml();
         String anonymizedHtml = htmlAnonymizer.getAnonymizedHtml();
         String cssUrl = htmlAnonymizer.getCssUrl();
-        Long articleId = resultHandler.createArticle(language.getShortCode(), title, revisionId, wikitext, html, anonymizedHtml, cssUrl);
+        Long articleId = databaseHandler.createArticle(language.getShortCode(), title, revisionId, wikitext, html, anonymizedHtml, cssUrl);
 
-        addSentencesFromArticle(articleId, title, revisionId, anonymizedHtml);
+        return new Object[] { articleId, 0, wikitext, cssUrl, html, anonymizedHtml };
       }
     } catch (Exception e) {
       print("Could not extract text, skipping document: " + e + ", full stacktrace follows:");
       e.printStackTrace();
     }
+    return null;
   }
 
   private void addSentencesFromArticle(Long articleId, String title, Integer revisionId, String anonymizedHtml) {
