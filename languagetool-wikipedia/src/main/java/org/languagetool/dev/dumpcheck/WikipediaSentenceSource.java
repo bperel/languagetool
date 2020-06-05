@@ -150,14 +150,17 @@ public class WikipediaSentenceSource extends SentenceSource {
                 print("Article #" + articleCount + " : " + title);
                 if (article == null) {
                   article = addArticle(title, revisionId, text.trim());
+                  if (article == null) {
+                    return;
+                  }
                 }
                 else {
                   print("Article " + title + " with revision " + revisionId + " is in the DB but analysis is not completed yet");
                 }
-                assert article != null;
-                addSentencesFromArticle((Long) article[0], title, revisionId, (String) article[5]);
                 Long articleId = (Long) article[0];
+                addSentencesFromArticle(articleId, title, revisionId, (String) article[5]);
 
+                databaseHandler.deleteNeverAppliedSuggestionsOfObsoleteArticles(title, language.getShortCode(), revisionId);
                 processSentences((String) article[2], (String) article[3], (String) article[4]);
                 databaseHandler.markArticleAsAnalyzed(articleId);
                 databaseHandler.deleteAlreadyAppliedSuggestionsInNewArticleRevisions(articleId);
@@ -264,7 +267,6 @@ public class WikipediaSentenceSource extends SentenceSource {
         redirectSkipCount++;
       }
 
-      databaseHandler.deleteNeverAppliedSuggestionsOfObsoleteArticles(title, language.getShortCode(), revisionId);
       HtmlTools.HtmlAnonymizer htmlAnonymizer = textParser.convertWikitextToHtml(title, wikitext);
       if (htmlAnonymizer != null) {
         String html = htmlAnonymizer.getHtml();

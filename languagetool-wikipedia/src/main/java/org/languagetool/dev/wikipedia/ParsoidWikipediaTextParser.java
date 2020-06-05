@@ -25,6 +25,7 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
 import java.net.HttpURLConnection;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -104,7 +105,12 @@ public class ParsoidWikipediaTextParser {
 
       return sb.toString();
     } catch (IOException e) {
-      e.printStackTrace();
+      if (e instanceof SocketTimeoutException) {
+        System.err.println("Timeout when calling Parsoid");
+      }
+      else {
+        e.printStackTrace();
+      }
       return null;
     }
   }
