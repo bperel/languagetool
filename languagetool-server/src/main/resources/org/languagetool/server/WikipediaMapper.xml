@@ -62,9 +62,10 @@
                (
                    SELECT concat(error_context, '%%', replacement_suggestion)
                    FROM corpus_match sample
-                   INNER JOIN corpus_article sample_article on sample.article_id = sample_article.id
-                   WHERE rule.languagetool_version = sample.languagetool_version
-                     AND article.language_code = sample_article.language_code
+                   WHERE sample.article_id IN (
+                       select id from corpus_article sample_article where article.language_code = sample_article.language_code
+                   )
+                     AND rule.languagetool_version = sample.languagetool_version
                      AND rule.rule_category = sample.rule_category
                      AND rule.rule_description = sample.rule_description
                    ORDER BY rule.applied_date DESC
@@ -73,9 +74,11 @@
         FROM corpus_match rule
                  INNER JOIN corpus_article article on rule.article_id = article.id
         WHERE applied = 0
+          AND applied_date > date_sub(current_date, interval 2 week)
         GROUP BY languagetool_version, language_code, rule_category, rule_description
-        HAVING COUNT(*) > 50
+        HAVING COUNT(*) > 10
         ORDER BY languagetool_version DESC, language_code, COUNT(*) DESC
+        LIMIT 10
     </select>
     <select id="insertAccessToken">
         INSERT INTO access_token(language_code, username, access_token, access_token_secret) VALUES(#{languageCode}, #{username}, #{accessToken}, #{accessTokenSecret})

@@ -28,6 +28,9 @@ create table corpus_article
 )
     charset=utf8mb4;
 
+create index corpus_article_language_code_index
+    on corpus_article (language_code);
+
 create table corpus_match
 (
     id int auto_increment
