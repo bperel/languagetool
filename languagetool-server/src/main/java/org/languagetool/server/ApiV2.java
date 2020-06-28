@@ -591,8 +591,7 @@ class ApiV2 {
         g.writeObjectField("ruleCategory", stat.getRuleCategory());
         g.writeObjectField("ruleDescription", stat.getRuleDescription());
         g.writeObjectField("count", stat.getCount());
-        g.writeObjectField("sampleErrorContext", stat.getSampleErrorContext());
-        g.writeObjectField("sampleReplacementSuggestion", stat.getSampleReplacementSuggestion());
+        g.writeObjectField("sampleSuggestionId", stat.getSampleSuggestionId());
         g.writeEndObject();
       }
       g.writeEndArray();

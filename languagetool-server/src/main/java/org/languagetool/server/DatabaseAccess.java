@@ -588,20 +588,15 @@ class DatabaseAccess {
     private final String ruleCategory;
     private final String ruleDescription;
     private final Integer count;
-    private final String sampleErrorContext;
-    private final String sampleReplacementSuggestion;
+    private final Integer sampleSuggestionId;
 
-    public RefusedSuggestionCategoryPerLanguageCode(String languagetoolVersion, String languageCode, String ruleCategory, String ruleDescription, Integer count, String sampleErrorContextAndReplacementSuggestion) {
+    public RefusedSuggestionCategoryPerLanguageCode(String languagetoolVersion, String languageCode, String ruleCategory, String ruleDescription, Integer count, Integer sampleSuggestionId) {
       this.languagetoolVersion = languagetoolVersion;
       this.languageCode = languageCode;
       this.ruleCategory = ruleCategory;
       this.ruleDescription = ruleDescription;
       this.count = count;
-
-      String sampleFieldDelimiter = "%%";
-      int splitPosition = sampleErrorContextAndReplacementSuggestion.lastIndexOf(sampleFieldDelimiter);
-      this.sampleErrorContext = sampleErrorContextAndReplacementSuggestion.substring(0, splitPosition);
-      this.sampleReplacementSuggestion = sampleErrorContextAndReplacementSuggestion.substring(splitPosition + sampleFieldDelimiter.length());
+      this.sampleSuggestionId = sampleSuggestionId;
     }
 
     public String getLanguagetoolVersion() {
@@ -624,12 +619,8 @@ class DatabaseAccess {
       return count;
     }
 
-    public String getSampleErrorContext() {
-      return sampleErrorContext;
-    }
-
-    public String getSampleReplacementSuggestion() {
-      return sampleReplacementSuggestion;
+    public Integer getSampleSuggestionId() {
+      return sampleSuggestionId;
     }
   }
 

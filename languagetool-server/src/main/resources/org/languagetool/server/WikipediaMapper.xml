@@ -60,7 +60,7 @@
                rule_description,
                COUNT(*),
                (
-                   SELECT concat(error_context, '%%', replacement_suggestion)
+                   SELECT sample.id
                    FROM corpus_match sample
                    WHERE sample.article_id IN (
                        select id from corpus_article sample_article where article.language_code = sample_article.language_code
@@ -70,7 +70,7 @@
                      AND rule.rule_description = sample.rule_description
                    ORDER BY rule.applied_date DESC
                    LIMIT 1
-               )
+               ) AS sample_suggestion_id
         FROM corpus_match rule
                  INNER JOIN corpus_article article on rule.article_id = article.id
         WHERE applied = 0
