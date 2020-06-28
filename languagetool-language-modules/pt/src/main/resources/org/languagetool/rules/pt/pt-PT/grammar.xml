@@ -521,6 +521,16 @@ title="Easy editing stylesheet" ?>
       <url>https://pt.wikipedia.org/wiki/Gerundismo</url>
       <short>Possível gerundismo.</short>
     <rule>
+<!-- MARCOAGPINTO 2020-06-19 *START* -->
+<!-- "Com efeito, vinham-se acumulando estudos e testemunhos." -->
+      <antipattern>
+<!--	      <token negate_pos="yes" postag='CS|RG|PP3[FM][SP]A00' postag_regexp='yes'/> -->
+          <token inflected='yes' regexp='yes'>ir|vir|criar</token>
+		  <token regexp='yes' spacebefore='no'>&hifen;</token>
+		   <token regexp='no'>se</token>
+          <token regexp='yes'>sendo|ficando|saindo|crescendo|permitindo|progredindo|emergindo|acumulando|beneficiando|usando|propagando|ganhando|desaparecendo|perdendo|levantando|caindo|decrescendo|surgindo</token>
+      </antipattern>
+<!-- MARCOAGPINTO 2020-06-19 *END* -->	
       <pattern>
           <token inflected='yes' regexp='yes'>estar|andar|ir|vir</token><!-- TODO Review all cases and confirm it can be safely expanded to more cases-->
           <token regexp='yes' spacebefore='no'>&hifen;</token>
@@ -538,6 +548,19 @@ title="Easy editing stylesheet" ?>
           <token>sendo</token>
           <token postag='V.P.+' postag_regexp='yes'/>
       </antipattern>
+<!-- MARCOAGPINTO 2020-06-12 + 2020-06-13 + 2020-06-14 + 2020-06-16 + 2020-06-17 + 2020-06-19 *START* -->
+<!-- "Ao fazê-lo vão saindo resultados cada vez mais inesperados." -->
+<!-- "Ao fazê-lo vai saindo resultados cada vez mais inesperados." -->
+<!-- "Ao fazê-lo vão saindo equações cada vez mais inesperadas." -->
+<!-- "Ao fazê-lo vai saindo equações cada vez mais inesperadas." -->
+<!-- "Ao fazê-lo vão saindo agentes cada vez mais inesperados." -->
+<!-- "Ao fazê-lo vai saindo agentes cada vez mais inesperadas." -->
+      <antipattern>
+	      <token negate_pos="yes" postag='CS|RG|PP3[FM][SP]A00' postag_regexp='yes'/>
+          <token inflected='yes' regexp='yes'>ir|vir|criar</token>
+          <token regexp='yes'>sendo|ficando|saindo|crescendo|permitindo|progredindo|emergindo|acumulando|beneficiando|usando|propagando|ganhando|desaparecendo|perdendo|levantando|caindo|decrescendo|surgindo</token>
+      </antipattern>
+<!-- MARCOAGPINTO 2020-06-12 + 2020-06-13 + 2020-06-14 + 2020-06-16 + 2020-06-17 + 2020-06-19 *END* -->
       <pattern>
           <token inflected='yes' regexp='yes'>estar|andar|ir|vir</token>
           <token postag='V.G0+' postag_regexp='yes'/>
@@ -553,7 +576,20 @@ title="Easy editing stylesheet" ?>
           <token>sendo</token>
           <token postag='V.P.+' postag_regexp='yes'/>
       </antipattern>
-      <pattern>
+<!-- MARCOAGPINTO 2020-06-12 + 2020-06-13 + 2020-06-14 + 2020-06-16 + 2020-06-17 + 2020-06-19 *START* -->
+<!-- "Ao fazê-lo vão saindo resultados cada vez mais inesperados." -->
+<!-- "Ao fazê-lo vai saindo resultados cada vez mais inesperados." -->
+<!-- "Ao fazê-lo vão saindo equações cada vez mais inesperadas." -->
+<!-- "Ao fazê-lo vai saindo equações cada vez mais inesperadas." -->
+<!-- "Ao fazê-lo vão saindo agentes cada vez mais inesperados." -->
+<!-- "Ao fazê-lo vai saindo agentes cada vez mais inesperadas." -->
+      <antipattern>
+	      <token negate_pos="yes" postag='CS|RG|PP3[FM][SP]A00' postag_regexp='yes'/>
+          <token inflected='yes' regexp='yes'>ir|vir|criar</token>
+          <token regexp='yes'>sendo|ficando|saindo|crescendo|permitindo|progredindo|emergindo|acumulando|beneficiando|usando|propagando|ganhando|desaparecendo|perdendo|levantando|caindo|decrescendo|surgindo</token>
+      </antipattern>
+<!-- MARCOAGPINTO 2020-06-12 + 2020-06-13 + 2020-06-14 + 2020-06-16 + 2020-06-17 + 2020-06-19 *END* -->
+        <pattern>
           <token postag='V.+' postag_regexp='yes'>
             <exception inflected='yes' regexp='yes'>medida|votar</exception>
             <exception negate_pos='yes' postag='V.+' postag_regexp='yes'/></token>
@@ -1068,6 +1104,37 @@ title="Easy editing stylesheet" ?>
       <example>"<marker>Garanto-te</marker> que foi mesmo assim."</example>
     </rule>
     <rule>
+<!-- MARCOAGPINTO 2020-06-07 *START* -->
+<!-- "Isso dá-me uma sensação de paz." -->
+<!-- "Isso dá-nos uma sensação de paz." -->
+<!-- "O local dá-me uma sensação de paz." -->
+<!-- "A loja dá-nos uma sensação de paz." -->
+<!-- "Eu muito estranho falares-me desse modo." -->
+<!-- "Por favor envia-me uma resposta assim que receber esta carta." -->
+      <antipattern>
+	      <token negate="yes" regexp='yes'>muito|pouco|por</token>
+		  <token postag="PD0NN000|NC[CFM]S000" postag_regexp='yes'/>
+		  <token postag="V...2.+" postag_regexp='yes'/>
+		  <token regexp='yes' spacebefore='no'>&hifen;</token>
+		  <token regexp='yes'>me|nos</token>
+      </antipattern>
+<!-- MARCOAGPINTO 2020-06-07 *END* -->
+<!-- MARCOAGPINTO 2020-06-07 *START* -->
+<!-- "Cabe-lhe assinar e mandar publicar os decretos da Assembleia e do Governo Regional." -->
+      <antipattern>
+		  <token postag="V...3.+" postag_regexp='yes'/>
+		  <token regexp='yes' spacebefore='no'>&hifen;</token>
+		  <token regexp='yes'>lhe|lhes</token>
+		  <token postag="VMN0000" postag_regexp='no'/>
+      </antipattern>
+<!-- "Falta-lhe talento para ser ator." -->
+      <antipattern>
+		  <token postag="NCFS000" postag_regexp='no'/>
+		  <token regexp='yes' spacebefore='no'>&hifen;</token>
+		  <token regexp='yes'>lhe|lhes</token>
+		  <token postag="VMN0000|NC[CFM]S000" postag_regexp='yes'/>
+      </antipattern>	  
+<!-- MARCOAGPINTO 2020-06-07 *END* -->
       <pattern>
           <token min='0' regexp='yes'>tu|vós</token>
           <token postag="V...2.+" postag_regexp='yes'>
@@ -1911,6 +1978,94 @@ title="Easy editing stylesheet" ?>
     </rule>
  </category>
 
+<category id="STYLE" name="Style" type="style">
+    <rulegroup id="EMAIL" name="E-mail (correio eletrónico)">
+      <rule>
+        <pattern>
+		      <token>e</token>
+		      <token spacebefore="no">-</token>
+          <token spacebefore="no">mail</token>
+        </pattern>
+        <message>'e-mail' é um estrangeirismo. É preferível dizer <suggestion>endereço eletrónico</suggestion> ou <suggestion>correio eletrónico</suggestion>.</message>
+        <url>https://pt.wikipedia.org/wiki/E-mail</url>
+        <example correction="endereço eletrónico|correio eletrónico">Padrões para codificação de mensagens de <marker>e-mail</marker> foram propostas em 1973 (RFC 561)</example>
+      </rule>
+      <rule>
+        <pattern>
+		      <token>e</token>
+		      <token spacebefore="no">-</token>
+          <token spacebefore="no">mails</token>
+        </pattern>
+        <message>'e-mails' é um estrangeirismo. É preferível dizer <suggestion>endereços eletrónicos</suggestion> ou <suggestion>correios eletrónicos</suggestion>.</message>
+        <url>https://pt.wikipedia.org/wiki/E-mail</url>
+        <example correction="endereços eletrónicos|correios eletrónicos">Em inglês americano, email é usado como um substantivo coletivo, mas, no inglês britânico, é mais comumente usado como um substantivo comum, com a forma plural <marker>e-mails</marker>.</example>
+      </rule>
+      <rule>
+        <antipattern>
+          <token>e</token>
+          <token min="0">-</token>
+          <token>mail</token>
+        </antipattern>
+        <pattern>
+          <token>mail</token>
+        </pattern>
+        <message>'mail' é um estrangeirismo. É preferível dizer <suggestion>endereço eletrónico</suggestion> ou <suggestion>correio eletrónico</suggestion>.</message>
+        <example correction="endereço eletrónico|correio eletrónico">Padrões para codificação de mensagens de <marker>mail</marker> foram propostas em 1973 (RFC 561)</example>
+      </rule>
+      <rule>
+        <antipattern>
+          <token>e</token>
+          <token min="0">-</token>
+          <token>mails</token>
+        </antipattern>
+        <pattern>
+          <token>mails</token>
+        </pattern>
+        <message>'mails' é um estrangeirismo. É preferível dizer <suggestion>endereços eletrónicos</suggestion> ou <suggestion>correios eletrónicos</suggestion>.</message>
+        <example correction="endereços eletrónicos|correios eletrónicos">Em inglês americano, email é usado como um substantivo coletivo, mas, no inglês britânico, é mais comumente usado como um substantivo comum, com a forma plural <marker>mails</marker>.</example>
+      </rule>
+      <rule>
+        <pattern>
+		      <token>e</token>
+		      <token spacebefore="no">-</token>
+          <token spacebefore="no">book</token>
+        </pattern>
+        <message>'e-book' é um estrangeirismo. É preferível dizer <suggestion>livro eletrónico</suggestion>.</message>
+        <url>https://pt.wikipedia.org/wiki/Livro_digital</url>
+        <example correction="livro eletrónico">O mais forte candidato a criador do <marker>e-book</marker> é Michael Stern Hart.</example>
+      </rule>
+      <rule>
+        <pattern>
+		      <token>e</token>
+		      <token spacebefore="no">-</token>
+          <token spacebefore="no">books</token>
+        </pattern>
+        <message>'e-book' é um estrangeirismo. É preferível dizer <suggestion>livros eletrónicos</suggestion>.</message>
+        <url>https://pt.wikipedia.org/wiki/Livro_digital</url>
+        <example correction="livros eletrónicos">Escritores e editores possuem uma grande variedade de formatos à disposição quando se trata de <marker>e-books</marker>, cada um com suas vantagens e desvantagens.</example>
+      </rule>
+      <rule>
+        <pattern>
+		      <token>e</token>
+		      <token spacebefore="no">-</token>
+          <token spacebefore="no">zine</token>
+        </pattern>
+        <message>'e-zine' é um estrangeirismo. É preferível dizer <suggestion>revista eletrónica</suggestion>.</message>
+        <url>https://pt.wikipedia.org/wiki/E-zine</url>
+        <example correction="Revista eletrónica"><marker>E-zine</marker> é um "fanzine eletrónica".</example>
+      </rule>
+      <rule>
+        <pattern>
+		      <token>e</token>
+		      <token spacebefore="no">-</token>
+          <token spacebefore="no">zines</token>
+        </pattern>
+        <message>'e-zine' é um estrangeirismo. É preferível dizer <suggestion>revistas eletrónicas</suggestion>.</message>
+        <url>https://pt.wikipedia.org/wiki/E-zine</url>
+        <example correction="revistas eletrónicas">Existem também <marker>e-zines</marker> comerciais, mais voltados para a venda de espaços publicitários do que para a produção de conteúdo.</example>
+      </rule>
+    </rulegroup>
+  </category>
     <!-- TODO Temporary use only for minimum inconsistency. Regression test in pt-PT then move to pt-AO and pt-MZ. Change id back to CASING after moving.
  <category id='CASING_AO45' name='Capitalização' type='grammar'>
 

@@ -36,11 +36,11 @@ import org.languagetool.tagging.disambiguation.rules.XmlRuleDisambiguator;
 /**
  * Hybrid chunker-disambiguator for Catalan
  * 
- * @author Marcin Miłkowski
+ * @author Jaume Ortolà
  */
 public class CatalanHybridDisambiguator extends AbstractDisambiguator {
 
-  private final Disambiguator chunker = new MultiWordChunker("/ca/multiwords.txt", true);
+  private final Disambiguator chunker = new MultiWordChunker("/ca/multiwords.txt", true, true);
   private final Disambiguator disambiguator = new XmlRuleDisambiguator(new Catalan());
 
   /**

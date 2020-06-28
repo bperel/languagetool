@@ -118,6 +118,8 @@ public class TokenAgreementPrepNounRuleTest {
     assertEmptyMatch("Вони замість Андрій вибрали Юрій");
     assertEmptyMatch("час від часу нам доводилось");
     assertEmptyMatch("ні до чого доброго силові дії не призведуть");
+    
+    assertEmptyMatch("у святая святих");
 //    assertEmptyMatch("Імена від Андрій до Юрій");  // називний між від і до рідко зустрічається але такий виняток ховає багато помилок 
 
 //    assertEmptyMatch("як у Конана Дойла")).length); //TODO
@@ -223,7 +225,10 @@ public class TokenAgreementPrepNounRuleTest {
     
     matches = ruleMatch("— О пан Єзус, захисти їх!");
     assertEquals(1, matches.length);
-    
+
+    matches = ruleMatch("до Ленінграду");
+    assertEquals(1, matches.length);
+
 //    matches = ruleMatch("На фото: З Голлівуду Яринка Шуст привезла дві золоті медалі");
 //    assertEquals(1, matches.length);
   }

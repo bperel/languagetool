@@ -1,5 +1,5 @@
 FROM maven:3-jdk-11 as build
-ENV LANGUAGETOOL_VERSION=4.9.1
+ENV LANGUAGETOOL_VERSION=5.0
 MAINTAINER Bruno Perel <brunoperel@gmail.com>
 
 WORKDIR /srv
@@ -20,7 +20,7 @@ EXPOSE 8010
 
 
 FROM openjdk:11-jre-buster as languagetool-wikipedia
-ENV LANGUAGETOOL_VERSION=4.9.1
+ENV LANGUAGETOOL_VERSION=5.0.0
 COPY --from=build /srv/languagetool/languagetool-wikipedia/target/LanguageTool-wikipedia-$LANGUAGETOOL_VERSION /srv/languagetool-wikipedia
 COPY ./import-dump.sh /home
 

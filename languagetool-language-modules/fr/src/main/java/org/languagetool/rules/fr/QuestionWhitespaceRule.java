@@ -62,13 +62,30 @@ public class QuestionWhitespaceRule extends Rule {
         new PatternTokenBuilder().tokenRegex("[\\(\\)D]").setIsWhiteSpaceBefore(false).build()
       ),
       Arrays.asList( // times like 23:20
-        new PatternTokenBuilder().tokenRegex("\\d{1,2}").build(),
+        new PatternTokenBuilder().tokenRegex(".*\\d{1,2}").build(),
         new PatternTokenBuilder().token(":").build(),
         new PatternTokenBuilder().tokenRegex("\\d{1,2}").build()
       ),
       Arrays.asList( // "??"
         new PatternTokenBuilder().tokenRegex("[?!]").build(),
         new PatternTokenBuilder().tokenRegex("[?!]").build()
+      ),
+      Arrays.asList( // mac address
+        new PatternTokenBuilder().tokenRegex("[a-z0-9]{2}").build(),
+        new PatternTokenBuilder().token(":").build(),
+        new PatternTokenBuilder().tokenRegex("[a-z0-9]{2}").build(),
+        new PatternTokenBuilder().token(":").build(),
+        new PatternTokenBuilder().tokenRegex("[a-z0-9]{2}").build()
+      ),
+      Arrays.asList( // csv markup (not sure why we need this, but there were a lot of users ignoring this specific case)
+        new PatternTokenBuilder().token(";").build(),
+        new PatternTokenBuilder().tokenRegex(".+").setIsWhiteSpaceBefore(false).build(),
+        new PatternTokenBuilder().token(";").setIsWhiteSpaceBefore(false).build()
+      ),
+      Arrays.asList( // csv markup (not sure why we need this, but there were a lot of users ignoring this specific case)
+        new PatternTokenBuilder().tokenRegex(".+").setIsWhiteSpaceBefore(false).build(),
+        new PatternTokenBuilder().token(";").setIsWhiteSpaceBefore(false).build(),
+        new PatternTokenBuilder().tokenRegex(".+").setIsWhiteSpaceBefore(false).build()
       )
     );
 
@@ -103,7 +120,10 @@ public class QuestionWhitespaceRule extends Rule {
         continue;
       }
       String token = tokens[i].getToken();
-      boolean isWhiteBefore = tokens[i].isWhitespaceBefore();
+
+      // using isWhitespaceBefore() will not work (breaks test)
+      boolean isWhiteBefore = i > 0 ? tokens[i - 1].isWhitespace() : false;
+
       String msg = null;
       int fixFromPos = 0;
       int fixToPos = 0;

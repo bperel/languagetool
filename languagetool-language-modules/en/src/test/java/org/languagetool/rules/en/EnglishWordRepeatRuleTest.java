@@ -52,6 +52,8 @@ public class EnglishWordRepeatRuleTest {
     assertGood("Hip Hip Hooray");
     assertBad("Hip Hip");
     assertGood("It's S.T.E.A.M.");
+    assertGood("Ok ok ok!");
+    assertGood("O O O");
     assertGood("Alice and Bob had had a long-standing relationship.");
     assertBad("I may may awake up.");
     assertBad("That is May May.");
@@ -65,8 +67,11 @@ public class EnglishWordRepeatRuleTest {
     assertBad("You can feel confident that that this administration will continue to support a free and open Internet.");
     assertBad("This is is a test.");
     assertGood("b a s i c a l l y");
+    assertGood("You can contact E.ON on Instagram.");
     assertBad("But I i was not sure.");
     assertBad("I I am the best.");
+    assertGood("In a land far far away.");
+    assertGood("I love you so so much.");
   }
 
   private void assertGood(String sentence) throws IOException {

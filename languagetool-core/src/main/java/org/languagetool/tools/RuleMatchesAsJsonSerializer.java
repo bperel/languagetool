@@ -184,7 +184,12 @@ public class RuleMatchesAsJsonSerializer {
   private void writeReplacements(JsonGenerator g, RuleMatch match) throws IOException {
     g.writeArrayFieldStart("replacements");
     boolean autoCorrect = match.isAutoCorrect();
+    int i = 0;
     for (SuggestedReplacement replacement : match.getSuggestedReplacementObjects()) {
+      i++;
+      if (compactMode == 1 && i > 5) {  // these clients only show up to 5 suggestions anyway
+        break;
+      }
       g.writeStartObject();
       g.writeStringField("value", replacement.getReplacement());
       if (replacement.getShortDescription() != null) {
@@ -226,27 +231,34 @@ public class RuleMatchesAsJsonSerializer {
 
   private void writeRule(JsonGenerator g, RuleMatch match) throws IOException {
     g.writeObjectFieldStart("rule");
-    g.writeStringField("id", match.getRule().getId());
-    if (match.getRule() instanceof AbstractPatternRule) {
-      AbstractPatternRule pRule = (AbstractPatternRule) match.getRule();
+    Rule rule = match.getRule();
+    g.writeStringField("id", rule.getId());
+    if (rule instanceof AbstractPatternRule) {
+      AbstractPatternRule pRule = (AbstractPatternRule) rule;
       if (pRule.getSubId() != null) {
         g.writeStringField("subId", pRule.getSubId());
       }
+      if (pRule.getSourceFile() != null && compactMode != 1) {
+        g.writeStringField("sourceFile", pRule.getSourceFile().replaceFirst(".*/", ""));
+      }
     }
-    g.writeStringField("description", match.getRule().getDescription());
-    g.writeStringField("issueType", match.getRule().getLocQualityIssueType().toString());
-    if (match.getUrl() != null || match.getRule().getUrl() != null) {
+    g.writeStringField("description", rule.getDescription());
+    g.writeStringField("issueType", rule.getLocQualityIssueType().toString());
+    if (rule.isDefaultTempOff()) {
+      g.writeBooleanField("tempOff", true);
+    }
+    if (match.getUrl() != null || rule.getUrl() != null) {
       g.writeArrayFieldStart("urls");  // currently only one, but keep it extensible
       g.writeStartObject();
       if (match.getUrl() != null) {
         g.writeStringField("value", match.getUrl().toString());
       } else {
-        g.writeStringField("value", match.getRule().getUrl().toString());
+        g.writeStringField("value", rule.getUrl().toString());
       }
       g.writeEndObject();
       g.writeEndArray();
     }
-    writeCategory(g, match.getRule().getCategory());
+    writeCategory(g, rule.getCategory());
     g.writeEndObject();
   }
 

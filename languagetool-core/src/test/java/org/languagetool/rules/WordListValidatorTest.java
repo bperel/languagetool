@@ -31,25 +31,27 @@ import static junit.framework.TestCase.fail;
 public class WordListValidatorTest {
 
   private static final String VALID_CHARS =
-          "[ 0-9a-zA-ZöäüÖÄÜßëçèéáàóòÈÉÁÀÓÒãñíîş&" +
+          "[ 0-9a-zA-ZöäüÖÄÜßëçèéáàóòÈÉÁÀÓÒÍãñíîş&" +
           "___INSERT___" +
           "Œ€ūαΑβΒγɣΓδΔεΕζΖηΗθΘιΙκΚλΛμΜνΝξΞοΟπΠρΡσΣτΤυΥφΦχΧψΨωΩάΆέΈίΊήΉύΎϊϋΰΐœţłń" +
           "ŚśōżúïÎôêâû" +
           "'’" +
           "./-]+" +
-          "|[khmcdµ]?m[²³]|°[CFR]|CO₂-?.*|mc²";
+          "|[khmcdµ]?m[²³]|°[CFR]|C?O₂-?.*|mc²";
 
   // Words that are valid but with special characters so that we don't want to
   // allow them in general:
   private static final Set<String> VALID_WORDS = new HashSet<>(Arrays.asList(
           "Będzin",
           "Bhagavad-gītā",
+          "Sønderjylland/S",
           "Božena/S",
           "Brăila/S",
           "Timișoara/S",
           "Tromsø/S",
           "Solidarność",
           "Salihamidžić/S",
+          "Darʿā",  // de
           "veni, vidi, vici", // en
           "Food+Tech Connect", // en
           "comme ci, comme ça", // en
@@ -57,6 +59,7 @@ public class WordListValidatorTest {
           "herõon", // en
           "herõons", // en
           "Võro",  // en
+          "Łukasz",
           "Čakavian",
           "Erdoğan",
           "Štokavian",
@@ -104,6 +107,8 @@ public class WordListValidatorTest {
           "S&P",
           "ČSSR",
           "V&D",
+          "İlkay",
+          "Gündoğan",
           // Greek letters / Mathematics and physics variables
           "Α", "Β", "Γ", "Δ", "Ε", "Ζ", "Η", "Θ", "Ι", "Κ", "Λ", "Μ", "Ν", "Ξ", "Ο", "Π", "Ρ", "Σ", "Τ", "Υ", "Φ", "Χ", "Ψ", "Ω", 
           "α", "β", "γ", "δ", "ε", "ζ", "η", "θ", "ι", "κ", "λ", "μ", "ν", "ξ", "ο", "π", "ρ", "σ", "τ", "υ", "φ", "χ", "ψ", "ω"          

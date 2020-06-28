@@ -241,12 +241,16 @@ COVID-19
 SEA
 Guichard
 Email
+Emails
 email
+emails
 Batignolles #name
 Bélanger #name
 A1
 A2
+A3
 BPCE #name
+B5
 B6
 Bygmalion #name
 QR
@@ -268,3 +272,252 @@ Chloë
 H1N1
 Scrum
 Ahuntsic-Cartierville
+LT #abbr
+Biscarrosse #name
+Anouar #name
+BAFA #abbr
+Annaëlle #name
+Chenonceaux #name
+LLCER #abbr
+Alessio #name
+B2C
+B2B
+2FA
+BTSA #abbr
+CDA #abbr
+Claudius #name
+mAh #unit
+mph #unit
+fps #unit
+BE #abbr
+Guérin #name
+CIJ #abbr
+CPI #abbr
+IPv4
+IPv6
+AGV #abbr
+coworking #eng
+CCF #abbr
+e-book
+e-books
+Carrère
+ADM #abbr
+CCF #abbr
+CNUCED #abbr
+Astérix #name
+EPS #abbr
+FC #abbr #name
+CDC #abbr
+RT #abbr
+AA #abbr
+AMP #abbr
+Belfius #name
+RPM #abbr
+Natalie #name
+ANSEJ #abbr
+déconfinement
+Mpx
+LTE
+GSM
+EDGE
+3GPP
+Sunrise
+Vidéotron
+Proximus
+Adalberto #name
+Agassi #name
+AES #abbr
+AFPA #abbr
+Archambault #name
+Arnault #name
+SC #abbr
+BPI #abbr
+BRICS #abbr
+Santa Barbara #name
+Santa Fe #name
+Santa Cruz #name
+Santa Clarita #name
+Santa Marta
+2π
+CESU #abbr
+ADLC #abbr
+Castorama #name
+4DX #name
+Bernier #name
+ACT #abbr
+CHSLD #abbr
+CSE #abbr
+DLC #abbr
+AMP #abbr #name
+RT #name #abbr
+CSG #abbr
+Aboubacar #name
+Caecilius #name
+Cornélius #name
+CPA #abbr
+CPC #abbr
+CPM #abbr
+DIY #abbr
+devops
+DevOps
+OFSP #abbr
+PESTEL #abbr
+CDG #abbr
+GTA #name
+PSN #abbr
+Telegram #name
+Classroom #name
+gaming #eng
+game #eng
+games #eng
+Louisbourg #name
+Montalieu-Vercieu #name
+Saskatoon
+responsive
+TV5Monde
+TV5 Monde
+SWOT #abbr
+PBL #abbr
+scan
+Michaud #name
+codéthyline
+déconfiner
+climatogramme
+climatogrammes
+Evelina #name
+Crémieu #name
+covid
+COVID
+Covid
+covid-19
+COVID-19
+Covid-19
+corona
+tracking
+shooting
+fashion
+lead
+leads
+network
+networks
+firewall
+firewalls
+marketplace
+marketplaces
+Transatel
+Buckingham
+UI
+PRA
+RVB
+BDE
+Bpifrance
+DPO
+Évry-Courcouronnes
+OLED
+SaaS
+Twingo
+Unsplash
+SUV
+VPS
+QC
+Camila
+CS
+KPI
+KPIs
+KYC
+curl
+Strauss-Kahn
+Teams #Microsoft Teams
+CN
+Lamontagne
+Traoré
+SD
+EPN
+Pronote #name
+crowdfunding #eng
+consulting #eng
+Lévesque #name
+RSE #abbr
+cookie
+cookies
+panel
+panels
+briefing
+briefings
+call #ca
+calls #ca
+kit
+kits
+green
+greens
+patch
+patchs
+patches
+bachelor
+bachelors
+drive
+drives
+coaching
+coach
+coachs
+coaches
+lead
+leads
+brainstorming
+fake news
+okay
+Lauzon #name
+bifidobacterium
+Gianni #name
+Kwame #name
+HDR #abbr
+MBA #abbr
+RSE #abbr
+VM #abbr
+CBD #abbr
+FS #abbr
+LP #abbr
+BDSM #abbr
+Jungkook #name
+LLC #abbr
+SCPI #abbr
+Tancarville #name
+TSA #abbr
+Tyson #name
+GPEC #abbr
+SM #abbr
+Drivy #name
+Amersfoort #name
+Anderson #name
+Cristina #name
+CSDM #abbr
+hydroxychloroquine
+NextRadioTV #name
+open market #eng
+open markets #eng
+story-board #eng
+story-boards #eng
+landing page #eng
+landing pages #eng
+insight #eng
+insights #eng
+snapshot #eng
+snapshots #eng
+top model #eng
+top models #eng
+e-cig #eng
+e-cigs #eng
+e-cigarette #eng
+e-cigarettes #eng
+EDC #abbr
+DCM #abbr
+display #eng
+displays #eng
+testing
+testings
+trading
+THC #abbr
+Bénichou #name
+Messaoudi #name
+Adriano #name
+Andréanne #name

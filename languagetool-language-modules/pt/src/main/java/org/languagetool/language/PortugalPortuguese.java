@@ -18,18 +18,13 @@
  */
 package org.languagetool.language;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ResourceBundle;
-
 import org.languagetool.Language;
 import org.languagetool.UserConfig;
-import org.languagetool.rules.*;
-import org.languagetool.rules.pt.PostReformPortugueseCompoundRule;
-import org.languagetool.rules.pt.PostReformPortugueseDashRule;
-import org.languagetool.rules.pt.PortugalPortugueseReplaceRule;
-import org.languagetool.rules.pt.PortugueseAgreementReplaceRule;
+import org.languagetool.rules.Rule;
+import org.languagetool.rules.pt.*;
+
+import java.io.IOException;
+import java.util.*;
 
 public class PortugalPortuguese extends Portuguese {
 
@@ -48,14 +43,16 @@ public class PortugalPortuguese extends Portuguese {
     List<Rule> rules = new ArrayList<>();
     rules.addAll(super.getRelevantRules(messages, userConfig, motherTongue, altLanguages));
     rules.add(new PostReformPortugueseCompoundRule(messages));
-    rules.add(new PostReformPortugueseDashRule());
+    rules.add(new PostReformPortugueseDashRule(messages));
     rules.add(new PortugalPortugueseReplaceRule(messages));
     rules.add(new PortugueseAgreementReplaceRule(messages));
+    rules.add(new PortugueseBarbarismsRule(messages, "/pt/barbarisms-pt-PT.txt"));
+    rules.add(new PortugueseArchaismsRule(messages, "/pt/archaisms-pt-PT.txt"));
     return rules;
   }
 
   @Override
-  public int getPriorityForId(String id) {
+  protected int getPriorityForId(String id) {
     switch (id) {
       case "PT_COMPOUNDS_POST_REFORM":         return  1;
       case "PORTUGUESE_OLD_SPELLING_INTERNAL": return -9;

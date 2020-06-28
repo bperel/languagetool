@@ -43,6 +43,7 @@ import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * Dialog that offers the available rules so they can be turned on/off
@@ -415,6 +416,19 @@ public class ConfigurationDialog implements ActionListener {
     
     jPane.add(new JScrollPane(getUnderlineColorPanel(rules)), cons);
     
+    if(insideOffice) {
+      JCheckBox markSingleCharBold = new JCheckBox(Tools.getLabel(messages.getString("guiMarkSingleCharBold")));
+      markSingleCharBold.setSelected(config.markSingleCharBold());
+      markSingleCharBold.addItemListener(e -> config.setMarkSingleCharBold(markSingleCharBold.isSelected()));
+      JLabel dummyLabel = new JLabel(" ");
+      cons.weightx = 0.0f;
+      cons.weighty = 0.0f;
+      cons.gridx = 0;
+      cons.gridy++;
+      jPane.add(dummyLabel, cons);
+      jPane.add(markSingleCharBold, cons);
+    }
+    
     Container contentPane = dialog.getContentPane();
     contentPane.setLayout(new GridBagLayout());
     cons = new GridBagConstraints();
@@ -671,7 +685,12 @@ public class ConfigurationDialog implements ActionListener {
         if(serverName.isEmpty()) {
           serverName = null;
         }
-        config.setOtherServerUrl(serverName);
+        if (config.isValidServerUrl(serverName)) {
+          otherServerNameField.setForeground(Color.BLACK);
+          config.setOtherServerUrl(serverName);
+        } else {
+          otherServerNameField.setForeground(Color.RED);
+        }
       }
     });
 
@@ -748,6 +767,27 @@ public class ConfigurationDialog implements ActionListener {
     cons.gridy++;
     portPanel.add(serverPanel, cons);
 
+    cons.insets = new Insets(0, 4, 0, 0);
+    cons.gridx = 0;
+    cons.gridy++;
+    JLabel dummyLabel4 = new JLabel(" ");
+    portPanel.add(dummyLabel4, cons);
+    JCheckBox useLtDictionaryBox = new JCheckBox(Tools.getLabel(messages.getString("guiUseLtDictionary")));
+    useLtDictionaryBox.setSelected(config.useLtDictionary());
+    useLtDictionaryBox.addItemListener(e -> {
+      config.setUseLtDictionary(useLtDictionaryBox.isSelected());
+    });
+    cons.gridy++;
+    portPanel.add(useLtDictionaryBox, cons);
+
+    JCheckBox noSynonymsAsSuggestionsBox = new JCheckBox(Tools.getLabel(messages.getString("guiNoSynonymsAsSuggestions")));
+    noSynonymsAsSuggestionsBox.setSelected(config.noSynonymsAsSuggestions());
+    noSynonymsAsSuggestionsBox.addItemListener(e -> {
+      config.setNoSynonymsAsSuggestions(noSynonymsAsSuggestionsBox.isSelected());
+    });
+    cons.gridy++;
+    portPanel.add(noSynonymsAsSuggestionsBox, cons);
+    
   }
   
   private int showRemoteServerHint(Component component, boolean otherServer) {
@@ -967,7 +1007,7 @@ public class ConfigurationDialog implements ActionListener {
     defaultButton.addActionListener(e -> {
       List<String> saveProfiles = new ArrayList<String>(); 
       saveProfiles.addAll(config.getDefinedProfiles());
-      String saveCurrent = config.getCurrentProfile() == null ? null : new String(config.getCurrentProfile());
+      String saveCurrent = config.getCurrentProfile() == null ? null : config.getCurrentProfile();
       config.initOptions();
       config.addProfiles(saveProfiles);
       config.setCurrentProfile(saveCurrent);
@@ -1352,10 +1392,10 @@ public class ConfigurationDialog implements ActionListener {
   
   private String[] getUnderlineTypes() {
     String[] types = {
-        new String(messages.getString("guiUTypeWave")),
-        new String(messages.getString("guiUTypeBoldWave")),
-        new String(messages.getString("guiUTypeBold")),
-        new String(messages.getString("guiUTypeDash")) };
+      messages.getString("guiUTypeWave"),
+      messages.getString("guiUTypeBoldWave"),
+      messages.getString("guiUTypeBold"),
+      messages.getString("guiUTypeDash")};
     return types;
   }
 
@@ -1468,16 +1508,6 @@ public class ConfigurationDialog implements ActionListener {
       cons.gridy++;
     }
     
-    if(insideOffice) {
-      JCheckBox markSingleCharBold = new JCheckBox(Tools.getLabel(messages.getString("guiMarkSingleCharBold")));
-      markSingleCharBold.setSelected(config.markSingleCharBold());
-      markSingleCharBold.addItemListener(e -> config.setMarkSingleCharBold(markSingleCharBold.isSelected()));
-      JLabel dummyLabel = new JLabel(" ");
-      panel.add(dummyLabel, cons);
-      cons.gridy++;
-      panel.add(markSingleCharBold, cons);
-    }
-
     return panel;
   }
 

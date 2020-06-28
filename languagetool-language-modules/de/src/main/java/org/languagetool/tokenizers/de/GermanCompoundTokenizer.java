@@ -48,6 +48,13 @@ public class GermanCompoundTokenizer implements Tokenizer {
     static Set<String> extendedList() {
       Set<String> words = new HashSet<>(EmbeddedGermanDictionary.getWords());
       // add compound parts here so we don't need to update JWordSplitter for every missing word we find:
+      words.add("online");
+      words.add("affin");
+      words.add("affine");
+      words.add("affiner");
+      words.add("affines");
+      words.add("affinen");
+      words.add("affinem");
       words.add("trockner");
       words.add("thermostat");
       words.add("thermostats");
@@ -80,6 +87,37 @@ public class GermanCompoundTokenizer implements Tokenizer {
       words.add("freundlicher");
       words.add("freundlichen");
       words.add("freundlichem");
+      words.add("gelegenen");  // e.g. höchstgelegenen
+      words.add("gelegenes");
+      words.add("gelegene");
+      words.add("gelegen");
+      words.add("neurogen");
+      words.add("neurogene");
+      words.add("neurogenes");
+      words.add("neurogenen");
+      words.add("autogene");
+      words.add("autogenes");
+      words.add("autogenen");
+      words.add("biogenetisch");
+      words.add("biogenetische");
+      words.add("biogenetischen");
+      words.add("biogenetisches");
+      words.add("fotogene");
+      words.add("fotogenes");
+      words.add("fotogenen");
+      words.add("erlegene");
+      words.add("erlegenes");
+      words.add("erlegenen");
+      words.add("genesenden");
+      words.add("genesender");
+      words.add("geneset");
+      words.add("telegene");
+      words.add("telegenen");
+      words.add("telegenes");
+      words.add("genetisch");
+      words.add("genetische");
+      words.add("genetischen");
+      words.add("genetisches");
       return words;
     }
   }
@@ -96,6 +134,11 @@ public class GermanCompoundTokenizer implements Tokenizer {
     wordSplitter.addException("Buchungstricks", asList("Buchungs", "tricks"));
     wordSplitter.addException("Rückzugsorte", asList("Rückzugs", "orte"));
     wordSplitter.addException("Malerarbeiten", asList("Maler", "arbeiten"));
+    wordSplitter.addException("Siebengestirn", asList("Sieben", "gestirn"));
+    wordSplitter.addException("Siebengestirne", asList("Sieben", "gestirne"));
+    wordSplitter.addException("Siebengestirnen", asList("Sieben", "gestirnen"));
+    wordSplitter.addException("Siebengestirns", asList("Sieben", "gestirns"));
+    wordSplitter.addException("Siebengestirnes", asList("Sieben", "gestirnes"));
     wordSplitter.setStrictMode(strictMode);
     wordSplitter.setMinimumWordLength(3);
   }

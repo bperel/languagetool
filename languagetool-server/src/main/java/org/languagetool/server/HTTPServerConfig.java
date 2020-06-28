@@ -491,7 +491,6 @@ public class HTTPServerConfig {
    * Maximum text length for users that can identify themselves with an API key.
    * @since 4.2
    */
-  @Experimental
   int getMaxTextLengthWithApiKey() {
     return maxTextLengthWithApiKey;
   }
@@ -558,7 +557,6 @@ public class HTTPServerConfig {
   }
 
   /** @since 4.2 */
-  @Experimental
   long getMaxCheckTimeWithApiKeyMillis() {
     return maxCheckTimeWithApiKeyMillis;
   }
@@ -585,6 +583,7 @@ public class HTTPServerConfig {
    * Get base directory for neural network models or {@code null}
    * @since 4.4
    */
+  @Deprecated
   public File getNeuralNetworkModelDir() {
     return neuralNetworkModelDir;
   }
@@ -793,7 +792,6 @@ public class HTTPServerConfig {
    * @since 4.0
    */
   @Nullable
-  @Experimental
   String getHiddenMatchesServer() {
     return hiddenMatchesServer;
   }
@@ -802,7 +800,6 @@ public class HTTPServerConfig {
    * Timeout in milliseconds for querying {@link #getHiddenMatchesServer()}.
    * @since 4.0
    */
-  @Experimental
   int getHiddenMatchesServerTimeout() {
     return hiddenMatchesServerTimeout;
   }
@@ -811,7 +808,6 @@ public class HTTPServerConfig {
    * Period to skip requests to hidden matches server after a timeout (in milliseconds)
    * @since 4.5
    */
-  @Experimental
   int getHiddenMatchesServerFailTimeout() {
     return hiddenMatchesServerFailTimeout;
   }
@@ -820,7 +816,6 @@ public class HTTPServerConfig {
    * Languages for which {@link #getHiddenMatchesServer()} will be queried.
    * @since 4.0
    */
-  @Experimental
   List<Language> getHiddenMatchesLanguages() {
     return hiddenMatchesLanguages;
   }
@@ -848,7 +843,6 @@ public class HTTPServerConfig {
    * @since 4.2
    */
   @Nullable
-  @Experimental
   String getDatabaseDriver() {
     return dbDriver;
   }
@@ -856,7 +850,6 @@ public class HTTPServerConfig {
   /**
    * @since 4.2
    */
-  @Experimental
   void setDatabaseDriver(String dbDriver) {
     this.dbDriver = dbDriver;
   }
@@ -866,7 +859,6 @@ public class HTTPServerConfig {
    * @since 4.2
    */
   @Nullable
-  @Experimental
   String getDatabaseUrl() {
     return dbUrl;
   }
@@ -874,7 +866,6 @@ public class HTTPServerConfig {
   /**
    * @since 4.2
    */
-  @Experimental
   void setDatabaseUrl(String dbUrl) {
     this.dbUrl = dbUrl;
   }
@@ -884,7 +875,6 @@ public class HTTPServerConfig {
    * @since 4.2
    */
   @Nullable
-  @Experimental
   String getDatabaseUsername() {
     return dbUsername;
   }
@@ -892,7 +882,6 @@ public class HTTPServerConfig {
   /**
    * @since 4.2
    */
-  @Experimental
   void setDatabaseUsername(String dbUsername) {
     this.dbUsername = dbUsername;
   }
@@ -902,7 +891,6 @@ public class HTTPServerConfig {
    * @since 4.2
    */
   @Nullable
-  @Experimental
   String getDatabasePassword() {
     return dbPassword;
   }
@@ -910,7 +898,6 @@ public class HTTPServerConfig {
   /**
    * @since 4.2
    */
-  @Experimental
   void setDatabasePassword(String dbPassword) {
     this.dbPassword = dbPassword;
   }
@@ -919,7 +906,6 @@ public class HTTPServerConfig {
    * Whether meta data about each search (like in the logfile) should be logged to the database.
    * @since 4.4
    */
-  @Experimental
   void setDatabaseLogging(boolean logging) {
     this.dbLogging = logging;
   }
@@ -927,7 +913,6 @@ public class HTTPServerConfig {
   /**
    * @since 4.4
    */
-  @Experimental
   boolean getDatabaseLogging() {
     return this.dbLogging;
   }
@@ -951,7 +936,6 @@ public class HTTPServerConfig {
    * @since 4.5
    * @return threshold for rule computation time until a warning gets logged, in milliseconds
    */
-  @Experimental
   public int getSlowRuleLoggingThreshold() {
     return slowRuleLoggingThreshold;
   }
@@ -989,7 +973,6 @@ public class HTTPServerConfig {
    * @since 4.4
    * See if a specific A/B-Test is to be run
    */
-  @Experimental
   @Nullable
   public String getAbTest() {
     return abTest;
@@ -999,7 +982,6 @@ public class HTTPServerConfig {
    * @since 4.4
    * Enable a specific A/B-Test to be run (or null to disable all tests)
    */
-  @Experimental
   public void setAbTest(@Nullable String abTest) {
     if (abTest != null && abTest.trim().isEmpty()) {
       this.abTest = null;
@@ -1009,7 +991,7 @@ public class HTTPServerConfig {
   }
 
   /**
-   * Clients that a A/B test runs on; null -> disabled
+   * Clients that a A/B test runs on; null -&gt; disabled
    * @since 4.9
    */
   @Experimental
@@ -1019,7 +1001,7 @@ public class HTTPServerConfig {
   }
 
   /**
-   * Clients that a A/B test runs on; null -> disabled
+   * Clients that a A/B test runs on; null -&gt; disabled
    * @since 4.9
    */
   @Experimental

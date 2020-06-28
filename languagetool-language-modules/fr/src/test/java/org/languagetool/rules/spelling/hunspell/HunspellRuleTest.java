@@ -29,7 +29,8 @@ import org.languagetool.tagging.disambiguation.Disambiguator;
 import java.io.IOException;
 import java.util.Arrays;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 public class HunspellRuleTest {
 
@@ -44,6 +45,8 @@ public class HunspellRuleTest {
     test("Le cœur, la sœur.", 0);
 
     test("LanguageTool", 0);
+    
+    test("L'ONU", 0);
 
     // Tests with dash and apostrophes.
     test("Il arrive après-demain.", 0);
@@ -74,7 +77,7 @@ public class HunspellRuleTest {
 
     final French frenchWithDisambiguator = new French(){
       @Override
-      public Disambiguator getDisambiguator() {
+      public Disambiguator createDefaultDisambiguator() {
         return new TestFrenchDisambiguator();
       }
     };

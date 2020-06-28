@@ -535,3 +535,12 @@ Turnusärztin
 Turnusärztinnen
 Öffi/S
 Nightjet/S
+Billa/S #name
+Bursektomie/N
+Brömmel/S #name
+Boubacar/S #name
+Carpendale/S #name
+Carbonara/S #name
+Anonymverfügung
+Anonymverfügungen
+Krot

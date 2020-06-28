@@ -654,7 +654,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
           <token regexp="yes">[йїєяюyu].*</token>
         </pattern>
         <message>Перед й, ї, є, я, ю треба писати і: <suggestion>і</suggestion> \2</message>
-        <url>https://r2u.org.ua/pravopys/pravXXI/13.html</url>
+        <url>https://r2u.org.ua/pravopys/pravXXI/12.html</url>
         <example>Хто і як?</example>
         <example correction="і">Хто <marker>й</marker> як?</example>
         <example correction="і">Йому <marker>й</marker> їй?</example>
@@ -669,7 +669,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
           <token regexp="yes">([уеіаоиeioa].*|11?)</token>
         </pattern>
         <message>Між двома голосними варто писати й: \1 <suggestion>й</suggestion> \3, \1 <suggestion>та</suggestion> \3</message>
-        <url>https://r2u.org.ua/pravopys/pravXXI/13.html</url>
+        <url>https://r2u.org.ua/pravopys/pravXXI/12.html</url>
         <example correction="й|та">Марко <marker>і</marker> Іван.</example>
         <example correction="й|та">2 <marker>і</marker> 1.</example>
         <example correction="й|та">увійти <marker>і</marker> обідати</example>
@@ -685,7 +685,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
           <token regexp="yes">[^йїюя].*</token>
         </pattern>
         <message>Після голосної зі звуком і/и варто писати й або та: \1 <suggestion>й</suggestion> \3, \1 <suggestion>та</suggestion> \3</message>
-        <url>https://r2u.org.ua/pravopys/pravXXI/13.html</url>
+        <url>https://r2u.org.ua/pravopys/pravXXI/12.html</url>
         <example correction="й|та">увійти <marker>і</marker> обідати</example>
         <example>сісти і їхати</example>
       </rule>
@@ -1468,7 +1468,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
           <token>на</token>
         </marker>
       </pattern>
-      <message>Хоча вислів незважаючи на засвідчений у словниках, текстах і чинному правописі, у багатьох випадках те саме значення можна передати іншими словами</message>
+      <message>Хоча вислів «незважаючи на» засвідчений у словниках, текстах і чинному правописі, у багатьох випадках те саме значення можна передати іншими словами</message>
       <suggestion>попри</suggestion>
       <suggestion>дарма що</suggestion>
       <suggestion>всупереч</suggestion>
@@ -1714,6 +1714,161 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
       <example>накидав зверху каміння та давай носити воду</example>
     </rule>
 
+
+    <rule id="verb_short" name="Вкорочені форми дієслів">
+      <antipattern>
+        <token negate_pos="yes" postag="SENT_START"/>
+        <token case_sensitive="yes" regexp="yes">[А-ЯІЇЄҐ].*</token>
+      </antipattern>
+      <pattern>
+        <token postag_regexp="yes" postag="verb.*short.*">
+          <exception regexp="yes">бува|зна|[ву]?мить|занять|стать|постать|повість|знать|чуть|нить|понять</exception>
+          <exception case_sensitive="yes" regexp="yes">Міша|Кива|Чита</exception>
+          <exception postag_regexp="yes" postag="verb.*:3(?!.*short).*|verb.*impr.*"/>
+        </token>
+      </pattern>
+      <message>Ця дієслівна форма обмежена усним та поетичним мовленням.</message>
+      <suggestion><match no="1" postag_regexp="yes" postag="(verb.*):short(.*)" postag_replace="$1$2"/></suggestion>
+      <example correction="співає">Він <marker>співа</marker>.</example>
+      <example correction="співати">давай <marker>співать</marker>.</example>
+      <example correction="спадає">і він <marker>спада</marker></example>
+      <example>він дає.</example>
+      <example>й бува.</example>
+      <example>Ігоря Поклада</example>
+      <example>стрілять</example>
+      <example>зменшить</example>
+      <example>поясніть</example>
+      <!-- handled (as adv) by simple replace -->
+      <example>чуть</example>
+    </rule>
+
+    <rule id="verb_impr_long" name="Варіативні форми наказового способу">
+      <pattern>
+        <token postag_regexp="yes" postag="verb.*impr.*long.*"/>
+      </pattern>
+      <message>Ця дієслівна форма обмежена усним та поетичним мовленням.</message>
+      <suggestion><match no="1" postag_regexp="yes" postag="(verb.*):long(.*)" postag_replace="$1$2"/></suggestion>
+      <example correction="окропіть">І <marker>окропіте</marker>.</example>
+    </rule>
+
+    <rule id="adj_long" name="Нестягнені форми прикметників">
+      <pattern>
+        <token postag_regexp="yes" postag="adj.*long.*">
+          <exception regexp="yes">цілую|багатії</exception>
+          <exception case_sensitive="yes" regexp="yes">Малая|Тая</exception>
+        </token>
+      </pattern>
+      <message>Ця прикметникова форма обмежена усним та поетичним мовленням.</message>
+      <suggestion><match no="1" postag_regexp="yes" postag="(adj.*):long(.*)" postag_replace="$1$2"/></suggestion>
+      <example correction="гарна"><marker>гарная</marker> галявина.</example>
+      <example>Сирії</example>
+      <example>цілую</example>
+    </rule>
+
+    <rule id="adv_short" name="Вкорочені форми порівняльного ступеня прислівників">
+      <pattern>
+        <token postag_regexp="yes" postag="adv.*short.*">
+          <exception regexp="yes">((що(як)?)?най)?(більш|менш|скоріш|перш)</exception>
+          <exception case_sensitive="yes">Гірш</exception>
+        </token>
+      </pattern>
+      <message>Ця прикметникова форма обмежена усним та поетичним мовленням.</message>
+      <suggestion><match no="1" regexp_match=".*ш" regexp_replace="$0е"/></suggestion>
+      <example correction="гарніше">все <marker>гарніш</marker>.</example>
+      <example>більш і менш</example>
+      <example>щонайбільш</example>
+    </rule>
+
+    <rule id="apo_short" name="Вкорочені форми слів">
+      <pattern>
+        <token postag_regexp="yes" postag=".*short.*" regexp="yes">'.*|.*'</token>
+      </pattern>
+      <message>Ця форма обмежена усним та поетичним мовленням.</message>
+      <example correction="">все <marker>'дно</marker>.</example>
+    </rule>
+
+    <rule id="archaism" name="Архаїзми">
+      <antipattern>
+        <token case_sensitive="yes" regexp="yes">Мо|Сю</token>
+        <token case_sensitive="yes" regexp="yes">[А-ЯІЇЄҐ][а-яіїєґ'-]+</token>
+      </antipattern>
+      <pattern>
+        <token postag_regexp="yes" postag=".*:arch.*">
+          <exception negate_pos="yes" postag_regexp="yes" postag=".*:arch.*|.*_END"/>
+        </token>
+      </pattern>
+      <message>Це слово є застарілим, архаїчним або діалектним.</message>
+      <example correction="">І <marker>сього</marker> дня.</example>
+      <example>довгу</example>
+      <example>Анголи</example>
+      <example>китаянку Сю Ян</example>
+      <example>бігуна Мо Кейна</example>
+    </rule>
+
+    <rule id="vulgar" name="Вульгаризми">
+      <pattern>
+        <token postag_regexp="yes" postag=".*:vulg.*">
+          <exception negate_pos="yes" postag_regexp="yes" postag=".*:vulg.*|.*_END"/>
+        </token>
+      </pattern>
+      <message>Це слово є вульгарним.</message>
+      <example correction="">«все до <marker>сраки</marker>!»</example>
+      <example correction="">все до <marker>сраки</marker></example>
+    </rule>
+
+    <rule id="vocative_inanim" name="Кличний для неістот">
+      <antipattern>
+        <token postag_regexp="yes" postag="verb.*?:impr:.*"/>
+        <token>,</token>
+        <unify>
+          <feature id="gender"/>
+          <feature id="case"/>
+          <token postag_regexp="yes" postag="adj:.:v_kly.*" min="0"/>
+          <token postag_regexp="yes" postag="noun:inanim:.:v_kly.*"/>
+        </unify>
+      </antipattern>
+      <antipattern>
+        <token regexp="yes">ой|о|ох|агов|гей|нумо|годі|гудбай|привіт</token>
+        <unify>
+          <feature id="gender"/>
+          <feature id="case"/>
+          <token postag_regexp="yes" postag="adj:.:v_kly.*" min="0"/>
+          <token postag_regexp="yes" postag="noun:inanim:.:v_kly.*"/>
+        </unify>
+      </antipattern>
+      <antipattern>
+        <token regexp="yes">ой|о|ох|агов|гей|нумо|годі|гудбай|привіт</token>
+        <token min="0">ти</token>
+        <token>,</token>
+        <unify>
+          <feature id="gender"/>
+          <feature id="case"/>
+          <token postag_regexp="yes" postag="adj:.:v_kly.*" min="0"/>
+          <token postag_regexp="yes" postag="noun:inanim:.:v_kly.*"/>
+        </unify>
+      </antipattern>
+      <pattern>
+        <token postag_regexp="yes" postag="noun:inanim:.:v_kly.*">
+          <exception negate_pos="yes" postag_regexp="yes" postag="noun:inanim:.:v_kly.*|.*_END"/>
+          <exception regexp="yes">народе|батьківщино|У?країно|(не)?доле|громадо|вітре|надіє|гол[оі]вонько|святосте|достойносте|красо|діброво|(все)?світе|лишко|братіє|вітчизно|мордо|квітко|зіронько|зірочко|святине|годинонько|хвилинонько|маро|зброє|весно|ноче|редакціє|(ред)?колегіє|думо|націє|владо|верше|душко</exception>
+          <!-- рідкіші
+          <exception regexp="yes">трояндо|долино|книго|суде|радосте|скорбото|красо|шкуро|втіхо|завірюхо|чарочко|кровиночко|холеро|шкапо|луже|вельможносте|веснонько|лапко|пучино|долино|молитво|хвиле|хмаро|згубо|славо|ніченько|березо|вербо|розпуко|худобо|вітре|морозе</exception>
+          -->
+          <exception case_sensitive="yes" regexp="yes">[А-ЯІЇЄҐ][а-яіїєґ'].*</exception>
+          <exception case_sensitive="yes" regexp="yes">[А-ЯІЇЄҐ]+</exception>
+        </token>
+      </pattern>
+      <message>Форми кличного відмінку для неістот мають обмежене вживання.</message>
+      <example correction=""><marker>автокомісійко</marker>.</example>
+      <example correction=""><marker>аберометре</marker></example>
+      <example>того.</example>
+      <example>Матіоло.</example>
+      <example>ПАСЕ</example>
+      <example>прощавай, стара імперіє</example>
+      <example>ой, хато ти моя</example>
+      <example>агов тумане</example>
+    </rule>
+
     <rule id="u_znak_vdiachnosti" name="У знак вдячності">
       <pattern>
         <token regexp="yes">[ву]</token>
@@ -1847,7 +2002,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
         <pattern>
           <or>
             <token postag_regexp="yes" postag="noun:anim:.:v_oru.*">
-              <exception negate_pos="yes" postag_regexp="yes" postag="noun:anim:.:v_oru.*"/>
+              <exception negate_pos="yes" postag_regexp="yes" postag="noun:anim:.:v_oru.*|.*_END"/>
               <exception postag_regexp="yes" postag="noun.*?pron.*"/>
               <exception postag_regexp="yes" postag="&lt;(adv|insert)&gt;"/>
               <exception>персоною</exception>
@@ -1887,17 +2042,20 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
 
 
     <rule id="cholovik_with_numr" name="«Чоловік» з числівниками">
+      <antipattern>
+        <token regexp="yes">чоловік[аи]?</token>
+        <token min="0" max="2"/>
+        <token regexp="yes">жінок|жінки|жінка</token>
+      </antipattern>
       <pattern>
         <token postag=".*num.*" postag_regexp="yes">
-          <exception inflected="yes" regexp="yes">один|обидва</exception>
+          <exception inflected="yes" regexp="yes">один|обидва|два</exception>
           <exception postag_regexp="yes" postag="adj:m:.*"/>
         </token>
         <marker>
-          <token regexp="yes" skip="-1">чоловік|чоловіка|чоловіки
-            <exception scope="next" regexp="yes">жінок|жінки|жінка</exception>
+          <token regexp="yes">чоловік[аи]?
           </token>
         </marker>
-        <token postag="SENT_END"/>
       </pattern>
       <message>Деякі мовні стилісти радять вживати «осіб»: \1 <suggestion>осіб</suggestion></message>
       <url>http://mova.kreschatic.kiev.ua/32.php</url>
@@ -1907,6 +2065,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
       <example>791 чоловік, 43 жінки</example>
       <example>Один чоловік сказав мені таке...</example>
       <example>Її першого чоловіка.</example>
+      <example>3703 чоловіки та 114 жінок</example>
+      <example>два чоловіки й жінка</example>
     </rule>
 
     <rule id="viyskova_pidgotovka" name="Військова підготовка">
@@ -1928,6 +2088,26 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
       <suggestion>минулого року</suggestion>
       <suggestion>того року</suggestion>
       <example correction="торік|минулого року|того року"><marker>в минулому році</marker></example>
+    </rule>
+
+    <rule id="na_protyazi" name="На протязі">
+      <pattern>
+        <marker>
+          <token>на</token>
+          <token>протязі</token>
+        </marker>
+        <token postag_regexp="yes" postag=".*?v_rod.*|adv.*|number.*"/>
+      </pattern>
+      <message>На позначення часового відрізка деякі мовознавці не рекомендують вживати «на протязі»</message>
+      <suggestion>упродовж</suggestion>
+      <suggestion>протягом</suggestion>
+      <url>https://r2u.org.ua/check/rules/na_protyazi</url>
+      <example correction="упродовж|протягом"><marker>на протязі</marker> року</example>
+      <example correction="упродовж|протягом"><marker>на протязі</marker> 10 хвилин</example>
+      <example correction="упродовж|протягом"><marker>на протязі</marker> XX століття</example>
+      <example correction="упродовж|протягом"><marker>на протязі</marker> майже 20 хв.</example>
+      <example>той стоїть на протязі</example>
+      <example>той стояв на протязі кілька хвилин.</example>
     </rule>
 
     <rule id="vuhan" name="Вухань">

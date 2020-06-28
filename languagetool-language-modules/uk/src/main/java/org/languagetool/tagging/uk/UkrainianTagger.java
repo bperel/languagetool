@@ -22,18 +22,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.UnaryOperator;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.commons.lang3.StringUtils;
 import org.languagetool.AnalyzedToken;
+import org.languagetool.rules.uk.LemmaHelper;
 import org.languagetool.tagging.BaseTagger;
 import org.languagetool.tagging.TaggedWord;
 import org.languagetool.tagging.WordTagger;
 import org.languagetool.tools.StringTools;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,22 +47,18 @@ public class UkrainianTagger extends BaseTagger {
 
   private static final Pattern NUMBER = Pattern.compile("[+-±]?[€₴\\$]?[0-9]+(,[0-9]+)?([-–—][0-9]+(,[0-9]+)?)?(%|°С?)?|\\d{1,3}([\\s\u00A0\u202F]\\d{3})+");
   // full latin number regex: M{0,4}(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})
-  private static final Pattern LATIN_NUMBER = Pattern.compile("(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})");
-  private static final Pattern LATIN_NUMBER_CYR = Pattern.compile("[IXІХ]|[IІ]V|V?[IІ]{0,3}");
+  private static final Pattern LATIN_NUMBER = Pattern.compile("(?=[MDCLXVI])M*(C[MD]|D?C*)(X[CL]|L?X*)(I[XV]|V?I*)");
+  private static final Pattern LATIN_NUMBER_CYR = Pattern.compile("[IXІХV]{2,4}(-[а-яі]{1,4})?|[IXІХV](-[а-яі]{1,4})");
+  private static final Pattern HASHTAG = Pattern.compile("#[а-яіїєґa-z_][а-яіїєґa-z0-9_]*", Pattern.CASE_INSENSITIVE|Pattern.UNICODE_CASE);
 
   private static final Pattern DATE = Pattern.compile("[\\d]{2}\\.[\\d]{2}\\.[\\d]{4}");
   private static final Pattern TIME = Pattern.compile("([01]?[0-9]|2[0-3])[.:][0-5][0-9]");
   private static final Pattern ALT_DASHES_IN_WORD = Pattern.compile("[а-яіїєґ0-9a-z]\u2013[а-яіїєґ]|[а-яіїєґ]\u2013[0-9]", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
-  private static final Pattern NAPIV_ALLOWED_TAGS_REGEX = Pattern.compile("(noun|ad(j|v(?!p))(?!.*?:comp[cs])).*");
-  private static final Pattern NAPIV_REMOVE_TAGS_REGEX = Pattern.compile(":comp.|:&adjp(:(actv|pasv|perf|imperf))*");
+  private static final Pattern COMPOUND_WITH_QUOTES_REGEX = Pattern.compile("-[«\"„]");
 
-  private final CompoundTagger compoundTagger = new CompoundTagger(this, wordTagger, conversionLocale);
+
+  private final CompoundTagger compoundTagger = new CompoundTagger(this, wordTagger, locale);
 //  private BufferedWriter taggedDebugWriter;
-
-  @Override
-  public String getManualAdditionsFileName() {
-    return "/uk/added.txt";
-  }
 
   public UkrainianTagger() {
     super("/uk/ukrainian.dict", new Locale("uk", "UA"), false);
@@ -80,13 +74,13 @@ public class UkrainianTagger extends BaseTagger {
 
     if ( LATIN_NUMBER.matcher(word).matches() ) {
       List<AnalyzedToken> additionalTaggedTokens = new ArrayList<>();
-      additionalTaggedTokens.add(new AnalyzedToken(word, IPOSTag.number.getText()+":latin", word));
+      additionalTaggedTokens.add(new AnalyzedToken(word, "number:latin", word));
       return additionalTaggedTokens;
     }
 
     if ( LATIN_NUMBER_CYR.matcher(word).matches() ) {
       List<AnalyzedToken> additionalTaggedTokens = new ArrayList<>();
-      additionalTaggedTokens.add(new AnalyzedToken(word, IPOSTag.number.getText()+":latin:bad", word));
+      additionalTaggedTokens.add(new AnalyzedToken(word, "number:latin:bad", word));
       return additionalTaggedTokens;
     }
 
@@ -102,7 +96,20 @@ public class UkrainianTagger extends BaseTagger {
       return additionalTaggedTokens;
     }
 
+    if ( word.startsWith("#") && HASHTAG.matcher(word).matches() ) {
+      List<AnalyzedToken> additionalTaggedTokens = new ArrayList<>();
+      additionalTaggedTokens.add(new AnalyzedToken(word, IPOSTag.hashtag.getText(), word));
+      return additionalTaggedTokens;
+    }
+
     if ( word.indexOf('-') > 0 ) {
+
+      // екс-«депутат»
+      if( COMPOUND_WITH_QUOTES_REGEX.matcher(word).find() ) {
+        String adjustedWord = word.replaceAll("[«»\"„“]", "");
+        return getAdjustedAnalyzedTokens(word, adjustedWord, null, null, null);
+      }
+
       try {
         List<AnalyzedToken> guessedCompoundTags = compoundTagger.guessCompoundTag(word);
         return guessedCompoundTags;
@@ -113,20 +120,8 @@ public class UkrainianTagger extends BaseTagger {
       }
     }
 
-    return guessOtherTags(word);
+    return compoundTagger.guessOtherTags(word);
   }
-
-  private List<AnalyzedToken> guessOtherTags(String word) {
-    if( word.length() > 7
-        && StringTools.isCapitalizedWord(word)
-        && (word.endsWith("штрассе")
-        || word.endsWith("штрасе")) ) {
-      return PosTagHelper.generateTokensForNv(word, "f", ":prop");
-    }
-
-    return null;
-  }
-
 
   @Override
   protected List<AnalyzedToken> getAnalyzedTokens(String word) {
@@ -141,74 +136,39 @@ public class UkrainianTagger extends BaseTagger {
         return newTokens.size() > 0 ? newTokens : tokens; 
       }
 
-      
-      if( word.indexOf('\u2013') > 0
-           && ALT_DASHES_IN_WORD.matcher(word).find() ) {
+      if( word.length() > 2 ) {
+        if( word.indexOf('\u2013') > 0
+            && ALT_DASHES_IN_WORD.matcher(word).find() ) {
 
-        word = origWord.replace('\u2013', '-');
+          word = origWord.replace('\u2013', '-');
 
-        List<AnalyzedToken> newTokens = getAdjustedAnalyzedTokens(origWord, word, null, null, null);
+          List<AnalyzedToken> newTokens = getAdjustedAnalyzedTokens(origWord, word, null, null, null);
 
-        if( newTokens.size() > 0 ) {
-          tokens = newTokens;
-        }
-      }
-      
-      if( word.length() > 7 && word.startsWith("напів") ) {
-        String addPosTag = "";
-
-        Matcher matcher = Pattern.compile("(напів['-]?)(.*)").matcher(word);
-        matcher.matches();
-
-        String prefix = matcher.group(1);
-        String adjustedWord = matcher.group(2);
-
-        List<AnalyzedToken> newTokens = getAdjustedAnalyzedTokens(origWord, adjustedWord, NAPIV_ALLOWED_TAGS_REGEX, null, null);
-
-        if( newTokens.size() > 0 ) {
-          if( ! addPosTag.contains(":bad:") ) {
-            if( word.charAt(5) == '-'
-                && ! adjustedWord.matches("[А-ЯІЇЄҐ].*") ) {
-              addPosTag += ":bad";
-            }
-            else if( word.charAt(5) != '\''
-                && adjustedWord.matches("[єїюя].*") ) {
-              addPosTag += ":bad";
-            }
+          if( newTokens.size() > 0 ) {
+            tokens = newTokens;
           }
-
-          for (int i = 0; i < newTokens.size(); i++) {
-            AnalyzedToken analyzedToken = newTokens.get(i);
-
-            String lemma = analyzedToken.getLemma();
-            String posTag = analyzedToken.getPOSTag();
-
-            posTag = NAPIV_REMOVE_TAGS_REGEX.matcher(posTag).replaceAll("");
-
-            posTag = PosTagHelper.addIfNotContains(posTag, addPosTag);
-
-            AnalyzedToken newToken = new AnalyzedToken(origWord, posTag, prefix+lemma);
-            newTokens.set(i, newToken);
-          }
-          tokens = newTokens;
         }
-      }
-      // try г instead of ґ
-      else if( word.contains("ґ") ) {
-        tokens = convertTokens(tokens, word, "ґ", "г", ":alt");
-      }
-      else if( word.contains("ія") ) {
-        tokens = convertTokens(tokens, word, "ія", "іа", ":alt");
-      }
-      else if( word.endsWith("тер") ) {
-        tokens = convertTokens(tokens, word, "тер", "тр", ":alt");
+
+        // try г instead of ґ
+        else if( word.contains("ґ") || word.contains("Ґ") ) {
+          tokens = convertTokens(tokens, word, "ґ", "г", ":alt");
+        }
+        else if( word.contains("ія") ) {
+          tokens = convertTokens(tokens, word, "ія", "іа", ":alt");
+        }
+        else if( word.endsWith("тер") ) {
+          tokens = convertTokens(tokens, word, "тер", "тр", ":alt");
+        }
+        else if( word.contains("льо") ) {
+          tokens = convertTokens(tokens, word, "льо", "ло", ":alt");
+        }
       }
     }
 
     // try УКРАЇНА as Україна and СИРІЮ as Сирію
-    if( word.length() > 2 && StringUtils.isAllUpperCase(word) ) {
+    if( word.length() > 2 && LemmaHelper.isAllUppercaseUk(word) ) {
 
-      String newWord = StringUtils.capitalize(StringUtils.lowerCase(word));
+      String newWord = LemmaHelper.capitalizeProperName(word);
 
       List<AnalyzedToken> newTokens = getAdjustedAnalyzedTokens(word, newWord, Pattern.compile("noun.*?:prop.*"), null, null);
       if( newTokens.size() > 0 ) {
@@ -260,6 +220,9 @@ public class UkrainianTagger extends BaseTagger {
 
   private List<AnalyzedToken> convertTokens(List<AnalyzedToken> origTokens, String word, String str, String dictStr, String additionalTag) {
     String adjustedWord = word.replace(str, dictStr);
+    if( str.length() == 1 ) {
+        adjustedWord = adjustedWord.replace(str.toUpperCase(), dictStr.toUpperCase());
+    }
 
     List<AnalyzedToken> newTokens = getAdjustedAnalyzedTokens(word, adjustedWord, null, additionalTag,
         (lemma) -> lemma.replace(dictStr, str));

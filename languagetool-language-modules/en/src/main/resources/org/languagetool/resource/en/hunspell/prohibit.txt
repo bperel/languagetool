@@ -6,6 +6,7 @@ ad-on
 ad-ons
 al
 de
+easter
 enfranchize
 enfranchizes
 enfranchized
@@ -40,9 +41,27 @@ ne
 personnels
 # should be built-in
 builtin
-# breakpoint is not in the dict, so should be breakpoints
-breakpoints
 amazon
 froward
 nerver
 heigh
+# brank is normally used in plural (branks), also it's scottish and archaic, easily confused with "bank", "blank", "rank", "crank" etc.
+brank
+sin-off
+sin-offs
+Sin-off
+Sin-offs
+someones
+somethings
+anythings
+na
+pre-requisite
+pre-requisites
+on-line
+Nescafe
+# Has to be T-Mobile / T-Systems
+t-mobile
+T-mobile
+t-systems
+T-systems
+dc

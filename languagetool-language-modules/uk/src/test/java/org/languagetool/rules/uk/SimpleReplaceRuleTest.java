@@ -71,6 +71,12 @@ public class SimpleReplaceRuleTest {
     assertEquals(1, matches.length);
     assertEquals(Arrays.asList("Нападник", "Нападальний", "Нападний"), matches[0].getSuggestedReplacements());
 
+    // test enforce list
+    // главком - дуже рідко зустрічається, як загальна назва
+//    matches = rule.match(langTool.getAnalyzedSentence("главком"));
+//    assertEquals(1, matches.length);
+//    assertEquals(Arrays.asList("головком"), matches[0].getSuggestedReplacements());
+
     // test ignoreTagged
     matches = rule.match(langTool.getAnalyzedSentence("щедрота"));
     assertEquals(1, matches.length);
@@ -78,6 +84,18 @@ public class SimpleReplaceRuleTest {
 
     matches = rule.match(langTool.getAnalyzedSentence("щедроти"));
     assertEquals(0, matches.length);
+
+    matches = rule.match(langTool.getAnalyzedSentence("200 чоловік."));
+    assertEquals(0, matches.length);
+
+    matches = rule.match(langTool.getAnalyzedSentence("Конрадом II і Генріхом III"));
+    assertEquals(0, matches.length);
+    
+    //TODO: should not react at all
+    matches = rule.match(langTool.getAnalyzedSentence("мікро-району"));
+    assertEquals(1, matches.length);
+    assertEquals(Arrays.asList("мікрорайону"), matches[0].getSuggestedReplacements());
+
   }
 
   @Test
@@ -102,9 +120,9 @@ public class SimpleReplaceRuleTest {
   public void testMisspellings() throws IOException {
     SimpleReplaceRule rule = new SimpleReplaceRule(TestTools.getEnglishMessages(), morfologikSpellerRule);
 
-    RuleMatch[] matches = rule.match(langTool.getAnalyzedSentence("цурюпинський"));
+    RuleMatch[] matches = rule.match(langTool.getAnalyzedSentence("ганделик"));
     assertEquals(1, matches.length);
-    assertEquals(Arrays.asList("цюрупинський"), matches[0].getSuggestedReplacements());
+    assertEquals(Arrays.asList("генделик"), matches[0].getSuggestedReplacements());
 //    assertEquals(Categories.MISC.toString(), matches[0].getRule().getCategory().getId());
 //    assertEquals("Це розмовна просторічна форма", matches[0].getMessage());
   }

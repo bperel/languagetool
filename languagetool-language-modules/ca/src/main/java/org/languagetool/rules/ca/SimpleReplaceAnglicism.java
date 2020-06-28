@@ -18,21 +18,14 @@
  */
 package org.languagetool.rules.ca;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import org.jetbrains.annotations.NotNull;
-import org.languagetool.Language;
 import org.languagetool.rules.AbstractSimpleReplaceRule;
 import org.languagetool.rules.Categories;
 import org.languagetool.rules.ITSIssueType;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
-import java.util.concurrent.TimeUnit;
 
 /**
  * A rule that matches lemmas found only in DNV (AVL dictionary) and suggests
@@ -46,8 +39,7 @@ import java.util.concurrent.TimeUnit;
 public class SimpleReplaceAnglicism extends AbstractSimpleReplaceRule {
 
   private static final Map<String, List<String>> wrongWords = loadFromPath("/ca/replace_anglicism.txt");
-  private static final Locale CA_LOCALE = new Locale("CA");
-
+  
   @Override
   protected Map<String, List<String>> getWrongWords() {
     return wrongWords;

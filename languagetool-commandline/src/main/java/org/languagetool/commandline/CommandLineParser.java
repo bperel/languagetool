@@ -48,6 +48,8 @@ class CommandLineParser {
         options.setVerbose(true);
       } else if (args[i].equals("--line-by-line")) {
         options.setLineByLine(true);
+      } else if (args[i].equals("--enable-temp-off")) {
+        options.setEnableTempOff(true);
       } else if (args[i].equals("-t") || args[i].equals("--taggeronly")) {
         options.setTaggerOnly(true);
         if (options.isListUnknown()) {
@@ -226,14 +228,16 @@ class CommandLineParser {
             + "  --bitextrules  FILE      use external bitext XML rule file (useful only in bitext mode)\n"
             + "  --languagemodel DIR      a directory with e.g. 'en' sub directory (i.e. a language code) that contains\n"
             + "                           '1grams'...'3grams' sub directories with Lucene indexes with\n"
-            + "                           ngram occurrence counts; activates the confusion rule if supported\n"
+            + "                           ngram occurrence counts; activates the confusion rule if supported;\n"
+            + "                           see http://wiki.languagetool.org/finding-errors-using-n-gram-data\n"
             + "  --word2vecmodel DIR      a directory with e.g. 'en' sub directory (i.e. a language code) that contains\n"
             + "                           final_embeddings.txt and dictionary.txt; activates neural network based rules\n"
-            + "  --neuralnetworkmodel DIR a base directory for various saved neural network models\n"
+            + "  --neuralnetworkmodel DIR a base directory for various saved neural network models (deprecated)\n"
             + "  --fasttextmodel FILE     fasttext language detection model (optional), see https://fasttext.cc/docs/en/language-identification.html\n"
             + "  --fasttextbinary FILE    fasttext executable (optional), see https://fasttext.cc/docs/en/support.html\n"
             + "  --xmlfilter              remove XML/HTML elements from input before checking (deprecated)\n"
             + "  --line-by-line           work on file line by line (for development, e.g. inside an IDE)"
+            + "  --enable-temp-off        enable all temp_off rules (for testing and development)"
     );
   }
 

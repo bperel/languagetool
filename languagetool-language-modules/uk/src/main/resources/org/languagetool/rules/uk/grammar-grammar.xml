@@ -106,7 +106,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
             </token>
           </marker>
         </pattern>
-        <message>Дієслово після модального слова має йти інфінітивом: <suggestion><match no="5" postag_regexp="yes" postag="verb.*:inf.*"/></suggestion></message>
+        <message>Дієслово після модального слова має йти інфінітивом: <suggestion><match no="5" postag_regexp="yes" postag="verb.*:inf(?!.*short).*"/></suggestion></message>
         <example correction="писати">Треба <marker>писав</marker>.</example>
         <example correction="писати">Треба не <marker>писав</marker>.</example>
         <example correction="сподіватись|сподіватися">І тому варто <marker>сподіваюся</marker>, що це спрацює.</example>
@@ -121,9 +121,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
         <example>можна буде встояти.</example>
         <example>Комерційний підхід до треб є незрозумілим</example>
         <example>конгрес повинен був сформулювати</example>
-        <!--  verb:inf:coll not in default dictionary
         <example>Не можна встоять.</example>
-         -->
       </rule>
 
       <rule>
@@ -164,7 +162,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
             </token>
           </marker>
         </pattern>
-        <message>Дієслово після модального слова має йти інфінітивом: <suggestion><match no="4" postag_regexp="yes" postag="verb.*:inf.*"/></suggestion></message>
+        <message>Дієслово після модального слова має йти інфінітивом: <suggestion><match no="4" postag_regexp="yes" postag="verb.*:inf(?!.*short).*"/></suggestion></message>
         <example correction="писати">Мусять <marker>писали</marker>.</example>
         <example correction="пищати">Маємо не <marker>пищали</marker>.</example>
         <example correction="спинитись|спинитися">І тому він має <marker>спинилися</marker>.</example>
@@ -203,7 +201,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
             </token>
           </marker>
         </pattern>
-        <message>Дієслово після модального слова має йти інфінітивом: <suggestion><match no="4" postag_regexp="yes" postag="verb.*:inf.*"/></suggestion></message>
+        <message>Дієслово після модального слова має йти інфінітивом: <suggestion><match no="4" postag_regexp="yes" postag="verb.*:inf(?!.*short).*"/></suggestion></message>
         <example correction="працювати">Вони не бажали <marker>працювали</marker>.</example>
         <example correction="стріляти">Вони благали не <marker>стрілятимуть</marker>.</example>
         <!-- TODO:
@@ -227,7 +225,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
             </token>
           </marker>
         </pattern>
-        <message>Дієслово після модального слова має йти інфінітивом: <suggestion><match no="5" postag_regexp="yes" postag="verb.*:inf.*"/></suggestion></message>
+        <message>Дієслово після модального слова має йти інфінітивом: <suggestion><match no="5" postag_regexp="yes" postag="verb.*:inf(?!.*short).*"/></suggestion></message>
         <example correction="писати">Повинен <marker>писатиме</marker>.</example>
         <example correction="плакати">Повинна не <marker>плакатиме</marker>.</example>
         <example correction="писати">Повинен би був <marker>писатиме</marker>.</example>
@@ -967,6 +965,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
         <example correction="півтори"><marker>півтора</marker> тисячі</example>
         <example>півтори доби</example>
       </rule>
+
       <rule>
         <pattern>
           <token regexp="yes">півтор[аи]</token>
@@ -991,6 +990,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
         <example>півтора тисячі</example> <!-- ingore this mistake here, it'll be caght by rule above -->
         <example>якихось півтори десятих</example>
       </rule>
+
       <rule>
         <pattern>
           <token>півтора</token>
@@ -1008,6 +1008,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
         <example>півтора літра</example>
         <example>півтора рази</example> <!-- ingore this mistake here, it'll be caght by rule below -->
       </rule>
+
       <rule>
         <pattern>
           <token regexp="yes">півтор[аи]</token>
@@ -1024,6 +1025,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
         <example>півтора кілограма</example>
         <example>або у 2 рази.</example>
       </rule>
+
       <rule>
         <pattern>
           <marker>
@@ -1050,8 +1052,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
           <token>пів</token>
           <token postag_regexp="yes" postag="adj:f:v_rod.*" regexp="yes" inflected="yes">&hours;</token>
         </pattern>
-        <message>Правильно: <suggestion>(о) пів на <match no="2" postag_regexp="yes" postag="adj:f:v_zna.*"/></suggestion></message>
-        <suggestion>(о) пів до <match no="2" postag_regexp="yes" postag="adj:f:v_rod.*"/></suggestion>
+        <message>Правильно: <suggestion>(о) пів на <match no="2" postag_regexp="yes" postag="adj:f:v_zna(?!.*long).*"/></suggestion></message>
+        <suggestion>(о) пів до <match no="2" postag_regexp="yes" postag="adj:f:v_rod(?!.*long).*"/></suggestion>
         <example correction="(о) пів на першу|(о) пів до першої"><marker>пів першої</marker> приїхав і він</example>
         <example>пів на першу приїхав і він</example>
       </rule>
@@ -1194,7 +1196,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
         </pattern>
         <!-- TODO: use java code to get previous hour?? -->
         <message>Правильно: <suggestion>по [<match no="3" postag_regexp="yes" postag="adj:f:v_mis.*"/> - 1 година]</suggestion></message>
-        <suggestion>на <match no="3" postag_regexp="yes" postag="adj:f:v_zna.*"/></suggestion>
+        <suggestion>на <match no="3" postag_regexp="yes" postag="adj:f:v_zna(?!.*long).*"/></suggestion>
         <example correction="по [третій - 1 година]|на третю">п'ять хвилин <marker>третьої</marker></example>
         <example correction="по [дев'ятій - 1 година]|на дев'яту">5 хвилин <marker>дев'ятої</marker></example>
         <example correction="по [сьомій - 1 година]|на сьому">двадцять п'ять хвилин <marker>сьомої</marker></example>
@@ -1240,6 +1242,20 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
       <message>При звертанні треба вживати кличний відмінок</message>
       <suggestion>\1, <match no="3" postag_regexp="yes" postag="(noun:anim:.:)v_naz(:prop:fname.*)" postag_replace="$1v_kly$2"/></suggestion>
       <example correction="Привіт, Василю"><marker>Привіт Василь</marker>!</example>
+    </rule>
+
+    <rule id="im_choloviche_prizvysche" name="Ім. + чоловіче прізвище">
+      <pattern>
+        <token>ім.</token>
+        <marker>
+          <token postag_regexp="yes" postag="noun:anim:m:v_naz.*?:lname.*">
+            <exception postag_regexp="yes" postag="noun:anim:m:v_rod.*?:lname.*"/>
+          </token>
+        </marker>
+      </pattern>
+      <message>Чоловіче прізвище відмінюється</message>
+      <suggestion><match no="2" postag_regexp="yes" postag="(noun:anim:m:)v_naz(.*?:lname.*)" postag_replace="$1v_rod.*"/></suggestion>
+      <example correction="Довженка">Кіностудія ім. <marker>Довженко</marker>.</example>      
     </rule>
 
     <rule id="VIDMINA_CHOLOVICHYH_PRIZVYSCH" name="Відмінювання чоловічих прізвищ">
@@ -2280,6 +2296,29 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
       <example>вивісиш</example>
     </rule>
 
+    <rule id="pozhezhni" name="Пожежні">
+      <antipattern>
+        <unify>
+          <feature id="gender"/>
+          <feature id="case"/>
+          <token inflected="yes" postag_regexp="yes" postag="adj:p:.*">пожежний</token>
+          <token postag_regexp="yes" postag="noun:inanim:p:.*"/>
+        </unify>
+      </antipattern>
+      <pattern>
+        <marker>
+          <token inflected="yes" postag_regexp="yes" postag="adj:p:.*">пожежний</token>
+        </marker>
+      </pattern>
+      <message>У значенні іменника правильно вживати <suggestion>пожежники</suggestion></message>
+      <example correction="пожежники">приїхали <marker>пожежні</marker>.</example>
+      <example>пожежні вежі</example>
+      <example>пожежних випадків</example>
+      <!-- 
+      <example>пожежних інспекторів</example>
+       -->
+    </rule>
+
     <rule id="V_SHOCI" name="В шоці">
       <pattern>
         <token regexp="yes">[ув]</token>
@@ -2405,6 +2444,61 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
         <example correction="">Конференція відбудеться в <marker>понеділок, 7 жов 2014</marker> р.</example>
         <example>Конференція відбудеться у вівторок, 7 жовтня 2014 р.</example>
         <example>Конференція відбудеться у вівторок, 7 жов 2014 р.</example>
+      </rule>
+    </rulegroup>
+
+    <rulegroup id="nemaye_v_rod" name="Немає з р.в.">
+      <rule>
+        <pattern>
+          <token regexp="yes">немає?</token>
+          <token postag_regexp="yes" postag="adj:m:v_rod.*" min="0"/>
+          <marker>
+            <token postag_regexp="yes" postag="noun:inanim:m:v_dav.*" regexp="yes">.+[ую]
+              <exception postag_regexp="yes" postag="noun:.*?(v_rod|pron|numr|prop).*"/>
+              <exception negate_pos="yes" postag_regexp="yes" postag="noun.*|.*_END"/>
+            </token>
+          </marker>
+        </pattern>
+        <message>Слово, пов'язане з «немає», має стояти в родовому відмінку</message>
+        <suggestion><match no="3" postag_regexp="yes" postag="(noun:inanim:m:)v_...(.*)" postag_replace="$1v_rod$2.*"/></suggestion>
+        <example correction="гаража">Там немає <marker>гаражу</marker>.</example>
+        <example correction="графіка">Там немає жодного <marker>графіку</marker>.</example>
+        <example>немає чим відвернути увагу</example>
+        <example>значить білка немає та імунна система</example>
+        <example>його немає другу добу</example>
+        <example>немає перед ким</example>
+        <example>немає Сергію виходу</example>
+      </rule>
+
+      <rule>
+        <antipattern>
+          <token regexp="yes">немає?</token>
+          <token postag_regexp="yes" postag="(noun:inanim|adj):.:v_rod.*"/>
+        </antipattern>
+        <pattern>
+          <marker>
+            <token postag_regexp="yes" postag="noun:inanim:m:v_dav.*" regexp="yes">.+[ую]
+              <exception postag_regexp="yes" postag="noun:.*?(v_rod|pron|numr|prop).*"/>
+              <exception negate_pos="yes" postag_regexp="yes" postag="noun.*|.*_END"/>
+              <exception scope="previous" postag_regexp="yes" postag="prep.*"/>
+            </token>
+          </marker>
+          <token regexp="yes">немає?
+            <!-- exception via next/postag_regexp does not work :( - need antipattern
+            <exception scope="next" postag_regexp="yes" postag="noun:inanim:.:v_rod.*"/>
+             -->
+          </token>
+        </pattern>
+        <message>Слово, пов'язане з «немає», має стояти в родовому відмінку</message>
+        <suggestion><match no="1" postag_regexp="yes" postag="(noun:inanim:m:)v_...(.*)" postag_replace="$1v_rod$2.*"/></suggestion>
+        <example correction="предмета">Такого <marker>предмету</marker> немає.</example>
+        <example>рейсів на кубу немає</example>
+        <example>комітету немає резону сподіватися</example>
+        <example>що комітету немає кому довірити</example>
+        <example>У найповнішому медичному довіднику немає такої хвороби</example> 
+        <!-- TODO:
+        <example>загрози паводку немає</example>
+         -->
       </rule>
     </rulegroup>
   </category>

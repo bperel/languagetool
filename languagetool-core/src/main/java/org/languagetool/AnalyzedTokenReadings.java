@@ -19,14 +19,14 @@
 
 package org.languagetool;
 
-import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Pattern;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.languagetool.chunking.ChunkTag;
 import org.languagetool.tools.StringTools;
+
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
 
 import static org.languagetool.JLanguageTool.*;
 
@@ -47,7 +47,7 @@ public final class AnalyzedTokenReadings implements Iterable<AnalyzedToken> {
   private AnalyzedToken[] anTokReadings;
   private int startPos;
   private String token;
-  private List<ChunkTag> chunkTags = new ArrayList<>();
+  private List<ChunkTag> chunkTags = Collections.emptyList();
   private boolean isSentEnd;
   private boolean isParaEnd;
   private boolean isWhitespaceBefore;
@@ -521,6 +521,7 @@ public final class AnalyzedTokenReadings implements Iterable<AnalyzedToken> {
       }
       if (posTag != null) {
         hasNoPOStag = false;
+        break;
       }
     }
     for (AnalyzedToken an: anTokReadings) {
@@ -547,7 +548,7 @@ public final class AnalyzedTokenReadings implements Iterable<AnalyzedToken> {
   private void addHistoricalAnnotations(String oldValue, String ruleApplied) {
     if (!ruleApplied.isEmpty()) {
       this.historicalAnnotations = this.getHistoricalAnnotations() + "\n" + ruleApplied + ": " + oldValue + " -> "
-          + this.toString();
+          + this;
     }
   }
   
@@ -579,7 +580,7 @@ public final class AnalyzedTokenReadings implements Iterable<AnalyzedToken> {
       sb.append(',');
     }
     sb.delete(sb.length() - 1, sb.length());
-    if (chunkTags.size() > 0) {
+    if (!chunkTags.isEmpty()) {
       sb.append(',');
       sb.append(StringUtils.join(chunkTags, "|"));
     }
@@ -652,8 +653,7 @@ public final class AnalyzedTokenReadings implements Iterable<AnalyzedToken> {
   @Override
   public boolean equals(Object obj) {
     if (this == obj) { return true; }
-    if (obj == null) { return false; }
-    if (getClass() != obj.getClass()) {
+    if (obj == null || getClass() != obj.getClass()) {
       return false;
     }
     AnalyzedTokenReadings other = (AnalyzedTokenReadings) obj;

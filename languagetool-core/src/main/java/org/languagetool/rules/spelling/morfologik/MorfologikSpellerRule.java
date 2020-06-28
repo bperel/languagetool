@@ -19,16 +19,30 @@
 
 package org.languagetool.rules.spelling.morfologik;
 
+import static org.languagetool.JLanguageTool.getDataBroker;
+
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.ResourceBundle;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.languagetool.*;
+import org.languagetool.AnalyzedSentence;
+import org.languagetool.AnalyzedTokenReadings;
+import org.languagetool.Experimental;
+import org.languagetool.GlobalConfig;
+import org.languagetool.Language;
+import org.languagetool.UserConfig;
 import org.languagetool.languagemodel.LanguageModel;
 import org.languagetool.rules.Categories;
 import org.languagetool.rules.ITSIssueType;
@@ -36,16 +50,10 @@ import org.languagetool.rules.RuleMatch;
 import org.languagetool.rules.SuggestedReplacement;
 import org.languagetool.rules.spelling.SpellingCheckRule;
 import org.languagetool.rules.spelling.suggestions.SuggestionsChanges;
-import org.languagetool.rules.spelling.suggestions.SuggestionsOrderer;
-import org.languagetool.rules.spelling.suggestions.SuggestionsOrdererFeatureExtractor;
-import org.languagetool.rules.spelling.suggestions.XGBoostSuggestionsOrderer;
 import org.languagetool.rules.translation.TranslationEntry;
 import org.languagetool.rules.translation.Translator;
-import org.languagetool.tools.Tools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static org.languagetool.JLanguageTool.*;
 
 public abstract class MorfologikSpellerRule extends SpellingCheckRule {
 
@@ -57,9 +65,6 @@ public abstract class MorfologikSpellerRule extends SpellingCheckRule {
   protected Locale conversionLocale;
   protected final Language motherTongue;
   protected final GlobalConfig globalConfig;
-
-  private final SuggestionsOrderer suggestionsOrderer;
-  private final boolean runningExperiment;
 
   private boolean ignoreTaggedWords = false;
   private boolean checkCompound = false;
@@ -99,14 +104,6 @@ public abstract class MorfologikSpellerRule extends SpellingCheckRule {
     this.conversionLocale = conversionLocale != null ? conversionLocale : Locale.getDefault();
     init();
     setLocQualityIssueType(ITSIssueType.Misspelling);
-
-    if (SuggestionsChanges.isRunningExperiment("NewSuggestionsOrderer")) {
-      suggestionsOrderer = new SuggestionsOrdererFeatureExtractor(language, this.languageModel);
-      runningExperiment = true;
-    } else {
-      runningExperiment = false;
-      suggestionsOrderer = new XGBoostSuggestionsOrderer(language, languageModel);
-    }
   }
 
   @Override
@@ -286,7 +283,7 @@ public abstract class MorfologikSpellerRule extends SpellingCheckRule {
     String afterSuggestionStr = "";  //to be added after
     
     // Check for split word with previous word
-    if (idx > 0) {
+    if (idx > 0 && tokens[idx].isWhitespaceBefore()) {
       String prevWord = tokens[idx - 1].getToken();
       if (prevWord.length() > 0 && !prevWord.matches(".*\\d.*")
           && getFrequency(speller1, prevWord) < MAX_FREQUENCY_FOR_SPLITTING) {
@@ -337,9 +334,9 @@ public abstract class MorfologikSpellerRule extends SpellingCheckRule {
     }
         
     // Check for split word with next word
-    if (ruleMatch == null && idx < tokens.length - 1) {
+    if (ruleMatch == null && idx < tokens.length - 1 && tokens[idx + 1].isWhitespaceBefore()) {
       String nextWord = tokens[idx + 1].getToken();
-      if (nextWord.length() > 0 && !nextWord.matches(".*\\d.*")
+      if (nextWord.length() > 0 && !StringUtils.containsAny(nextWord, "0", "1", "2", "3", "4", "5", "6", "7", "8", "9")
           && getFrequency(speller1, nextWord) < MAX_FREQUENCY_FOR_SPLITTING) {
         int nextStartPos = tokens[idx + 1].getStartPos();
         String sugg1a = word.substring(0, word.length() - 1);
@@ -396,8 +393,8 @@ public abstract class MorfologikSpellerRule extends SpellingCheckRule {
       phrasesToTranslate.add(new PhraseToTranslate(word, startPos + word.length()));
       for (PhraseToTranslate phraseToTranslate : phrasesToTranslate) {
         List<TranslationEntry> translations = translator.translate(phraseToTranslate.phrase, motherTongue.getShortCode(), language.getShortCode());
-        if (translations.size() > 0) {
-          logger.info("Translated: " + word);   // privacy: logging a single word without IP address etc. is okay
+        if (!translations.isEmpty()) {
+          logger.info("Translated: {}", word);   // privacy: logging a single word without IP address etc. is okay
           ruleMatch = new RuleMatch(this, sentence, startPos, phraseToTranslate.endPos, translator.getMessage());
           ruleMatch.setType(RuleMatch.Type.Hint);
           ruleMatch.setSuggestedReplacements(new ArrayList<>());
@@ -408,11 +405,13 @@ public abstract class MorfologikSpellerRule extends SpellingCheckRule {
               String suffix = translator.getTranslationSuffix(s);
               SuggestedReplacement repl = new SuggestedReplacement(translator.cleanTranslationForReplace(s, prevWord), String.join(", ", translation.getL1()), suffix.isEmpty() ? null : suffix);
               repl.setType(SuggestedReplacement.SuggestionType.Translation);
-              l.add(repl);
+              if (!repl.getReplacement().equals(word)) {
+                l.add(repl);
+              }
             }
           }
           List<SuggestedReplacement> mergedRepl = mergeSuggestionsWithSameTranslation(l);
-          if (mergedRepl.size() > 0) {
+          if (!mergedRepl.isEmpty()) {
             ruleMatch.setSuggestedReplacementObjects(mergedRepl);
             translationSuggestionCount = mergedRepl.size();
             if (phraseToTranslate.phrase.contains(" ")) {
@@ -425,16 +424,8 @@ public abstract class MorfologikSpellerRule extends SpellingCheckRule {
     }
 
     if (ruleMatch == null) {
-      Language acceptingLanguage = acceptedInAlternativeLanguage(word);
-      if (acceptingLanguage != null) {
-        // e.g. "Der Typ ist in UK echt famous" -> could be German 'famos'
-        ruleMatch = new RuleMatch(this, sentence, startPos, startPos + word.length(),
-                Tools.i18n(messages, "accepted_in_alt_language", word, messages.getString(acceptingLanguage.getShortCode())));
-        ruleMatch.setType(RuleMatch.Type.Hint);
-      } else {
-        ruleMatch = new RuleMatch(this, sentence, startPos, startPos + word.length(), messages.getString("spelling"),
-                messages.getString("desc_spelling_short"));
-      }
+      ruleMatch = new RuleMatch(this, sentence, startPos, startPos + word.length(), messages.getString("spelling"),
+              messages.getString("desc_spelling_short"));
     }
     boolean fullResults = SuggestionsChanges.getInstance() != null &&
       SuggestionsChanges.getInstance().getCurrentExperiment() != null &&
@@ -443,48 +434,36 @@ public abstract class MorfologikSpellerRule extends SpellingCheckRule {
 
     if (userConfig == null || userConfig.getMaxSpellingSuggestions() == 0 
         || ruleMatchesSoFar.size() <= userConfig.getMaxSpellingSuggestions()) {
-      List<String> defaultSuggestions = speller1.getSuggestionsFromDefaultDicts(word);
-      List<String> userSuggestions = speller1.getSuggestionsFromUserDicts(word);
+      List<SuggestedReplacement> defaultSuggestions = SuggestedReplacement.convert(speller1.getSuggestionsFromDefaultDicts(word));
+      List<SuggestedReplacement> userSuggestions = SuggestedReplacement.convert(speller1.getSuggestionsFromUserDicts(word));
       //System.out.println("speller1: " + suggestions);
       if (word.length() >= 3 && (fullResults || defaultSuggestions.isEmpty())) {
         // speller1 uses a maximum edit distance of 1, it won't find suggestion for "garentee", "greatful" etc.
         //System.out.println("speller2: " + speller2.getSuggestions(word));
-        defaultSuggestions.addAll(speller2.getSuggestionsFromDefaultDicts(word));
-        userSuggestions.addAll(speller2.getSuggestionsFromUserDicts(word));
+        defaultSuggestions.addAll(SuggestedReplacement.convert(speller2.getSuggestionsFromDefaultDicts(word)));
+        userSuggestions.addAll(SuggestedReplacement.convert(speller2.getSuggestionsFromUserDicts(word)));
         if (word.length() >= 5 && (fullResults || defaultSuggestions.isEmpty())) {
           //System.out.println("speller3: " + speller3.getSuggestions(word));
-          defaultSuggestions.addAll(speller3.getSuggestionsFromDefaultDicts(word));
-          userSuggestions.addAll(speller3.getSuggestionsFromUserDicts(word));
+          defaultSuggestions.addAll(SuggestedReplacement.convert(speller3.getSuggestionsFromDefaultDicts(word)));
+          userSuggestions.addAll(SuggestedReplacement.convert(speller3.getSuggestionsFromUserDicts(word)));
         }
       }
       //System.out.println("getAdditionalTopSuggestions(suggestions, word): " + getAdditionalTopSuggestions(suggestions, word));
-      defaultSuggestions.addAll(0, getAdditionalTopSuggestions(defaultSuggestions, word));
+      List<SuggestedReplacement> topSuggestions = getAdditionalTopSuggestions(defaultSuggestions, word);
+      topSuggestions.forEach(s -> s.setType(SuggestedReplacement.SuggestionType.Curated));
+      defaultSuggestions.addAll(0, topSuggestions);
       //System.out.println("getAdditionalSuggestions(suggestions, word): " + getAdditionalSuggestions(suggestions, word));
       defaultSuggestions.addAll(getAdditionalSuggestions(defaultSuggestions, word));
 
       if (!(defaultSuggestions.isEmpty() && userSuggestions.isEmpty()) && !preventFurtherSuggestions) {
         defaultSuggestions = filterSuggestions(defaultSuggestions, sentence, idx);
-        filterDupes(userSuggestions);
+        userSuggestions = filterDupes(userSuggestions);
         defaultSuggestions = orderSuggestions(defaultSuggestions, word);
         
         defaultSuggestions = joinBeforeAfterSuggestions(defaultSuggestions, beforeSuggestionStr, afterSuggestionStr);
         userSuggestions = joinBeforeAfterSuggestions(userSuggestions, beforeSuggestionStr, afterSuggestionStr);
         // use suggestionsOrderer only w/ A/B - Testing or manually enabled experiments
-        if (runningExperiment) {
-          addSuggestionsToRuleMatch(word,
-            userSuggestions, defaultSuggestions, suggestionsOrderer, ruleMatch);
-        } else if (userConfig != null && userConfig.getAbTest() != null &&
-          userConfig.getAbTest().equals("SuggestionsRanker") &&
-          suggestionsOrderer.isMlAvailable() && userConfig.getTextSessionId() != null) {
-          boolean testingA = userConfig.getTextSessionId() % 2 == 0;
-          if (testingA) {
-            addSuggestionsToRuleMatch(word, userSuggestions, defaultSuggestions, null, ruleMatch);
-          } else {
-            addSuggestionsToRuleMatch(word, userSuggestions, defaultSuggestions, suggestionsOrderer, ruleMatch);
-          }
-        } else {
-          addSuggestionsToRuleMatch(word, userSuggestions, defaultSuggestions, null, ruleMatch);
-        }
+        addSuggestionsToRuleMatch(word, userSuggestions, defaultSuggestions, null, ruleMatch);
         if (translationSuggestionCount > 0 && ruleMatch.getSuggestedReplacements().size() > translationSuggestionCount) {
           RuleMatch newRuleMatch = new RuleMatch(ruleMatch.getRule(), ruleMatch.getSentence(), ruleMatch.getFromPos(), ruleMatch.getToPos(),
             messages.getString("spelling") + " Translations to English are also offered.");
@@ -540,37 +519,8 @@ public abstract class MorfologikSpellerRule extends SpellingCheckRule {
     return null;
   }
 
-  protected List<String> orderSuggestions(List<String> suggestions, String word) {
+  protected List<SuggestedReplacement> orderSuggestions(List<SuggestedReplacement> suggestions, String word) {
     return suggestions;
-  }
-
-  private List<String> orderSuggestions(List<String> suggestions, String word, AnalyzedSentence sentence, int startPos) {
-    List<String> orderedSuggestions;
-    if (userConfig != null && userConfig.getAbTest() != null && userConfig.getAbTest().equals("SuggestionsOrderer") &&
-      suggestionsOrderer.isMlAvailable() && userConfig.getTextSessionId() != null) {
-      boolean logGroup = Math.random() < 0.01;
-      if (logGroup) {
-        System.out.print("Running A/B-Test for SuggestionsOrderer ->");
-      }
-      if (userConfig.getTextSessionId() % 2 == 0) {
-        if (logGroup) {
-          System.out.println("in group A (using new ordering)");
-        }
-        orderedSuggestions = suggestionsOrderer.orderSuggestionsUsingModel(suggestions, word, sentence, startPos);
-      } else {
-        if (logGroup) {
-          System.out.println("in group B (using old ordering)");
-        }
-        orderedSuggestions = orderSuggestions(suggestions, word);
-      }
-    } else {
-      if (suggestionsOrderer.isMlAvailable()) {
-        orderedSuggestions = suggestionsOrderer.orderSuggestionsUsingModel(suggestions, word, sentence, startPos);
-      } else {
-        orderedSuggestions = orderSuggestions(suggestions, word);
-      }
-    }
-    return orderedSuggestions;
   }
 
   /**
@@ -625,11 +575,14 @@ public abstract class MorfologikSpellerRule extends SpellingCheckRule {
    * Ex. to thow > tot how | to throw
    * 
    */
-  private List<String> joinBeforeAfterSuggestions(List<String> suggestionsList, String beforeSuggestionStr,
+  private List<SuggestedReplacement> joinBeforeAfterSuggestions(List<SuggestedReplacement> suggestionsList, String beforeSuggestionStr,
       String afterSuggestionStr) {
-    List<String> newSuggestionsList = new ArrayList<>();
-    for (String str : suggestionsList) {
-      newSuggestionsList.add(beforeSuggestionStr + str + afterSuggestionStr);
+    List<SuggestedReplacement> newSuggestionsList = new ArrayList<>();
+    for (SuggestedReplacement suggestion : suggestionsList) {
+      String str = suggestion.getReplacement();
+      SuggestedReplacement newSuggestion = new SuggestedReplacement(suggestion);
+      newSuggestion.setReplacement(beforeSuggestionStr + str + afterSuggestionStr);
+      newSuggestionsList.add(newSuggestion);
     }
     return newSuggestionsList;
   }

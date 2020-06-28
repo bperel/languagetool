@@ -30,6 +30,7 @@ import org.jetbrains.annotations.Nullable;
 import org.languagetool.AnalyzedSentence;
 import org.languagetool.UserConfig;
 import org.languagetool.languagemodel.bert.RemoteLanguageModel;
+import org.languagetool.markup.AnnotatedText;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,8 +44,10 @@ import java.util.stream.Collectors;
  * reorder suggestions from another rule using BERT as a LM
  */
 public class BERTSuggestionRanking extends RemoteRule {
-  private static final Logger logger = LoggerFactory.getLogger(BERTSuggestionRanking.class);
+
   public static final String RULE_ID = "BERT_SUGGESTION_RANKING";
+
+  private static final Logger logger = LoggerFactory.getLogger(BERTSuggestionRanking.class);
 
   private static final LoadingCache<RemoteRuleConfig, RemoteLanguageModel> models =
     CacheBuilder.newBuilder().build(CacheLoader.from(serviceConfiguration -> {
@@ -73,7 +76,7 @@ public class BERTSuggestionRanking extends RemoteRule {
   public BERTSuggestionRanking(Rule rule, RemoteRuleConfig config, UserConfig userConfig) {
     super(rule.messages, config);
     this.wrappedRule = rule;
-
+    super.setCategory(wrappedRule.getCategory());
     synchronized (models) {
       RemoteLanguageModel model = null;
       if (getId().equals(userConfig.getAbTest())) {
@@ -111,7 +114,7 @@ public class BERTSuggestionRanking extends RemoteRule {
   }
 
   @Override
-  protected RemoteRequest prepareRequest(List<AnalyzedSentence> sentences) {
+  protected RemoteRequest prepareRequest(List<AnalyzedSentence> sentences, AnnotatedText annotatedText) {
     List<RuleMatch> matches = new LinkedList<>();
     List<RemoteLanguageModel.Request> requests = new LinkedList<>();
     try {
@@ -122,7 +125,17 @@ public class BERTSuggestionRanking extends RemoteRule {
           match.setSuggestedReplacementObjects(prepareSuggestions(match.getSuggestedReplacementObjects()));
           // build request before correcting offset, as we send only sentence as text
           requests.add(buildRequest(match));
-          match.setOffsetPosition(match.getFromPos() + offset, match.getToPos() + offset);
+          int fromPos;
+          int toPos;
+          if (annotatedText != null) {
+            fromPos = annotatedText.getOriginalTextPositionFor(match.getFromPos() + offset, false);
+            toPos = annotatedText.getOriginalTextPositionFor(match.getToPos() + offset - 1, true) + 1;
+          } else {
+            // TODO: when can annotatedText be null?
+            fromPos = match.getFromPos() + offset;
+            toPos = match.getToPos() + offset;
+          }
+          match.setOffsetPosition(fromPos, toPos);
         }
         Collections.addAll(matches, sentenceMatches);
         offset += sentence.getText().length();
@@ -157,7 +170,20 @@ public class BERTSuggestionRanking extends RemoteRule {
         return new RemoteRuleResult(false, matches);
       } else {
         List<List<Double>> results = model.batchScore(requests);
-        Comparator<Pair<SuggestedReplacement, Double>> suggestionOrdering = Comparator.comparing(Pair::getRight);
+        // put curated at the top, then compare probabilities
+        Comparator<Pair<SuggestedReplacement, Double>> suggestionOrdering = (a, b) -> {
+          if (a.getKey().getType() != b.getKey().getType()) {
+            if (a.getKey().getType() == SuggestedReplacement.SuggestionType.Curated) {
+              return 1;
+            } else if (b.getKey().getType() == SuggestedReplacement.SuggestionType.Curated) {
+              return -1;
+            } else {
+              return a.getRight().compareTo(b.getRight());
+            }
+          } else {
+            return a.getRight().compareTo(b.getRight());
+          }
+        };
         suggestionOrdering = suggestionOrdering.reversed();
 
         for (int i = 0; i < indices.size(); i++) {

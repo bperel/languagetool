@@ -116,7 +116,9 @@ public class GermanSpellerRuleTest {
     assertThat(rule.match(lt.getAnalyzedSentence("Ventrolateral")).length, is(0));
     assertThat(rule.match(lt.getAnalyzedSentence("Kleindung")).length, is(1));  // ignored due to ignoreCompoundWithIgnoredWord(), but still in ignore.txt -> ignore.txt must override this
     assertThat(rule.match(lt.getAnalyzedSentence("Majonäse."))[0].getSuggestedReplacements().toString(), is("[Mayonnaise]"));
+    assertFirstSuggestion("Schöler-", "Schüler-", rule, lt);
     assertFirstSuggestion("wars.", "war's", rule, lt);
+    assertFirstSuggestion("haben -sehr", "sehr", rule, lt);
     assertFirstSuggestion("konservierungsstoffe", "Konservierungsstoffe", rule, lt);
 //    assertFirstSuggestion("Ist Ventrolateral", "ventrolateral", rule, lt);
     assertFirstSuggestion("denkte", "dachte", rule, lt);
@@ -421,6 +423,24 @@ public class GermanSpellerRuleTest {
     assertFirstSuggestion("zeritifierte", "zertifizierte", rule, lt);
     assertFirstSuggestion("gerähte", "Geräte", rule, lt);
     assertFirstSuggestion("pirsing", "Piercing", rule, lt);
+    assertFirstSuggestion("behilfreiches", "behilfliches", rule, lt);
+    assertFirstSuggestion("einsichtbar", "einsehbar", rule, lt);
+    assertFirstSuggestion("vollrichtest", "verrichtest", rule, lt);
+    assertFirstSuggestion("Vollrichtet", "Verrichtet", rule, lt);
+    assertFirstSuggestion("bedingslosem", "bedingungslosem", rule, lt);
+    assertFirstSuggestion("überstenden", "berstenden", rule, lt);
+    assertFirstSuggestion("abbonierst", "abonnierst", rule, lt);
+    assertFirstSuggestion("Apeliere", "Appelliere", rule, lt);
+    assertFirstSuggestion("voltieschiert", "voltigiert", rule, lt);
+    assertFirstSuggestion("meistverkaufteste", "meistverkaufte", rule, lt);
+    assertFirstSuggestion("unleshaftem", "unleserlichem", rule, lt);
+    assertFirstSuggestion("glaubenswürdig", "glaubwürdig", rule, lt);
+    assertFirstSuggestion("nivovolle", "niveauvolle", rule, lt);
+    assertFirstSuggestion("niwovoller", "niveauvoller", rule, lt);
+    assertFirstSuggestion("notgezwungender", "notgedrungener", rule, lt);
+    assertFirstSuggestion("misstraurig", "misstrauisch", rule, lt);
+    assertFirstSuggestion("Aux-Anschluss", "AUX-Anschluss", rule, lt);
+    assertFirstSuggestion("Wi", "Wie", rule, lt);
   }
 
   @Test
@@ -751,6 +771,11 @@ public class GermanSpellerRuleTest {
     assertFalse(rule.isMisspelled("Hausarbeit"));
     assertFalse(rule.isMisspelled("Überschuss"));
     assertFalse(rule.isMisspelled("Überschüsse"));
+
+    assertTrue(rule.isMisspelled("Spielzugcomputer"));
+    assertTrue(rule.isMisspelled("Spielzugcomputern"));
+    assertFalse(rule.isMisspelled("Spielzug"));
+    assertFalse(rule.isMisspelled("Spielzugs"));
   }
   
   @Test
