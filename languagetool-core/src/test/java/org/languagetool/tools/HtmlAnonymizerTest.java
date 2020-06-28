@@ -32,8 +32,8 @@ import static org.junit.Assert.assertEquals;
 
 @RunWith(Parameterized.class)
 public class HtmlAnonymizerTest {
-  private String originalHtml;
-  private String anonymizedHtml;
+  private final String originalHtml;
+  private final String anonymizedHtml;
 
   public HtmlAnonymizerTest(String originalHtml, String anonymizedHtml) {
     this.originalHtml = originalHtml;
