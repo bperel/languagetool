@@ -61,6 +61,6 @@ public class HtmlAnonymizerTest {
     HtmlTools.HtmlAnonymizer htmlAnonymizer = HtmlTools.HtmlAnonymizer.createFromHtml("title", "", originalHtml);
     htmlAnonymizer.anonymize();
 
-    assertEquals("<?xml version=\"1.0\" encoding=\"UTF-16\"?>\n" + anonymizedHtml, htmlAnonymizer.getAnonymizedHtml());
+    assertEquals(anonymizedHtml, htmlAnonymizer.getAnonymizedHtml());
   }
 }
