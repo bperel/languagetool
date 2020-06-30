@@ -125,29 +125,31 @@ public class WikipediaSentenceSource extends SentenceSource {
         @Override
         public void endElement(String uri, String localName, String qName) {
           if (qName.toLowerCase().equals("page")) {
+
+            String title = this.title.toString().trim();
+
             String namespace = this.namespace.toString().trim();
             if (ONLY_ARTICLES && !ARTICLE_NAMESPACE.equals(namespace)) {
               namespaceSkipCount++;
-              print("Article ignored because it doesn't belong to the main namespace : " + namespace);
+              print("Article " + title + " skipped : it doesn't belong to the main namespace (namespace :" + namespace + ")");
               return;
             }
 
             String text = this.text.toString().trim();
             if (text.length() > 250000) {
-              print("Article ignored because it is too large : " + text.length() + "characters");
+              print("Article " + title + " skipped : it is too large (" + text.length() + "characters)");
               return;
             }
 
-            String title = this.title.toString().trim();
             int revisionId = Integer.parseInt(this.revisionId.toString().trim());
             try {
               Object[] article = databaseHandler.getAnalyzedArticle(title, revisionId);
               if (article != null && article[1].equals(1L)) {
-                print("Article " + title + " with revision " + revisionId + " is already in the DB, ignoring");
+                print("Article " + title + " skipped : it is already in the DB (revision " + revisionId + ")");
               }
               else {
                 articleCount++;
-                print("Article #" + articleCount + " : " + title);
+                print("Article " + title + " (#" + articleCount + ") : Starting analysis");
                 if (article == null) {
                   article = addArticle(title, revisionId, text.trim());
                   if (article == null) {
@@ -155,7 +157,7 @@ public class WikipediaSentenceSource extends SentenceSource {
                   }
                 }
                 else {
-                  print("Article " + title + " with revision " + revisionId + " is in the DB but analysis is not completed yet");
+                  print("Article " + title + " (#" + articleCount + ") : In the DB but not analysed. Starting analysis");
                 }
                 Long articleId = (Long) article[0];
                 addSentencesFromArticle(articleId, title, revisionId, (String) article[5]);
