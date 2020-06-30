@@ -23,6 +23,7 @@ FROM openjdk:11-jre-buster as languagetool-wikipedia
 ENV LANGUAGETOOL_VERSION=5.0
 COPY --from=build /srv/languagetool/languagetool-wikipedia/target/LanguageTool-wikipedia-$LANGUAGETOOL_VERSION /srv/languagetool-wikipedia
 COPY ./import-dump.sh /home
+COPY ./disabled_rules.properties /home
 
 RUN apt-get update && apt-get install --no-install-recommends -y jq curl procps libxml-xpath-perl && apt-get clean && \
     chmod +x /home/import-dump.sh

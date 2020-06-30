@@ -64,7 +64,6 @@ services:
       - dumps:/home/dumps
       - ./nwords:/home/nwords
       - ./server.properties:/home/server.properties
-      - ./disabled_rules.properties:/home/disabled_rules.properties
     restart: always
     networks:
       default:
