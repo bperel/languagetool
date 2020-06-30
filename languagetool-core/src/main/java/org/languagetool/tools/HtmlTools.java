@@ -133,6 +133,9 @@ public class HtmlTools {
 
   public static String getErrorContextWithAppliedSuggestion(String articleTitle, String articleWikitext, String suggestionErrorContext, String suggestion) throws SuggestionNotApplicableException {
     String largestErrorContextWithoutHtmlTags = getLargestErrorContext(suggestionErrorContext);
+    if (largestErrorContextWithoutHtmlTags.contains("</tag") || largestErrorContextWithoutHtmlTags.contains("<tag")) {
+      throw new SuggestionNotApplicableException(String.format("Article %s : match skipped : Match string context '%s' can't be stripped off its HTML tags", articleTitle, largestErrorContextWithoutHtmlTags));
+    }
     String stringToReplace = getStringToReplace(largestErrorContextWithoutHtmlTags);
 
     int errorStartPosition = largestErrorContextWithoutHtmlTags.indexOf("<err>");
@@ -142,7 +145,7 @@ public class HtmlTools {
     if ( articleTitleStartPosition > -1
       && errorStartPosition >= articleTitleStartPosition && (articleTitleStartPosition + articleTitle.length()) >= errorEndPosition
     ) {
-      throw new SuggestionNotApplicableException(String.format("The title of the article is included in the match '%s' in the wikitext of article '%s'", stringToReplace, articleTitle));
+      throw new SuggestionNotApplicableException(String.format("Article %s : match skipped : Match string '%s' is included in the article's title", articleTitle, stringToReplace));
     }
 
     boolean hasMatch = articleWikitext.contains(stringToReplace);
@@ -150,20 +153,20 @@ public class HtmlTools {
 
     if (hasMatch) {
       if (hasMultipleMatches) {
-        throw new SuggestionNotApplicableException(String.format("More than one match for '%s' in the wikitext of article '%s'", stringToReplace, articleTitle));
+        throw new SuggestionNotApplicableException(String.format("Article %s : match skipped : Match string '%s' is found multiple times in the wikitext of its article", articleTitle, stringToReplace));
       }
       else {
-        System.out.println(String.format("Found a match for '%s' in the wikitext of article '%s'", stringToReplace, articleTitle));
+        System.out.println(String.format("Article %s : Match string '%s' found in the wikitext of its article", articleTitle, stringToReplace));
         try {
           return largestErrorContextWithoutHtmlTags.replaceAll("<err>.+?</err>", suggestion);
         }
         catch(RuntimeException e) {
-          throw new SuggestionNotApplicableException("Can't replace '" + stringToReplace + "' with the suggestion '"+suggestion+"'");
+          throw new SuggestionNotApplicableException(String.format("Article %s : match skipped : Match string '%s' can't be replaced with '%s'", articleTitle, stringToReplace, suggestion));
         }
       }
     }
     else {
-      throw new SuggestionNotApplicableException(String.format("Can't find a match for '%s' in the wikitext of article '%s'", stringToReplace, articleTitle));
+      throw new SuggestionNotApplicableException(String.format("Article %s : match skipped : Match string '%s' can't be found in the wikitext of its article", articleTitle, stringToReplace));
     }
   }
 

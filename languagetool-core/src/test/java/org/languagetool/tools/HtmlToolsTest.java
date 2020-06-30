@@ -55,7 +55,7 @@ public class HtmlToolsTest {
       fail("Should have thrown SuggestionNotApplicableException");
     }
     catch (HtmlTools.SuggestionNotApplicableException e) {
-      assertEquals("The title of the article is included in the match ' Hello World.' in the wikitext of article 'Hello World'", e.getMessage());
+      assertEquals("Article Hello World : match skipped : Match string ' Hello World.' is included in the article's title", e.getMessage());
     }
   }
 
@@ -69,7 +69,7 @@ public class HtmlToolsTest {
       fail("Should have thrown SuggestionNotApplicableException");
     }
     catch (HtmlTools.SuggestionNotApplicableException e) {
-      assertEquals("The title of the article is included in the match ' Hello World.' in the wikitext of article 'Hello World'", e.getMessage());
+      assertEquals("Article Hello World : match skipped : Match string ' Hello World.' is included in the article's title", e.getMessage());
     }
   }
 }
