@@ -28,4 +28,4 @@ COPY ./disabled_rules.properties /home
 RUN apt-get update && apt-get install --no-install-recommends -y jq curl procps libxml-xpath-perl && apt-get clean && \
     chmod +x /home/import-dump.sh
 
-CMD ["/home/import-dump.sh"]
+CMD ["sh", "-c", "/home/import-dump.sh"]
