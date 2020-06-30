@@ -150,10 +150,6 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
         createSentence(sentence.getArticleId(), match);
         ++errorCount;
         checkMaxErrors();
-        if (errorCount % 100 == 0) {
-          System.out.println("Storing error #" + errorCount + " for text:");
-          System.out.println("  " + sentence.getText());
-        }
       }
       ++sentenceCount;
       checkMaxSentences();
