@@ -24,10 +24,7 @@ ENV LANGUAGETOOL_VERSION=5.0
 COPY --from=build /srv/languagetool/languagetool-wikipedia/target/LanguageTool-wikipedia-$LANGUAGETOOL_VERSION /srv/languagetool-wikipedia
 COPY ./import-dump.sh /home
 
-RUN chmod +x /home/import-dump.sh \
- && apt-get update && apt-get install --no-install-recommends -y jq curl cron procps libxml-xpath-perl && apt-get clean
+RUN apt-get update && apt-get install --no-install-recommends -y jq curl procps libxml-xpath-perl && apt-get clean && \
+    chmod +x /home/import-dump.sh
 
-RUN echo "0 1 * * * pgrep -f /home/import-dump.sh > /dev/null 2> /dev/null || /home/import-dump.sh &> /proc/1/fd/1" > /etc/cron.d/import
-RUN crontab /etc/cron.d/import
-
-CMD ["cron", "-f"]
+CMD ["/home/import-dump.sh"]
