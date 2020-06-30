@@ -3,4 +3,5 @@
 !languagetool-*
 !pom.xml
 !*.sh
+!disabled_rules.properties
 **/target
