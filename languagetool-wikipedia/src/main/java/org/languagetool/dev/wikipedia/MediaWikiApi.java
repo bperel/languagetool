@@ -116,6 +116,7 @@ public class MediaWikiApi {
     editParameters.put("title", title);
     editParameters.put("text", content);
     editParameters.put("summary", editSummary);
+    editParameters.put("minor", "true");
     editParameters.put("token", token);
     Response editResponse = callApiWithAccessToken(Verb.POST, API_ENDPOINT_BASE, editParameters);
     System.out.println("Response : " + editResponse.getBody());
