@@ -39,16 +39,16 @@ import java.util.Properties;
  */
 class CorpusMatchDatabaseHandler implements AutoCloseable {
 
-  protected static final String MARKER_START = "<err>";
-  protected static final String MARKER_END = "</err>";
+  private static final String MARKER_START = "<err>";
+  private static final String MARKER_END = "</err>";
 
-  protected int sentenceCount = 0;
-  protected int errorCount = 0;
+  private int sentenceCount = 0;
+  private int errorCount = 0;
 
   private final int maxSentences;
   private final int maxErrors;
 
-  protected static Connection conn;
+  private final Connection conn;
 
   static final int MAX_CONTEXT_LENGTH = 500;
   private static final int SMALL_CONTEXT_LENGTH = 40;  // do not modify - it would break lookup of errors marked as 'false alarm'
@@ -56,12 +56,12 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
   static final ContextTools contextTools;
   static final ContextTools smallContextTools;
 
-  private PreparedStatement selectCorpusArticleWithRevisionSt;
-  private PreparedStatement insertCorpusArticleSt;
-  private PreparedStatement insertCorpusMatchSt;
-  private PreparedStatement deleteNeverAppliedSuggestionsOfObsoleteArticles;
-  private PreparedStatement deleteAlreadyAppliedSuggestionsInNewArticleRevisions;
-  private PreparedStatement updateCorpusArticleMarkAsAnalyzed;
+  private final PreparedStatement selectCorpusArticleWithRevisionSt;
+  private final PreparedStatement insertCorpusArticleSt;
+  private final PreparedStatement insertCorpusMatchSt;
+  private final PreparedStatement deleteNeverAppliedSuggestionsOfObsoleteArticles;
+  private final PreparedStatement deleteAlreadyAppliedSuggestionsInNewArticleRevisions;
+  private final PreparedStatement updateCorpusArticleMarkAsAnalyzed;
 
   static {
     contextTools = new ContextTools();
@@ -80,49 +80,47 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
     this.maxSentences = maxSentences;
     this.maxErrors = maxErrors;
 
-    if (conn == null) {
-      Properties dbProperties = new Properties();
-      try (FileInputStream inStream = new FileInputStream(propertiesFile)) {
-        dbProperties.load(inStream);
-        String dbUrl = getProperty(dbProperties, "dbUrl");
-        String dbUser = getProperty(dbProperties, "dbUsername");
-        String dbPassword = getProperty(dbProperties, "dbPassword");
-        conn = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
-      } catch (SQLException | IOException e) {
-        throw new RuntimeException(e);
-      }
-      try {
-        selectCorpusArticleWithRevisionSt = conn.prepareStatement("" +
-          " SELECT id, analyzed, wikitext, css_url, html, anonymized_html FROM corpus_article" +
-          " WHERE title = ? AND revision = ?");
-        insertCorpusArticleSt = conn.prepareStatement("" +
-          " INSERT INTO corpus_article (language_code, title, revision, wikitext, html, anonymized_html, css_url, analyzed)" +
-          " VALUES (?, ?, ?, ?, ?, ?, ?, 0)", Statement.RETURN_GENERATED_KEYS);
-        insertCorpusMatchSt = conn.prepareStatement("" +
-          " INSERT INTO corpus_match (article_id, ruleid, rule_category, rule_subid, rule_description, message, error_context, small_error_context, html_error_context, replacement_suggestion, languagetool_version)" +
-          " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        deleteNeverAppliedSuggestionsOfObsoleteArticles = conn.prepareStatement("" +
-          " DELETE FROM corpus_match" +
-          " WHERE applied IS NULL AND article_id IN (SELECT id FROM corpus_article WHERE title = ? AND language_code = ? AND revision <> ? )");
-        deleteAlreadyAppliedSuggestionsInNewArticleRevisions = conn.prepareStatement("" +
-          " DELETE from corpus_match WHERE article_id = ? AND id IN " +
-          " (SELECT m.id" +
-          "  FROM corpus_match m, corpus_match m2" +
-          "  WHERE m.id > m2.id" +
-          "    AND (select concat(a.title, '__', a.language_code) from corpus_article a where a.id = m.article_id) =" +
-          "        (select concat(a2.title, '__', a2.language_code) from corpus_article a2 where a2.id = m2.article_id)" +
-          "    AND m.ruleid = m2.ruleid" +
-          "    AND m.rule_subid = m2.rule_subid" +
-          "    AND m.error_context = m2.error_context" +
-          "    AND m.applied is null" +
-          "    AND m2.applied is not null" +
-          " )");
-        updateCorpusArticleMarkAsAnalyzed = conn.prepareStatement("" +
-          " UPDATE corpus_article" +
-          " SET analyzed = 1 WHERE id = ?");
-      } catch (SQLException e) {
-        throw new RuntimeException(e);
-      }
+    Properties dbProperties = new Properties();
+    try (FileInputStream inStream = new FileInputStream(propertiesFile)) {
+      dbProperties.load(inStream);
+      String dbUrl = getProperty(dbProperties, "dbUrl");
+      String dbUser = getProperty(dbProperties, "dbUsername");
+      String dbPassword = getProperty(dbProperties, "dbPassword");
+      conn = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
+    } catch (SQLException | IOException e) {
+      throw new RuntimeException(e);
+    }
+    try {
+      selectCorpusArticleWithRevisionSt = conn.prepareStatement("" +
+        " SELECT id, analyzed, wikitext, css_url, html, anonymized_html FROM corpus_article" +
+        " WHERE title = ? AND revision = ?");
+      insertCorpusArticleSt = conn.prepareStatement("" +
+        " INSERT INTO corpus_article (language_code, title, revision, wikitext, html, anonymized_html, css_url, analyzed)" +
+        " VALUES (?, ?, ?, ?, ?, ?, ?, 0)", Statement.RETURN_GENERATED_KEYS);
+      insertCorpusMatchSt = conn.prepareStatement("" +
+        " INSERT INTO corpus_match (article_id, ruleid, rule_category, rule_subid, rule_description, message, error_context, small_error_context, html_error_context, replacement_suggestion, languagetool_version)" +
+        " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+      deleteNeverAppliedSuggestionsOfObsoleteArticles = conn.prepareStatement("" +
+        " DELETE FROM corpus_match" +
+        " WHERE applied IS NULL AND article_id IN (SELECT id FROM corpus_article WHERE title = ? AND language_code = ? AND revision <> ? )");
+      deleteAlreadyAppliedSuggestionsInNewArticleRevisions = conn.prepareStatement("" +
+        " DELETE from corpus_match WHERE article_id = ? AND id IN " +
+        " (SELECT m.id" +
+        "  FROM corpus_match m, corpus_match m2" +
+        "  WHERE m.id > m2.id" +
+        "    AND (select concat(a.title, '__', a.language_code) from corpus_article a where a.id = m.article_id) =" +
+        "        (select concat(a2.title, '__', a2.language_code) from corpus_article a2 where a2.id = m2.article_id)" +
+        "    AND m.ruleid = m2.ruleid" +
+        "    AND m.rule_subid = m2.rule_subid" +
+        "    AND m.error_context = m2.error_context" +
+        "    AND m.applied is null" +
+        "    AND m2.applied is not null" +
+        " )");
+      updateCorpusArticleMarkAsAnalyzed = conn.prepareStatement("" +
+        " UPDATE corpus_article" +
+        " SET analyzed = 1 WHERE id = ?");
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
     }
   }
 
@@ -260,8 +258,6 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
         preparedStatement.close();
       }
     }
-    if (conn != null) {
-      conn.close();
-    }
+    conn.close();
   }
 }

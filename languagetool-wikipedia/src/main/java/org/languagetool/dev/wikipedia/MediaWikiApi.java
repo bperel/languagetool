@@ -16,10 +16,10 @@ public class MediaWikiApi {
 
   public static final String[] SUPPORTED_LANGUAGES = new String[]{"ca", "de", "en", "fr", "nl", "pl", "pt", "ru", "uk"};
 
-  private static HashMap<String, OAuth10aService> services = new HashMap<>();
-  private static HashMap<String, HashMap<String, OAuth1RequestToken>> requestTokens = new HashMap<>();
+  private static final HashMap<String, OAuth10aService> services = new HashMap<>();
+  private static final HashMap<String, HashMap<String, OAuth1RequestToken>> requestTokens = new HashMap<>();
 
-  private String language;
+  private final String language;
   private OAuth1AccessToken accessTokenWithSecret;
 
   public MediaWikiApi(String language) {
