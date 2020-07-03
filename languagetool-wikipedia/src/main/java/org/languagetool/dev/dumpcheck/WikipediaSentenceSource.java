@@ -144,8 +144,15 @@ public class WikipediaSentenceSource extends SentenceSource {
             int revisionId = Integer.parseInt(this.revisionId.toString().trim());
             try {
               Object[] article = databaseHandler.getAnalyzedArticle(title, revisionId);
-              if (article != null && article[1].equals(1L)) {
-                print("Article " + title + " skipped : it is already in the DB (revision " + revisionId + ")");
+              boolean isAnalyzed = article != null && (Boolean) article[2];
+              if (isAnalyzed) {
+                Long existingRevisionId = (Long) article[1];
+                if (existingRevisionId > revisionId) {
+                  print("Article " + title + " skipped : the version in the DB (" + existingRevisionId + ") is more recent than this one (" + revisionId + ")");
+                }
+                else {
+                  print("Article " + title + " skipped : it is already in the DB (revision " + revisionId + ")");
+                }
               }
               else {
                 articleCount++;
@@ -160,10 +167,15 @@ public class WikipediaSentenceSource extends SentenceSource {
                   print("Article " + title + " (#" + articleCount + ") : In the DB but not analysed. Starting analysis");
                 }
                 Long articleId = (Long) article[0];
-                addSentencesFromArticle(articleId, title, revisionId, (String) article[5]);
+                String wikitext = (String) article[3];
+                String cssUrl = (String) article[4];
+                String html = (String) article[5];
+                String anonymizedHtml = (String) article[6];
+
+                addSentencesFromArticle(articleId, title, revisionId, anonymizedHtml);
 
                 databaseHandler.deleteNeverAppliedSuggestionsOfObsoleteArticles(title, language.getShortCode(), revisionId);
-                processSentences((String) article[2], (String) article[3], (String) article[4]);
+                processSentences(wikitext, cssUrl, html);
                 databaseHandler.markArticleAsAnalyzed(articleId);
                 databaseHandler.deleteAlreadyAppliedSuggestionsInNewArticleRevisions(articleId);
               }

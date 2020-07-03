@@ -56,7 +56,7 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
   static final ContextTools contextTools;
   static final ContextTools smallContextTools;
 
-  private final PreparedStatement selectCorpusArticleWithRevisionSt;
+  private final PreparedStatement selectCorpusArticleWithEqualOrHigherRevisionSt;
   private final PreparedStatement insertCorpusArticleSt;
   private final PreparedStatement insertCorpusMatchSt;
   private final PreparedStatement deleteNeverAppliedSuggestionsOfObsoleteArticles;
@@ -91,9 +91,9 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
       throw new RuntimeException(e);
     }
     try {
-      selectCorpusArticleWithRevisionSt = conn.prepareStatement("" +
-        " SELECT id, analyzed, wikitext, css_url, html, anonymized_html FROM corpus_article" +
-        " WHERE title = ? AND revision = ?");
+      selectCorpusArticleWithEqualOrHigherRevisionSt = conn.prepareStatement("" +
+        " SELECT id, revision, analyzed, wikitext, css_url, html, anonymized_html FROM corpus_article article" +
+        " WHERE title = ? AND revision = (SELECT MAX(revision) from corpus_article where title=article.title)");
       insertCorpusArticleSt = conn.prepareStatement("" +
         " INSERT INTO corpus_article (language_code, title, revision, wikitext, html, anonymized_html, css_url, analyzed)" +
         " VALUES (?, ?, ?, ?, ?, ?, ?, 0)", Statement.RETURN_GENERATED_KEYS);
@@ -217,18 +217,19 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
   }
 
   Object[] getAnalyzedArticle(String title, int revision) throws SQLException {
-    selectCorpusArticleWithRevisionSt.setString(1, title);
-    selectCorpusArticleWithRevisionSt.setInt(2, revision);
+    selectCorpusArticleWithEqualOrHigherRevisionSt.setString(1, title);
+    selectCorpusArticleWithEqualOrHigherRevisionSt.setInt(2, revision);
 
-    ResultSet corpusArticleResultSet = selectCorpusArticleWithRevisionSt.executeQuery();
+    ResultSet corpusArticleResultSet = selectCorpusArticleWithEqualOrHigherRevisionSt.executeQuery();
     if (corpusArticleResultSet.next()) {
       return new Object[]{
         corpusArticleResultSet.getLong(1),
         corpusArticleResultSet.getLong(2),
-        corpusArticleResultSet.getString(3),
+        corpusArticleResultSet.getBoolean(3),
         corpusArticleResultSet.getString(4),
         corpusArticleResultSet.getString(5),
-        corpusArticleResultSet.getString(6)
+        corpusArticleResultSet.getString(6),
+        corpusArticleResultSet.getString(7)
       };
     } else {
       return null;
@@ -243,7 +244,7 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
   @Override
   public void close() throws Exception {
     for (PreparedStatement preparedStatement : Arrays.asList(
-      selectCorpusArticleWithRevisionSt,
+      selectCorpusArticleWithEqualOrHigherRevisionSt,
       insertCorpusArticleSt,
       insertCorpusMatchSt,
       deleteNeverAppliedSuggestionsOfObsoleteArticles,
