@@ -11,9 +11,6 @@ while true; do
       | while read -r dump; do
 
       echo "Dump : $dump"
-      echo "Retrieving sha1sums..."
-      curl -s "https://dumps.wikimedia.org/${wiki}wiki/$dump/${wiki}wiki-$dump-sha1sums.txt" > sha1sums.txt
-      echo "Done."
 
       curl -s "https://dumps.wikimedia.org/${wiki}wiki/$dump/dumpstatus.json" \
       | jq '.jobs.articlesmultistreamdump.files | keys[]' \
@@ -23,6 +20,9 @@ while true; do
         if [ -f "$file.done" ]; then
           echo "File already downloaded and processed, skipping"
         else
+          echo "Retrieving sha1sums..."
+          curl -s "https://dumps.wikimedia.org/${wiki}wiki/$dump/${wiki}wiki-$dump-sha1sums.txt" > sha1sums.txt
+          echo "Done."
           if grep `sha1sum "$file"` sha1sums.txt; then
             echo "File already downloaded but not processed, reprocessing"
           else
