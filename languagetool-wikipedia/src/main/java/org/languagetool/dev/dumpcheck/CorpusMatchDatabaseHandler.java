@@ -93,7 +93,7 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
     try {
       selectCorpusArticleWithEqualOrHigherRevisionSt = conn.prepareStatement("" +
         " SELECT id, revision, analyzed, wikitext, css_url, html, anonymized_html FROM corpus_article article" +
-        " WHERE title = ? AND revision = (SELECT MAX(revision) from corpus_article where title=article.title)");
+        " WHERE title = ? AND revision = (SELECT MAX(revision) from corpus_article where title=article.title) AND revision >= ?");
       insertCorpusArticleSt = conn.prepareStatement("" +
         " INSERT INTO corpus_article (language_code, title, revision, wikitext, html, anonymized_html, css_url, analyzed)" +
         " VALUES (?, ?, ?, ?, ?, ?, ?, 0)", Statement.RETURN_GENERATED_KEYS);
