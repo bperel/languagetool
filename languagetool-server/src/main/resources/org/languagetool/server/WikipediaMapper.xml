@@ -49,7 +49,7 @@
         SELECT language_code, count(*)
         FROM corpus_match
         INNER JOIN corpus_article ca on corpus_match.article_id = ca.id
-        WHERE applied_date is null
+        WHERE applied is null
         GROUP BY language_code
         ORDER BY language_code
     </select>
