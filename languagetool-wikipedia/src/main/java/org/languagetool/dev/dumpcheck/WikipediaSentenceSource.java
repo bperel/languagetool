@@ -288,7 +288,7 @@ public class WikipediaSentenceSource extends SentenceSource {
         String cssUrl = htmlAnonymizer.getCssUrl();
         Long articleId = databaseHandler.createArticle(language.getShortCode(), title, revisionId, wikitext, html, anonymizedHtml, cssUrl);
 
-        return new Object[] { articleId, 0, wikitext, cssUrl, html, anonymizedHtml };
+        return new Object[] { articleId, 0, false, wikitext, cssUrl, html, anonymizedHtml };
       }
     } catch (Exception e) {
       print("Could not extract text, skipping document: " + e + ", full stacktrace follows:");
