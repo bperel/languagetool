@@ -31,8 +31,8 @@ create table corpus_article
 create index corpus_article_language_code_index
     on corpus_article (language_code);
 
-create index corpus_match_article_applied_index
-    on corpus_match(article_id, applied);
+create index corpus_article_url_index
+    on corpus_article (url);
 
 create table corpus_match
 (
@@ -69,6 +69,12 @@ create index corpus_match_applied_index
 create index corpus_match_index_article
     on corpus_match (article_id);
 
+create index corpus_match_article_applied_index
+    on corpus_match(article_id, applied);
+
 create index corpus_match_rule_article_id_version_index
     on corpus_match (rule_category, rule_description, languagetool_version, article_id);
+
+create index corpus_match_rule_applied_index
+    on corpus_match (ruleid, rule_subid, applied);
 

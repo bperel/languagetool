@@ -108,8 +108,8 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
         " (SELECT m.id" +
         "  FROM corpus_match m, corpus_match m2" +
         "  WHERE m.id > m2.id" +
-        "    AND (select concat(a.title, '__', a.language_code) from corpus_article a where a.id = m.article_id) =" +
-        "        (select concat(a2.title, '__', a2.language_code) from corpus_article a2 where a2.id = m2.article_id)" +
+        "    AND (select a.url from corpus_article a where a.id = m.article_id) =" +
+        "        (select a2.url from corpus_article a2 where a2.id = m2.article_id)" +
         "    AND m.ruleid = m2.ruleid" +
         "    AND m.rule_subid = m2.rule_subid" +
         "    AND m.error_context = m2.error_context" +
