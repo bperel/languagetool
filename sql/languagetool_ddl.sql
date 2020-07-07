@@ -24,12 +24,15 @@ create table corpus_article
     analyzed tinyint(1) not null,
     url varchar(300) as (concat('https://',`language_code`,'.wikipedia.org/wiki/',`title`)) stored,
     constraint corpus_article_uindex
-        unique (title, revision)
+        unique (language_code, title, revision)
 )
     charset=utf8mb4;
 
 create index corpus_article_language_code_index
     on corpus_article (language_code);
+
+create index corpus_match_article_applied_index
+    on corpus_match(article_id, applied);
 
 create table corpus_match
 (

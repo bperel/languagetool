@@ -47,9 +47,10 @@
     </select>
     <select id="getPendingSuggestionsPerLanguageCode" resultType="org.languagetool.server.DatabaseAccess$PendingSuggestionsPerLanguageCode">
         SELECT language_code, count(*)
-        FROM corpus_match
-        INNER JOIN corpus_article ca on corpus_match.article_id = ca.id
-        WHERE applied is null
+        FROM corpus_match use index (corpus_match_article_applied_index),
+             corpus_article
+        WHERE article_id = corpus_article.id
+          AND applied is null
         GROUP BY language_code
         ORDER BY language_code
     </select>
