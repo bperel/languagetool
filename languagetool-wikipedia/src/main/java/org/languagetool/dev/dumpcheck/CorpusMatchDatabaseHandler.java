@@ -93,7 +93,7 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
     try {
       selectCorpusArticleWithEqualOrHigherRevisionSt = conn.prepareStatement("" +
         " SELECT id, revision, analyzed, wikitext, css_url, html, anonymized_html FROM corpus_article article" +
-        " WHERE title = ? AND revision = (SELECT MAX(revision) from corpus_article where title=article.title) AND revision >= ?");
+        " WHERE title = ? AND language_code = ? AND revision = (SELECT MAX(revision) from corpus_article where title=article.title) AND revision >= ?");
       insertCorpusArticleSt = conn.prepareStatement("" +
         " INSERT INTO corpus_article (language_code, title, revision, wikitext, html, anonymized_html, css_url, analyzed)" +
         " VALUES (?, ?, ?, ?, ?, ?, ?, 0)", Statement.RETURN_GENERATED_KEYS);
@@ -216,9 +216,10 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
     insertCorpusMatchSt.executeQuery();
   }
 
-  Object[] getAnalyzedArticle(String title, int revision) throws SQLException {
+  Object[] getAnalyzedArticle(String title, String languageCode, int revision) throws SQLException {
     selectCorpusArticleWithEqualOrHigherRevisionSt.setString(1, title);
-    selectCorpusArticleWithEqualOrHigherRevisionSt.setInt(2, revision);
+    selectCorpusArticleWithEqualOrHigherRevisionSt.setString(2, languageCode);
+    selectCorpusArticleWithEqualOrHigherRevisionSt.setInt(3, revision);
 
     ResultSet corpusArticleResultSet = selectCorpusArticleWithEqualOrHigherRevisionSt.executeQuery();
     if (corpusArticleResultSet.next()) {

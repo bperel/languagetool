@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
+import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -143,7 +144,7 @@ public class WikipediaSentenceSource extends SentenceSource {
 
             int revisionId = Integer.parseInt(this.revisionId.toString().trim());
             try {
-              Object[] article = databaseHandler.getAnalyzedArticle(title, revisionId);
+              Object[] article = databaseHandler.getAnalyzedArticle(title, language.getShortCode(), revisionId);
               boolean isAnalyzed = article != null && (Boolean) article[2];
               if (isAnalyzed) {
                 Long existingRevisionId = (Long) article[1];
@@ -263,7 +264,7 @@ public class WikipediaSentenceSource extends SentenceSource {
 
   @NotNull
   private String getUrl(String title, Integer revision) {
-    String url = "http://" + language.getShortCode() + ".wikipedia.org/wiki/" + title;
+    String url = MessageFormat.format("http://{0}.wikipedia.org/wiki/{1}", language.getShortCode(), title);
     if (revision != null) {
       url+="/"+revision;
     }
