@@ -18,6 +18,10 @@
  */
 package org.languagetool.dev.dumpcheck;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.apache.commons.cli.*;
 import org.apache.commons.lang3.StringUtils;
 import org.languagetool.*;
@@ -360,22 +364,28 @@ public class SentenceSourceChecker {
               break;
             case 1:
               System.out.println("Found an HTML match for '" + stringToReplace +"'");
-              match.setHtmlContext(getSimplifiedHtmlContext(dbf.newDocumentBuilder().newDocument(), nodeList.item(0), null));
+              String htmlContext = getSimplifiedHtmlContext(dbf.newDocumentBuilder().newDocument(), nodeList.item(0), null);
+              match.setHtmlContext(htmlContext);
               return match;
             default:
               System.out.println("Found more than 1 HTML match (" + nodeList.getLength()+ ") for '" + stringToReplace +"'");
           }
         } catch (XPathExpressionException | ParserConfigurationException e) {
           e.printStackTrace();
+          return null;
+        } catch (SuggestionNotApplicableException e) {
+          System.out.println(e.getMessage());
+          return null;
         }
 
         return null;
       };
     }
 
-    private static String getSimplifiedHtmlContext(Document doc, Node node, Node childElement) {
+    private static String getSimplifiedHtmlContext(Document doc, Node node, Node childElement) throws SuggestionNotApplicableException {
       if (node instanceof Text) {
         Node surroundingElement = doc.importNode(node.getParentNode(), true);
+        assertNodeNotExcluded(surroundingElement);
         return getSimplifiedHtmlContext(doc, node.getParentNode().getParentNode(), surroundingElement);
       }
       else {
@@ -385,6 +395,7 @@ public class SentenceSourceChecker {
           return HtmlTools.getStringFromDocument(doc);
         }
         else {
+          assertNodeNotExcluded(node);
           simpleElement = doc.createElement(node.getNodeName());
 
           if (node.getNodeName().equals("html")) {
@@ -404,6 +415,26 @@ public class SentenceSourceChecker {
       }
     }
 
+    private static void assertNodeNotExcluded(Node node) throws SuggestionNotApplicableException {
+      NamedNodeMap attributes = node.getAttributes();
+      for (int i = 0; i < attributes.getLength(); i++) {
+        Node attribute = attributes.item(i);
+        if ("data-mw".equals(attribute.getNodeName())) {
+          ObjectMapper mapper = new ObjectMapper(new JsonFactory());
+          try {
+            ArrayNode mwDataParts = (ArrayNode) mapper.readTree(attribute.getTextContent()).get("parts");
+            for (int j = 0; j < mwDataParts.size(); j++) {
+              if (mwDataParts.get(j).get("template").get("target").get("wt").toString().equals("\"Langue\"")) {
+                throw new SuggestionNotApplicableException("Match ignored because it is located within a lang template");
+              }
+            }
+          } catch (JsonProcessingException e) {
+            System.err.println("Can't read data-mw attribute content : " + attribute.getTextContent());
+          }
+        }
+      }
+    }
+
     private static Function<RuleMatch, RuleMatchWithHtmlContexts> mapRuleAddTextContext(Sentence sentence, String finalWikitext) {
       return match -> {
         String context = CorpusMatchDatabaseHandler.contextTools.getContext(match.getFromPos(), match.getToPos(), sentence.getText());
@@ -414,7 +445,7 @@ public class SentenceSourceChecker {
 
         List<String> suggestions = match.getSuggestedReplacements();
         if (suggestions.isEmpty()
-          || suggestions.get(0).matches("^\\(.+\\)$") // This kind of suggestions are expecting user input
+          || suggestions.get(0).matches("^\\(.+\\)$") // This kind of suggestions is expecting user input
         ) {
           return null;
         }
