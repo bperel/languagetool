@@ -1,9 +1,8 @@
 package org.languagetool.rules;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.jayway.jsonpath.Configuration;
+import com.jayway.jsonpath.JsonPath;
+import com.jayway.jsonpath.spi.json.JsonProvider;
 import org.languagetool.AnalyzedSentence;
 import org.languagetool.tools.ContextTools;
 import org.w3c.dom.*;
@@ -14,7 +13,10 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 
 import static org.languagetool.tools.HtmlTools.*;
@@ -25,6 +27,7 @@ public class RuleMatchWithHtmlContexts extends RuleMatch {
   private static final int MAX_CONTEXT_LENGTH = 500;
   private static final int SMALL_CONTEXT_LENGTH = 40;  // do not modify - it would break lookup of errors marked as 'false alarm'
 
+  public static String languageCode;
   public static String currentArticleCssUrl;
   public static Document currentArticleDocument;
 
@@ -56,6 +59,20 @@ public class RuleMatchWithHtmlContexts extends RuleMatch {
   public String textContext;
   public String largeTextContext;
   public String htmlContext;
+
+  private static final Map<String, Map<String, Set<String>>> excludedJsonPaths = new HashMap<String, Map<String, Set<String>>>() {
+    {
+      put("ca", Map.of("data-mw", Set.of("parts[*].template.target[?(@.wt == 'Lang')]")));
+      put("de", Map.of("data-mw", Set.of("parts[*].template.target[?(@.wt == 'lang')]")));
+      put("en", Map.of("data-mw", Set.of("parts[*].template.target[?(@.wt == 'Lang')]")));
+      put("fr", Map.of("data-mw", Set.of("parts[*].template.target[?(@.wt == 'Langue')]")));
+      put("nl", Map.of("data-mw", Set.of("parts[*].template.target[?(@.wt == 'Lang')]")));
+      put("pl", Map.of("data-mw", Set.of("parts[*].template.target[?(@.wt == 'J')]")));
+      put("pt", Map.of("data-mw", Set.of("parts[*].template.target[?(@.wt == 'Lang')]")));
+      put("ru", Map.of("data-mw", Set.of("parts[*].template.target[?(@.wt == 'Lang')]")));
+      put("uk", Map.of("data-mw", Set.of("parts[*].template.target[?(@.wt == 'Lang')]")));
+    }
+  };
 
   public RuleMatchWithHtmlContexts(Rule rule, AnalyzedSentence sentence, int fromPos, int toPos, String message, String shortMessage, List<String> suggestions) {
     super(rule, sentence, fromPos, toPos, message, shortMessage, suggestions);
@@ -124,19 +141,17 @@ public class RuleMatchWithHtmlContexts extends RuleMatch {
 
   private static void assertNodeNotExcluded(Node node) throws SuggestionNotApplicableException {
     NamedNodeMap attributes = node.getAttributes();
-    for (int i = 0; i < attributes.getLength(); i++) {
-      Node attribute = attributes.item(i);
-      if ("data-mw".equals(attribute.getNodeName())) {
-        ObjectMapper mapper = new ObjectMapper(new JsonFactory());
-        try {
-          ArrayNode mwDataParts = (ArrayNode) mapper.readTree(attribute.getTextContent()).get("parts");
-          for (int j = 0; j < mwDataParts.size(); j++) {
-            if (mwDataParts.get(j).get("template").get("target").get("wt").toString().equals("\"Langue\"")) {
-              throw new SuggestionNotApplicableException(" Match ignored because it is located within a lang template");
-            }
+    Map<String, Set<String>> excludedJsonPathsForLanguage = excludedJsonPaths.get(languageCode);
+    JsonProvider jsonProvider = Configuration.defaultConfiguration().jsonProvider();
+
+    for (String attributeName : excludedJsonPathsForLanguage.keySet()) {
+      Node attribute = attributes.getNamedItem(attributeName);
+      if (attribute != null) {
+        Object attributeContent = jsonProvider.parse(attribute.getNodeValue());
+        for (String jsonPath : excludedJsonPathsForLanguage.get(attributeName)) {
+          if (JsonPath.read(attributeContent, jsonPath) != null) {
+            throw new SuggestionNotApplicableException(" Match ignored because it matches the following path : " + jsonPath);
           }
-        } catch (JsonProcessingException e) {
-          System.err.println("Can't read data-mw attribute content : " + attribute.getTextContent());
         }
       }
     }

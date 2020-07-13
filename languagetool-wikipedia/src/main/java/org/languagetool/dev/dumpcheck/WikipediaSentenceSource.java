@@ -314,6 +314,7 @@ public class WikipediaSentenceSource extends SentenceSource {
       .filter(Objects::nonNull).collect(Collectors.toList());
 
     if (!matches.isEmpty() && articleHtml != null) {
+      RuleMatchWithHtmlContexts.languageCode = MixingSentenceSource.lt.getLanguage().getShortCode();
       RuleMatchWithHtmlContexts.currentArticleDocument = HTMLParser.parseArticle(articleHtml, sentence.getArticleId());
       RuleMatchWithHtmlContexts.currentArticleCssUrl = articleCssUrl;
       return matches.stream()
