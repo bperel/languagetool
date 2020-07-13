@@ -185,4 +185,28 @@ public class HtmlTools {
   public static String getStringToReplace(String largestErrorContextWithoutHtmlTags) {
     return largestErrorContextWithoutHtmlTags.replaceAll("<err>(.+?)</err>", "$1");
   }
+
+  public static class HTMLParser {
+    public static final DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+    static {
+      dbf.setValidating(false);
+    }
+
+    private static Long currentArticleId;
+    private static Document currentArticleDocument;
+
+    public static Document parseArticle(String articleHtml, Long articleId) {
+      if (!articleId.equals(currentArticleId)) {
+        DocumentBuilder docBuilder;
+        try {
+          docBuilder = dbf.newDocumentBuilder();
+          currentArticleDocument = docBuilder.parse(new InputSource(new StringReader(articleHtml)));
+          currentArticleId = articleId;
+        } catch (ParserConfigurationException | SAXException | IOException e) {
+          e.printStackTrace();
+        }
+      }
+      return currentArticleDocument;
+    }
+  }
 }

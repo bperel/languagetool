@@ -20,8 +20,8 @@ package org.languagetool.dev.dumpcheck;
 
 import org.apache.commons.lang3.StringUtils;
 import org.languagetool.JLanguageTool;
-import org.languagetool.dev.dumpcheck.SentenceSourceChecker.RuleMatchWithHtmlContexts;
 import org.languagetool.rules.Rule;
+import org.languagetool.rules.RuleMatchWithHtmlContexts;
 import org.languagetool.rules.patterns.AbstractPatternRule;
 import org.languagetool.tools.ContextTools;
 

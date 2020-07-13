@@ -22,6 +22,7 @@ import org.apache.commons.compress.compressors.CompressorInputStream;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.apache.commons.lang3.StringUtils;
 import org.languagetool.Language;
+import org.languagetool.MultiThreadedJLanguageTool;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -35,6 +36,7 @@ import java.util.regex.Pattern;
  * @since 2.4
  */
 public class MixingSentenceSource extends SentenceSource {
+  public static MultiThreadedJLanguageTool lt = null;
 
   private final List<SentenceSource> sources;
   private final Map<String, Integer> sourceDistribution = new HashMap<>();

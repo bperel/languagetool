@@ -18,41 +18,21 @@
  */
 package org.languagetool.dev.dumpcheck;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.apache.commons.cli.*;
 import org.apache.commons.lang3.StringUtils;
-import org.languagetool.*;
+import org.languagetool.JLanguageTool;
+import org.languagetool.Language;
+import org.languagetool.Languages;
+import org.languagetool.MultiThreadedJLanguageTool;
 import org.languagetool.rules.CategoryId;
 import org.languagetool.rules.Rule;
-import org.languagetool.rules.RuleMatch;
 import org.languagetool.rules.patterns.AbstractPatternRule;
-import org.languagetool.tools.HtmlTools;
-import org.w3c.dom.*;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.StringReader;
 import java.util.*;
-import java.util.function.Function;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
-import static org.languagetool.dev.dumpcheck.CorpusMatchDatabaseHandler.MAX_CONTEXT_LENGTH;
-import static org.languagetool.tools.HtmlTools.SuggestionNotApplicableException;
-import static org.languagetool.tools.HtmlTools.getErrorContextWithAppliedSuggestion;
 
 /**
  * Checks texts from one or more {@link SentenceSource}s.
@@ -237,9 +217,9 @@ public class SentenceSourceChecker {
     properties.load(inStream);
     String parsoidUrl = getProperty(properties, "parsoidUrl");
 
-    RuleMatchWithHtmlContexts.lt = lt;
+    MixingSentenceSource.lt = lt;
     MixingSentenceSource.create(Arrays.asList(fileNames), lang, filter, parsoidUrl, databaseHandler);
-    RuleMatchWithHtmlContexts.lt.shutdown();
+    MixingSentenceSource.lt.shutdown();
   }
 
   private void enableOnlySpecifiedRules(String[] ruleIds, JLanguageTool lt) {
@@ -293,7 +273,7 @@ public class SentenceSourceChecker {
   private static String getProperty(Properties prop, String key) {
     String value = prop.getProperty(key);
     if (value == null) {
-      throw new RuntimeException("Required key '" + key + "' not found in properties");
+      throw new RuntimeException(String.format("Required key '%s' not found in properties", key));
     }
     return value;
   }
@@ -306,221 +286,4 @@ public class SentenceSourceChecker {
       }
     }
   }
-
-  static class RuleMatchWithHtmlContexts extends RuleMatch {
-    public static MultiThreadedJLanguageTool lt = null;
-
-    public static final DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-    static {
-      dbf.setValidating(false);
-    }
-
-    public static final XPath xPath = XPathFactory.newInstance().newXPath();
-
-    private static Long currentArticleId;
-    private static String currentArticleCssUrl;
-    private static Document currentArticleDocument;
-
-    public String smallTextContext;
-    public String textContext;
-    public String largeTextContext;
-    public String htmlContext;
-
-    public RuleMatchWithHtmlContexts(Rule rule, AnalyzedSentence sentence, int fromPos, int toPos, String message, String shortMessage, List<String> suggestions) {
-      super(rule, sentence, fromPos, toPos, message, shortMessage, suggestions);
-    }
-
-    public static List<RuleMatchWithHtmlContexts> getMatches(Sentence sentence, String articleWikitext, String articleHtml, String articleCssUrl) throws IOException {
-      List<RuleMatchWithHtmlContexts> matches = lt.check(sentence.getText()).stream()
-        .map(mapRuleAddTextContext(sentence, articleWikitext))
-        .filter(Objects::nonNull).collect(Collectors.toList());
-
-      if (!matches.isEmpty() && articleHtml != null) {
-        try {
-          if (!sentence.getArticleId().equals(currentArticleId)) {
-            DocumentBuilder docBuilder = dbf.newDocumentBuilder();
-            currentArticleId = sentence.getArticleId();
-            currentArticleCssUrl = articleCssUrl;
-            currentArticleDocument = docBuilder.parse(new InputSource(new StringReader(articleHtml)));
-          }
-          return matches.stream().map(mapRuleAddHtmlContext())
-            .filter(Objects::nonNull).collect(Collectors.toList());
-        } catch (SAXException | IOException | ParserConfigurationException e) {
-          e.printStackTrace();
-        }
-      }
-      return matches;
-    }
-
-    private static Function<RuleMatchWithHtmlContexts, RuleMatchWithHtmlContexts> mapRuleAddHtmlContext() {
-      return match -> {
-        try {
-          String largestErrorContextWithoutHtmlTags = HtmlTools.getLargestErrorContext(match.getLargeTextContext());
-          String stringToReplace = HtmlTools.getStringToReplace(largestErrorContextWithoutHtmlTags);
-          NodeList nodeList = (NodeList) xPath.compile(getXpathExpression(stringToReplace)).evaluate(currentArticleDocument, XPathConstants.NODESET);
-          switch (nodeList.getLength()) {
-            case 0:
-              System.out.println("No HTML match for '" + stringToReplace + "'");
-              break;
-            case 1:
-              System.out.println("Found an HTML match for '" + stringToReplace +"'");
-              String htmlContext = getSimplifiedHtmlContext(dbf.newDocumentBuilder().newDocument(), nodeList.item(0), null);
-              match.setHtmlContext(htmlContext);
-              return match;
-            default:
-              System.out.println("Found more than 1 HTML match (" + nodeList.getLength()+ ") for '" + stringToReplace +"'");
-          }
-        } catch (XPathExpressionException | ParserConfigurationException e) {
-          e.printStackTrace();
-          return null;
-        } catch (SuggestionNotApplicableException e) {
-          System.out.println(e.getMessage());
-          return null;
-        }
-
-        return null;
-      };
-    }
-
-    private static String getSimplifiedHtmlContext(Document doc, Node node, Node childElement) throws SuggestionNotApplicableException {
-      if (node instanceof Text) {
-        Node surroundingElement = doc.importNode(node.getParentNode(), true);
-        assertNodeNotExcluded(surroundingElement);
-        return getSimplifiedHtmlContext(doc, node.getParentNode().getParentNode(), surroundingElement);
-      }
-      else {
-        Element simpleElement;
-        if (node.getParentNode() == null) {
-          doc.appendChild(childElement);
-          return HtmlTools.getStringFromDocument(doc);
-        }
-        else {
-          assertNodeNotExcluded(node);
-          simpleElement = doc.createElement(node.getNodeName());
-
-          if (node.getNodeName().equals("html")) {
-            Element headElement = doc.createElement("head");
-            Element cssElement = doc.createElement("link");
-            cssElement.setAttribute("rel", "stylesheet");
-            cssElement.setAttribute("href", currentArticleCssUrl);
-            headElement.appendChild(cssElement);
-            simpleElement.appendChild(headElement);
-          }
-
-          simpleElement.appendChild(childElement);
-          copyAttributes(node, simpleElement);
-
-          return getSimplifiedHtmlContext(doc, node.getParentNode(), simpleElement);
-        }
-      }
-    }
-
-    private static void assertNodeNotExcluded(Node node) throws SuggestionNotApplicableException {
-      NamedNodeMap attributes = node.getAttributes();
-      for (int i = 0; i < attributes.getLength(); i++) {
-        Node attribute = attributes.item(i);
-        if ("data-mw".equals(attribute.getNodeName())) {
-          ObjectMapper mapper = new ObjectMapper(new JsonFactory());
-          try {
-            ArrayNode mwDataParts = (ArrayNode) mapper.readTree(attribute.getTextContent()).get("parts");
-            for (int j = 0; j < mwDataParts.size(); j++) {
-              if (mwDataParts.get(j).get("template").get("target").get("wt").toString().equals("\"Langue\"")) {
-                throw new SuggestionNotApplicableException("Match ignored because it is located within a lang template");
-              }
-            }
-          } catch (JsonProcessingException e) {
-            System.err.println("Can't read data-mw attribute content : " + attribute.getTextContent());
-          }
-        }
-      }
-    }
-
-    private static Function<RuleMatch, RuleMatchWithHtmlContexts> mapRuleAddTextContext(Sentence sentence, String finalWikitext) {
-      return match -> {
-        String context = CorpusMatchDatabaseHandler.contextTools.getContext(match.getFromPos(), match.getToPos(), sentence.getText());
-        if (context.length() > MAX_CONTEXT_LENGTH) {
-          return null;
-        }
-        String smallContext = CorpusMatchDatabaseHandler.smallContextTools.getContext(match.getFromPos(), match.getToPos(), sentence.getText());
-
-        List<String> suggestions = match.getSuggestedReplacements();
-        if (suggestions.isEmpty()
-          || suggestions.get(0).matches("^\\(.+\\)$") // This kind of suggestions is expecting user input
-        ) {
-          return null;
-        }
-        try {
-          getErrorContextWithAppliedSuggestion(sentence.getTitle(), finalWikitext, context, suggestions.get(0));
-
-          String largestErrorContextWithoutHtmlTags = HtmlTools.getLargestErrorContext(context);
-
-          RuleMatchWithHtmlContexts matchWithHtmlContext = new RuleMatchWithHtmlContexts(
-            match.getRule(), match.getSentence(), match.getFromPos(), match.getToPos(), match.getMessage(), match.getShortMessage(), match.getSuggestedReplacements()
-          );
-          matchWithHtmlContext.setSmallTextContext(smallContext);
-          matchWithHtmlContext.setTextContext(context);
-          matchWithHtmlContext.setLargeTextContext(HtmlTools.getStringToReplace(largestErrorContextWithoutHtmlTags));
-          return matchWithHtmlContext;
-        } catch (SuggestionNotApplicableException e) {
-          System.out.println(e.getMessage());
-          return null;
-        }
-      };
-    }
-
-    private static void copyAttributes(Node from, Element to) {
-      NamedNodeMap attributes = from.getAttributes();
-      for (int i = 0; i < attributes.getLength(); i++) {
-        to.setAttribute(attributes.item(i).getNodeName(), attributes.item(i).getTextContent());
-      }
-    }
-
-    private static String getXpathExpression(String value)
-    {
-      String textExpression;
-      if (!value.contains("'")) {
-        textExpression = '\'' + value + '\'';
-      }
-      else if (!value.contains("\"")) {
-        textExpression = '"' + value + '"';
-      }
-      else {
-        textExpression = "concat('" + value.replace("'", "',\"'\",'") + "')";
-      }
-      return "//text()[contains(.,"+textExpression+")]";
-    }
-
-    public String getSmallTextContext() {
-      return smallTextContext;
-    }
-
-    public void setSmallTextContext(String smallTextContext) {
-      this.smallTextContext = smallTextContext;
-    }
-
-    public String getTextContext() {
-      return textContext;
-    }
-
-    public void setTextContext(String textContext) {
-      this.textContext = textContext;
-    }
-
-    public String getLargeTextContext() {
-      return largeTextContext;
-    }
-
-    public void setLargeTextContext(String largeTextContext) {
-      this.largeTextContext = largeTextContext;
-    }
-
-    public String getHtmlContext() {
-      return htmlContext;
-    }
-
-    public void setHtmlContext(String htmlContext) {
-      this.htmlContext = htmlContext;
-    }
-  }
-
 }

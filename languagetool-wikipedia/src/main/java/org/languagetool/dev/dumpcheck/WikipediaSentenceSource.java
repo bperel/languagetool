@@ -21,10 +21,11 @@ package org.languagetool.dev.dumpcheck;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.languagetool.Language;
-import org.languagetool.dev.dumpcheck.SentenceSourceChecker.RuleMatchWithHtmlContexts;
 import org.languagetool.dev.wikipedia.ParsoidWikipediaTextParser;
+import org.languagetool.rules.RuleMatchWithHtmlContexts;
 import org.languagetool.tokenizers.Tokenizer;
 import org.languagetool.tools.HtmlTools;
+import org.languagetool.tools.HtmlTools.HTMLParser;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -40,6 +41,7 @@ import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Provides access to the sentences of a Wikipedia XML dump. Note that
@@ -231,7 +233,7 @@ public class WikipediaSentenceSource extends SentenceSource {
     while (this.hasNext()) {
       Sentence sentence = this.next();
       try {
-        List<RuleMatchWithHtmlContexts> matches = RuleMatchWithHtmlContexts.getMatches(sentence, wikitext, html, cssUrl);
+        List<RuleMatchWithHtmlContexts> matches = getMatches(sentence, wikitext, html, cssUrl);
 
         try {
           databaseHandler.handleResult(sentence, matches);
@@ -304,6 +306,21 @@ public class WikipediaSentenceSource extends SentenceSource {
         sentences.add(new WikipediaSentence(sentence, title, revisionId, articleId));
       }
     }
+  }
+
+  public static List<RuleMatchWithHtmlContexts> getMatches(Sentence sentence, String articleWikitext, String articleHtml, String articleCssUrl) throws IOException {
+    List<RuleMatchWithHtmlContexts> matches = MixingSentenceSource.lt.check(sentence.getText()).stream()
+      .map(RuleMatchWithHtmlContexts.addTextContext(articleWikitext, sentence.getTitle(), sentence.getText()))
+      .filter(Objects::nonNull).collect(Collectors.toList());
+
+    if (!matches.isEmpty() && articleHtml != null) {
+      RuleMatchWithHtmlContexts.currentArticleDocument = HTMLParser.parseArticle(articleHtml, sentence.getArticleId());
+      RuleMatchWithHtmlContexts.currentArticleCssUrl = articleCssUrl;
+      return matches.stream()
+        .map(RuleMatchWithHtmlContexts.mapRuleAddHtmlContext())
+        .filter(Objects::nonNull).collect(Collectors.toList());
+    }
+    return matches;
   }
 
   static void print(String s) {
