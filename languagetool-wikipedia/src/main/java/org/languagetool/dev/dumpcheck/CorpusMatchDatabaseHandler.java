@@ -21,7 +21,7 @@ package org.languagetool.dev.dumpcheck;
 import org.apache.commons.lang3.StringUtils;
 import org.languagetool.JLanguageTool;
 import org.languagetool.rules.Rule;
-import org.languagetool.rules.RuleMatchWithHtmlContexts;
+import org.languagetool.rules.RuleMatchWithContexts;
 import org.languagetool.rules.patterns.AbstractPatternRule;
 import org.languagetool.tools.ContextTools;
 
@@ -144,9 +144,9 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
     return value;
   }
 
-  protected void handleResult(Sentence sentence, List<RuleMatchWithHtmlContexts> rulesMatchesWithSuggestions) throws SQLIntegrityConstraintViolationException {
+  protected void handleResult(Sentence sentence, List<RuleMatchWithContexts> rulesMatchesWithSuggestions) throws SQLIntegrityConstraintViolationException {
     try {
-      for (RuleMatchWithHtmlContexts match : rulesMatchesWithSuggestions) {
+      for (RuleMatchWithContexts match : rulesMatchesWithSuggestions) {
         createSentence(sentence.getArticleId(), match);
         ++errorCount;
         checkMaxErrors();
@@ -194,7 +194,7 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
     throw new SQLException("Couldn't create article " + title);
   }
 
-  private void createSentence(long articleId, RuleMatchWithHtmlContexts match) throws SQLException {
+  private void createSentence(long articleId, RuleMatchWithContexts match) throws SQLException {
 
     Rule rule = match.getRule();
     insertCorpusMatchSt.setLong(1, articleId);

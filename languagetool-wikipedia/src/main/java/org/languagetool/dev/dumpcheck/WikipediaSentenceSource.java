@@ -22,7 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.languagetool.Language;
 import org.languagetool.dev.wikipedia.ParsoidWikipediaTextParser;
-import org.languagetool.rules.RuleMatchWithHtmlContexts;
+import org.languagetool.rules.RuleMatchWithContexts;
 import org.languagetool.tokenizers.Tokenizer;
 import org.languagetool.tools.HtmlTools;
 import org.languagetool.tools.HtmlTools.HTMLParser;
@@ -233,7 +233,7 @@ public class WikipediaSentenceSource extends SentenceSource {
     while (this.hasNext()) {
       Sentence sentence = this.next();
       try {
-        List<RuleMatchWithHtmlContexts> matches = getMatches(sentence, wikitext, html, cssUrl);
+        List<RuleMatchWithContexts> matches = getMatches(sentence, wikitext, html, cssUrl);
 
         try {
           databaseHandler.handleResult(sentence, matches);
@@ -308,17 +308,17 @@ public class WikipediaSentenceSource extends SentenceSource {
     }
   }
 
-  public static List<RuleMatchWithHtmlContexts> getMatches(Sentence sentence, String articleWikitext, String articleHtml, String articleCssUrl) throws IOException {
-    List<RuleMatchWithHtmlContexts> matches = MixingSentenceSource.lt.check(sentence.getText()).stream()
-      .map(RuleMatchWithHtmlContexts.addTextContext(articleWikitext, sentence.getTitle(), sentence.getText()))
+  public static List<RuleMatchWithContexts> getMatches(Sentence sentence, String articleWikitext, String articleHtml, String articleCssUrl) throws IOException {
+    List<RuleMatchWithContexts> matches = MixingSentenceSource.lt.check(sentence.getText()).stream()
+      .map(RuleMatchWithContexts.addTextContext(articleWikitext, sentence.getTitle(), sentence.getText()))
       .filter(Objects::nonNull).collect(Collectors.toList());
 
     if (!matches.isEmpty() && articleHtml != null) {
-      RuleMatchWithHtmlContexts.languageCode = MixingSentenceSource.lt.getLanguage().getShortCode();
-      RuleMatchWithHtmlContexts.currentArticleDocument = HTMLParser.parseArticle(articleHtml, sentence.getArticleId());
-      RuleMatchWithHtmlContexts.currentArticleCssUrl = articleCssUrl;
+      RuleMatchWithContexts.languageCode = MixingSentenceSource.lt.getLanguage().getShortCode();
+      RuleMatchWithContexts.currentArticleDocument = HTMLParser.parseArticle(articleHtml, sentence.getArticleId());
+      RuleMatchWithContexts.currentArticleCssUrl = articleCssUrl;
       return matches.stream()
-        .map(RuleMatchWithHtmlContexts.mapRuleAddHtmlContext())
+        .map(RuleMatchWithContexts.mapRuleAddHtmlContext())
         .filter(Objects::nonNull).collect(Collectors.toList());
     }
     return matches;

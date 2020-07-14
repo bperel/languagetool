@@ -3,6 +3,7 @@ package org.languagetool.rules;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.spi.json.JsonProvider;
+import net.minidev.json.JSONArray;
 import org.languagetool.AnalyzedSentence;
 import org.languagetool.tools.ContextTools;
 import org.w3c.dom.*;
@@ -21,7 +22,7 @@ import java.util.function.Function;
 
 import static org.languagetool.tools.HtmlTools.*;
 
-public class RuleMatchWithHtmlContexts extends RuleMatch {
+public class RuleMatchWithContexts extends RuleMatch {
   private static final String MARKER_START = "<err>";
   private static final String MARKER_END = "</err>";
   private static final int MAX_CONTEXT_LENGTH = 500;
@@ -65,7 +66,11 @@ public class RuleMatchWithHtmlContexts extends RuleMatch {
       put("ca", Map.of("data-mw", Set.of("parts[*].template.target[?(@.wt == 'Lang')]")));
       put("de", Map.of("data-mw", Set.of("parts[*].template.target[?(@.wt == 'lang')]")));
       put("en", Map.of("data-mw", Set.of("parts[*].template.target[?(@.wt == 'Lang')]")));
-      put("fr", Map.of("data-mw", Set.of("parts[*].template.target[?(@.wt == 'Langue')]")));
+      put("fr", Map.of("data-mw", Set.of(
+        "parts[*].template.target[?(@.wt == 'Langue')]",
+        "parts[*].template[?(@.target.wt == 'Article')][?(@.params.langue)]",
+        "parts[*].template[?(@.target.wt == 'Ouvrage')][?(@.params.langue)]"
+      )));
       put("nl", Map.of("data-mw", Set.of("parts[*].template.target[?(@.wt == 'Lang')]")));
       put("pl", Map.of("data-mw", Set.of("parts[*].template.target[?(@.wt == 'J')]")));
       put("pt", Map.of("data-mw", Set.of("parts[*].template.target[?(@.wt == 'Lang')]")));
@@ -74,11 +79,11 @@ public class RuleMatchWithHtmlContexts extends RuleMatch {
     }
   };
 
-  public RuleMatchWithHtmlContexts(Rule rule, AnalyzedSentence sentence, int fromPos, int toPos, String message, String shortMessage, List<String> suggestions) {
+  public RuleMatchWithContexts(Rule rule, AnalyzedSentence sentence, int fromPos, int toPos, String message, String shortMessage, List<String> suggestions) {
     super(rule, sentence, fromPos, toPos, message, shortMessage, suggestions);
   }
 
-  public static Function<RuleMatchWithHtmlContexts, RuleMatchWithHtmlContexts> mapRuleAddHtmlContext() {
+  public static Function<RuleMatchWithContexts, RuleMatchWithContexts> mapRuleAddHtmlContext() {
     return match -> {
       try {
         String largestErrorContextWithoutHtmlTags = getLargestErrorContext(match.getLargeTextContext());
@@ -139,7 +144,7 @@ public class RuleMatchWithHtmlContexts extends RuleMatch {
     }
   }
 
-  private static void assertNodeNotExcluded(Node node) throws SuggestionNotApplicableException {
+  static void assertNodeNotExcluded(Node node) throws SuggestionNotApplicableException {
     NamedNodeMap attributes = node.getAttributes();
     Map<String, Set<String>> excludedJsonPathsForLanguage = excludedJsonPaths.get(languageCode);
     JsonProvider jsonProvider = Configuration.defaultConfiguration().jsonProvider();
@@ -149,7 +154,8 @@ public class RuleMatchWithHtmlContexts extends RuleMatch {
       if (attribute != null) {
         Object attributeContent = jsonProvider.parse(attribute.getNodeValue());
         for (String jsonPath : excludedJsonPathsForLanguage.get(attributeName)) {
-          if (JsonPath.read(attributeContent, jsonPath) != null) {
+          JSONArray match = JsonPath.read(attributeContent, jsonPath);
+          if (match != null && !match.isEmpty()) {
             throw new SuggestionNotApplicableException(" Match ignored because it matches the following path : " + jsonPath);
           }
         }
@@ -157,7 +163,7 @@ public class RuleMatchWithHtmlContexts extends RuleMatch {
     }
   }
 
-  public static Function<RuleMatch, RuleMatchWithHtmlContexts> addTextContext(String finalWikitext, String sentenceTitle, String sentenceText) {
+  public static Function<RuleMatch, RuleMatchWithContexts> addTextContext(String finalWikitext, String sentenceTitle, String sentenceText) {
     return match -> {
       String context = contextTools.getContext(match.getFromPos(), match.getToPos(), sentenceText);
       if (context.length() > MAX_CONTEXT_LENGTH) {
@@ -176,7 +182,7 @@ public class RuleMatchWithHtmlContexts extends RuleMatch {
 
         String largestErrorContextWithoutHtmlTags = getLargestErrorContext(context);
 
-        RuleMatchWithHtmlContexts matchWithHtmlContext = new RuleMatchWithHtmlContexts(
+        RuleMatchWithContexts matchWithHtmlContext = new RuleMatchWithContexts(
           match.getRule(), match.getSentence(), match.getFromPos(), match.getToPos(), match.getMessage(), match.getShortMessage(), match.getSuggestedReplacements()
         );
         matchWithHtmlContext.setSmallTextContext(smallContext);
