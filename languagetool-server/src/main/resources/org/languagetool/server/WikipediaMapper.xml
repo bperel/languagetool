@@ -5,12 +5,34 @@
         SELECT id, language_code, title, revision, wikitext, anonymized_html, css_url, analyzed, url FROM corpus_article WHERE id=#{id}
     </select>
     <select id="selectNonAppliedWikipediaSuggestions" resultType="org.languagetool.server.CorpusMatchEntry">
-        SELECT * FROM corpus_match m WHERE article_id in (select id from corpus_article where language_code IN
-        <foreach item="item" index="index" collection="languageCodes"
-                 open="(" separator="," close=")">
-            #{item}
-        </foreach>
-        ) AND applied IS NULL ORDER BY RAND() LIMIT 10
+        SELECT corpus_match.*
+        FROM (
+            select @cnt := count(*) + 1, @lim := 10
+            from corpus_match
+            where applied is null
+              and article_id in (
+                  select id
+                  from corpus_article
+                  where language_code in
+                        <foreach item="item" index="index" collection="languageCodes"  open="(" separator="," close=")">
+                            #{item}
+                        </foreach>
+              )
+        ) vars
+        STRAIGHT_JOIN (
+            select corpus_match.*, @lim := @lim - 1
+            from corpus_match
+            where (@cnt := @cnt - 1)
+              and applied is null
+              and article_id in (
+                  select id
+                  from corpus_article
+                  where language_code in
+                        <foreach item="item" index="index" collection="languageCodes"  open="(" separator="," close=")">
+                            #{item}
+                        </foreach>
+              ) and rand() &lt; (@lim / @cnt)
+        ) corpus_match
     </select>
     <select id="selectWikipediaSuggestion" resultType="org.languagetool.server.CorpusMatchEntry">
         SELECT * FROM corpus_match WHERE id=#{id}
