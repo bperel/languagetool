@@ -98,7 +98,9 @@ class ApiV2 {
     } else if (path.equals("wikipedia/user")) {
       handleWikipediaUserRequest(httpExchange, parameters);
     } else if (path.equals("wikipedia/suggestions")) {
-      handleWikipediaSuggestionRequest(httpExchange, parameters);
+      handleWikipediaSuggestionListRequest(httpExchange, parameters);
+    } else if (path.equals("wikipedia/suggestions/past")) {
+      handleWikipediaSuggestionListPastRequest(httpExchange, parameters);
     } else if (path.equals("wikipedia/suggestion")) {
       handleWikipediaSuggestionDetailsRequest(httpExchange, parameters);
     } else if (path.equals("wikipedia/suggestion/accept")) {
@@ -268,7 +270,7 @@ class ApiV2 {
     writeStringHashMapResponse(fields, httpExchange);
   }
 
-  private void handleWikipediaSuggestionRequest(HttpExchange httpExchange, Map<String, String> parameters) throws IOException {
+  private void handleWikipediaSuggestionListRequest(HttpExchange httpExchange, Map<String, String> parameters) throws IOException {
     ensureGetMethod(httpExchange, "/wikipedia/suggestions");
     String[] languageCodes = parameters.get("languageCodes").split(",");
     HashMap<Integer, CorpusArticleEntry> articles = new HashMap<>();
@@ -281,6 +283,29 @@ class ApiV2 {
       for (CorpusMatchEntry suggestion : suggestions) {
         articles.put(suggestion.getArticleId(), db.getCorpusArticle(suggestion.getArticleId()));
       }
+    }
+    writeCorpusMatchListResponse(suggestions, articles, httpExchange);
+  }
+
+  private void handleWikipediaSuggestionListPastRequest(HttpExchange httpExchange, Map<String, String> parameters) throws IOException {
+    ensureGetMethod(httpExchange, "/wikipedia/suggestions/past");
+    String languageCode = parameters.get("languageCode");
+    HashMap<Integer, CorpusArticleEntry> articles = new HashMap<>();
+    List<CorpusMatchEntry> suggestions = new ArrayList<>();
+
+    if (languageCode != null) {
+      DatabaseAccess db = DatabaseAccess.getInstance();
+      suggestions = db.getDecidedCorpusMatches(languageCode, 10);
+
+      for (CorpusMatchEntry suggestion : suggestions) {
+        articles.put(suggestion.getArticleId(), db.getCorpusArticle(suggestion.getArticleId()));
+      }
+      List<CorpusMatchEntry> skippedSuggestions = db.getSkippedCorpusMatches(languageCode, 10);
+
+      for (CorpusMatchEntry skippedSuggestion : skippedSuggestions) {
+        articles.put(skippedSuggestion.getArticleId(), db.getCorpusArticle(skippedSuggestion.getArticleId()));
+      }
+      suggestions.addAll(skippedSuggestions);
     }
     writeCorpusMatchListResponse(suggestions, articles, httpExchange);
   }
