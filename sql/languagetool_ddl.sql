@@ -66,15 +66,26 @@ create index corpus_match_applied_date_index
 create index corpus_match_applied_index
     on corpus_match (applied);
 
+create index corpus_match_article_applied_index
+    on corpus_match (article_id, applied);
+
 create index corpus_match_index_article
     on corpus_match (article_id);
-
-create index corpus_match_article_applied_index
-    on corpus_match(article_id, applied);
 
 create index corpus_match_rule_article_id_version_index
     on corpus_match (rule_category, rule_description, languagetool_version, article_id);
 
 create index corpus_match_rule_applied_index
     on corpus_match (ruleid, rule_subid, applied);
+
+create table corpus_match_skipped
+(
+    corpus_match_id int not null,
+    date datetime not null,
+    username varchar(255) not null,
+    primary key (corpus_match_id, username),
+    constraint corpus_match_skipped_corpus_match_id_fk
+        foreign key (corpus_match_id) references corpus_match (id)
+            on delete cascade
+);
 

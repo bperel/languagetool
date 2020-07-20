@@ -12,14 +12,22 @@
             from corpus_match corpus_match_id
             inner join corpus_article article on article.id = corpus_match_id.article_id
             where applied is null
-              and language_code in <foreach item="item" index="index" collection="languageCodes"  open="(" separator="," close=")">
-                  #{item}
+              and language_code in <foreach item="languageCode" index="index" collection="languageCodes"  open="(" separator="," close=")">
+                  #{languageCode}
               </foreach>
+              and not exists(
+                  select 1
+                  from corpus_match_skipped skipped
+                  where corpus_match_id = corpus_match_id.id
+                    and <foreach collection="usernames" index="languageCode" item="username" open="(" separator=" or " close=")">
+                        (skipped.username = #{username} and article.language_code = #{languageCode})
+                    </foreach>
+              )
             order by rand()
             limit 10
         ) AS ids ON ids.id = corpus_match.id
     </select>
-    <select id="selectSkippedWikipediaSuggestions" resultType="org.languagetool.server.CorpusMatchEntry">
+    <select id="selectAppliedWikipediaSuggestions" resultType="org.languagetool.server.CorpusMatchEntry">
         SELECT m.id,
                article_id,
                ruleid,
@@ -31,16 +39,17 @@
                small_error_context,
                html_error_context,
                replacement_suggestion,
-               null AS applied,
-               skipped.date,
-               null AS applied_reason,
-               skipped.username,
+               (IF(skipped.date is not null, null, applied)) AS applied,
+               IFNULL(skipped.date, applied_date),
+               applied_reason,
+        IFNULL(skipped.username, applied_username),
                languagetool_version
-        FROM corpus_match_skipped skipped
-                 INNER JOIN corpus_match m on skipped.corpus_match_id = skipped.corpus_match_id
-                 INNER JOIN corpus_article a on m.article_id
-        WHERE language_code = #{languageCode}
-          AND skipped.username = #{username}
+        FROM corpus_match m
+        INNER JOIN corpus_article a on a.id = m.article_id
+        LEFT JOIN corpus_match_skipped skipped on m.id = skipped.corpus_match_id
+        WHERE <foreach collection="usernames" index="languageCode" item="username" open="(" separator=" or " close=")">
+            ((skipped.username = #{username} or m.applied_username = #{username}) and a.language_code = #{languageCode})
+        </foreach>
         ORDER BY date DESC LIMIT 10
     </select>
     <select id="selectWikipediaSuggestion" resultType="org.languagetool.server.CorpusMatchEntry">
@@ -48,6 +57,9 @@
     </select>
     <select id="updateWikipediaSuggestion">
         UPDATE corpus_match SET applied=#{applied}, applied_date=current_timestamp(), applied_reason=#{reason}, applied_username=#{username} WHERE id=#{id}
+    </select>
+    <select id="skipWikipediaSuggestion">
+        INSERT INTO corpus_match_skipped(corpus_match_id, date, username) VALUES(#{corpus_match_id}, current_timestamp(), #{username})
     </select>
     <select id="selectAccessToken" resultType="org.languagetool.server.AccessToken">
         SELECT * FROM access_token WHERE access_token=#{accessToken} AND language_code=#{languageCode}

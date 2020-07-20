@@ -107,6 +107,8 @@ class ApiV2 {
       handleWikipediaAcceptRequest(httpExchange, parameters);
     } else if (path.equals("wikipedia/suggestion/refuse")) {
       handleWikipediaRefuseRequest(httpExchange, parameters);
+    } else if (path.equals("wikipedia/suggestion/skip")) {
+      handleWikipediaSkipRequest(httpExchange, parameters);
     } else if (path.equals("wikipedia/stats")) {
       handleWikipediaStatsRequest(httpExchange);
     } else {
@@ -270,15 +272,16 @@ class ApiV2 {
     writeStringHashMapResponse(fields, httpExchange);
   }
 
-  private void handleWikipediaSuggestionListRequest(HttpExchange httpExchange, Map<String, String> parameters) throws IOException {
+  private void handleWikipediaSuggestionListRequest(HttpExchange httpExchange, Map<String, String> accessTokens) throws IOException {
     ensureGetMethod(httpExchange, "/wikipedia/suggestions");
-    String[] languageCodes = parameters.get("languageCodes").split(",");
+    HashMap<String, String> usernames = getUsernamesFromAccessTokens(accessTokens);
+
     HashMap<Integer, CorpusArticleEntry> articles = new HashMap<>();
     List<CorpusMatchEntry> suggestions = new ArrayList<>();
 
-    if (languageCodes.length > 0) {
+    if (!usernames.values().isEmpty()) {
       DatabaseAccess db = DatabaseAccess.getInstance();
-      suggestions = db.getCorpusMatches(Arrays.asList(languageCodes), 10);
+      suggestions = db.getCorpusMatches(usernames, 10);
 
       for (CorpusMatchEntry suggestion : suggestions) {
         articles.put(suggestion.getArticleId(), db.getCorpusArticle(suggestion.getArticleId()));
@@ -287,25 +290,20 @@ class ApiV2 {
     writeCorpusMatchListResponse(suggestions, articles, httpExchange);
   }
 
-  private void handleWikipediaSuggestionListPastRequest(HttpExchange httpExchange, Map<String, String> parameters) throws IOException {
+  private void handleWikipediaSuggestionListPastRequest(HttpExchange httpExchange, Map<String, String> accessTokens) throws IOException {
     ensureGetMethod(httpExchange, "/wikipedia/suggestions/past");
-    String languageCode = parameters.get("languageCode");
+    HashMap<String, String> usernames = getUsernamesFromAccessTokens(accessTokens);
+
     HashMap<Integer, CorpusArticleEntry> articles = new HashMap<>();
     List<CorpusMatchEntry> suggestions = new ArrayList<>();
 
-    if (languageCode != null) {
+    if (!usernames.values().isEmpty()) {
       DatabaseAccess db = DatabaseAccess.getInstance();
-      suggestions = db.getDecidedCorpusMatches(languageCode, 10);
+      suggestions = db.getPastDecisions(usernames, 10);
 
       for (CorpusMatchEntry suggestion : suggestions) {
         articles.put(suggestion.getArticleId(), db.getCorpusArticle(suggestion.getArticleId()));
       }
-      List<CorpusMatchEntry> skippedSuggestions = db.getSkippedCorpusMatches(languageCode, 10);
-
-      for (CorpusMatchEntry skippedSuggestion : skippedSuggestions) {
-        articles.put(skippedSuggestion.getArticleId(), db.getCorpusArticle(skippedSuggestion.getArticleId()));
-      }
-      suggestions.addAll(skippedSuggestions);
     }
     writeCorpusMatchListResponse(suggestions, articles, httpExchange);
   }
@@ -376,6 +374,20 @@ class ApiV2 {
     boolean refused = db.resolveCorpusMatch(suggestionId, username, false, reason);
 
     writeBooleanResponse("refused", refused, httpExchange);
+  }
+
+  private void handleWikipediaSkipRequest(HttpExchange httpExchange, Map<String, String> parameters) throws Exception {
+    ensurePostMethod(httpExchange, "/wikipedia/skip");
+    ServerTools.setCommonHeaders(httpExchange, JSON_CONTENT_TYPE, allowOriginUrl);
+    int suggestionId = Integer.parseInt(parameters.get("suggestion_id"));
+
+    AccessToken accessTokenData = getAccessTokenData(parameters.get("languageCode"), parameters.get("accessToken"));
+    String username = accessTokenData.getUsername();
+
+    DatabaseAccess db = DatabaseAccess.getInstance();
+    boolean skipped = db.skipCorpusMatch(suggestionId, username);
+
+    writeBooleanResponse("skipped", skipped, httpExchange);
   }
 
   private void handleWikipediaStatsRequest(HttpExchange httpExchange) throws Exception {
@@ -826,6 +838,19 @@ class ApiV2 {
       g.writeEndObject();
     }
     return sw.toString();
+  }
+
+  @NotNull
+  private HashMap<String, String> getUsernamesFromAccessTokens(Map<String, String> accessTokens) {
+    HashMap<String, String> usernames = new HashMap<>();
+    for (String languageCode : accessTokens.keySet()) {
+      try {
+        AccessToken accessTokenData = getAccessTokenData(languageCode, accessTokens.get(languageCode));
+        usernames.put(languageCode, accessTokenData.getUsername());
+      }
+      catch(RuntimeException ignored) { }
+    }
+    return usernames;
   }
 
 }

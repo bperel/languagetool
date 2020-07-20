@@ -150,25 +150,27 @@ class DatabaseAccess {
     }
   }
 
-  List<CorpusMatchEntry> getCorpusMatches(List<String> languageCodes, int limit) {
+  List<CorpusMatchEntry> getCorpusMatches(Map<String, String> usernames, int limit) {
     if (sqlSessionFactory == null) {
       return new ArrayList<>();
     }
     try (SqlSession session = sqlSessionFactory.openSession(true)) {
-      Map<Object, Object> map = new HashMap<>();
-      map.put("languageCodes", languageCodes);
-      return session.selectList("org.languagetool.server.WikipediaMapper.selectNonAppliedWikipediaSuggestions", map, new RowBounds(0, limit));
+      Map<Object, Object> parameters = new HashMap<>();
+      parameters.put("languageCodes", usernames.keySet());
+      parameters.put("usernames", usernames);
+      return session.selectList("org.languagetool.server.WikipediaMapper.selectNonAppliedWikipediaSuggestions", parameters, new RowBounds(0, limit));
     }
   }
 
-  List<CorpusMatchEntry> getDecidedCorpusMatches(String languageCode, int limit) {
+  List<CorpusMatchEntry> getPastDecisions(HashMap<String, String> usernames, int limit) {
     if (sqlSessionFactory == null) {
       return new ArrayList<>();
     }
     try (SqlSession session = sqlSessionFactory.openSession(true)) {
-      Map<Object, Object> map = new HashMap<>();
-      map.put("languageCode", languageCode);
-      return session.selectList("org.languagetool.server.WikipediaMapper.selectAppliedWikipediaSuggestions", map, new RowBounds(0, limit));
+      Map<Object, Object> parameters = new HashMap<>();
+      parameters.put("languageCodes", usernames.keySet());
+      parameters.put("usernames", usernames);
+      return session.selectList("org.languagetool.server.WikipediaMapper.selectAppliedWikipediaSuggestions", parameters, new RowBounds(0, limit));
     }
   }
 
@@ -253,6 +255,19 @@ class DatabaseAccess {
       map.put("applied", shouldBecomeApplied);
       map.put("reason", reason);
       int affectedRows = session.update("org.languagetool.server.WikipediaMapper.updateWikipediaSuggestion", map);
+      return affectedRows >= 1;
+    }
+  }
+
+  boolean skipCorpusMatch(int suggestionId, String username) {
+    if (sqlSessionFactory == null) {
+      return false;
+    }
+    try (SqlSession session = sqlSessionFactory.openSession(true)) {
+      Map<Object, Object> map = new HashMap<>();
+      map.put("corpus_match_id", suggestionId);
+      map.put("username", username);
+      int affectedRows = session.update("org.languagetool.server.WikipediaMapper.skipWikipediaSuggestion", map);
       return affectedRows >= 1;
     }
   }
