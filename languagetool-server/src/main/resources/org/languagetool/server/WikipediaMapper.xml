@@ -42,7 +42,7 @@
                (IF(skipped.date is not null, null, applied)) AS applied,
                IFNULL(skipped.date, applied_date),
                applied_reason,
-        IFNULL(skipped.username, applied_username),
+               IFNULL(skipped.username, applied_username),
                languagetool_version
         FROM corpus_match m
         INNER JOIN corpus_article a on a.id = m.article_id
@@ -50,7 +50,7 @@
         WHERE <foreach collection="usernames" index="languageCode" item="username" open="(" separator=" or " close=")">
             ((skipped.username = #{username} or m.applied_username = #{username}) and a.language_code = #{languageCode})
         </foreach>
-        ORDER BY date DESC LIMIT 10
+        ORDER BY IFNULL(skipped.date, applied_date) DESC LIMIT 10
     </select>
     <select id="selectWikipediaSuggestion" resultType="org.languagetool.server.CorpusMatchEntry">
         SELECT * FROM corpus_match WHERE id=#{id}
