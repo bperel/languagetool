@@ -80,13 +80,13 @@
         where applied_date is not null
         group by week;
     </select>
-    <select id="getContributionStats" resultType="org.languagetool.server.DatabaseAccess$ContributionStatisticsPerMonth">
+    <select id="getTopContributors" resultType="org.languagetool.server.DatabaseAccess$ContributionStatisticsPerMonth">
         SELECT date_format(applied_date, '%Y-%m') as month, language_code, applied_username, count(*)
         FROM corpus_match
         INNER JOIN corpus_article ca on corpus_match.article_id = ca.id
         WHERE applied_date is not null
         GROUP BY month, language_code, applied_username
-        ORDER BY month DESC, count(*) DESC, language_code
+        ORDER BY month DESC, language_code, count(*) DESC
     </select>
     <select id="getPendingSuggestionsPerLanguageCode" resultType="org.languagetool.server.DatabaseAccess$PendingSuggestionsPerLanguageCode">
         SELECT language_code, count(*)

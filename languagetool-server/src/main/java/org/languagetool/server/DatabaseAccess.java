@@ -291,11 +291,30 @@ class DatabaseAccess {
   }
 
   List<ContributionStatisticsPerMonth> getContributorsStats() {
+    final int limitPerMonthAndLanguage = 3;
     if (sqlSessionFactory == null) {
       return null;
     }
     try (SqlSession session = sqlSessionFactory.openSession(true)) {
-      return session.selectList("org.languagetool.server.WikipediaMapper.getContributionStats");
+      List<ContributionStatisticsPerMonth> topContributors = session.selectList("org.languagetool.server.WikipediaMapper.getTopContributors");
+      List<ContributionStatisticsPerMonth> topContributorsLimited = new ArrayList<>();
+
+      String previousMonthAndLanguage = "";
+      int currentLimit = 0;
+      for (ContributionStatisticsPerMonth contributionForLanguageAndUser : topContributors) {
+        String monthAndLanguage = String.format("%s-%s",
+          contributionForLanguageAndUser.date,
+          contributionForLanguageAndUser.languageCode);
+        if (! previousMonthAndLanguage.equals(monthAndLanguage) || currentLimit < limitPerMonthAndLanguage) {
+          topContributorsLimited.add(contributionForLanguageAndUser);
+          if (! previousMonthAndLanguage.equals(monthAndLanguage)) {
+            currentLimit = 0;
+          }
+          previousMonthAndLanguage = monthAndLanguage;
+          currentLimit++;
+        }
+      }
+      return topContributorsLimited;
     }
   }
 
