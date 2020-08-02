@@ -37,7 +37,7 @@
     <properties>
         <!-- we have to repeat it here as otherwise Grails project languagetool-community-website will fail: -->
         <lucene.version>5.5.5</lucene.version>
-        <mariadb.client.version>2.6.0</mariadb.client.version>
+        <mariadb.client.version>2.6.1</mariadb.client.version>
     </properties>
     
     <build>
