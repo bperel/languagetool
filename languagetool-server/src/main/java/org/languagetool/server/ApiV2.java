@@ -848,7 +848,9 @@ class ApiV2 {
         AccessToken accessTokenData = getAccessTokenData(languageCode, accessTokens.get(languageCode));
         usernames.put(languageCode, accessTokenData.getUsername());
       }
-      catch(RuntimeException ignored) { }
+      catch(RuntimeException e) {
+        System.err.println(e.getMessage());
+      }
     }
     return usernames;
   }
