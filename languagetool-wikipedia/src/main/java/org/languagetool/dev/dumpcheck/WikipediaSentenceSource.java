@@ -43,6 +43,8 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static org.languagetool.tools.HtmlTools.htmlToAnnotatedText;
+
 /**
  * Provides access to the sentences of a Wikipedia XML dump. Note that
  * conversion exceptions are logged to STDERR and are otherwise ignored.
@@ -309,7 +311,7 @@ public class WikipediaSentenceSource extends SentenceSource {
   }
 
   public static List<RuleMatchWithContexts> getMatches(Sentence sentence, String articleWikitext, String articleHtml, String articleCssUrl) throws IOException {
-    List<RuleMatchWithContexts> matches = MixingSentenceSource.lt.check(sentence.getText()).stream()
+    List<RuleMatchWithContexts> matches = MixingSentenceSource.lt.check(htmlToAnnotatedText(sentence.getText())).stream()
       .map(RuleMatchWithContexts.addTextContext(articleWikitext, sentence.getTitle(), sentence.getText()))
       .filter(Objects::nonNull).collect(Collectors.toList());
 

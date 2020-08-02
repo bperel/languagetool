@@ -19,6 +19,7 @@
 package org.languagetool.tools;
 
 import org.junit.Test;
+import org.languagetool.markup.AnnotatedText;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -71,5 +72,13 @@ public class HtmlToolsTest {
     catch (HtmlTools.SuggestionNotApplicableException e) {
       assertEquals("Article Hello World : match skipped : Match string ' Hello World.' is included in the article's title", e.getMessage());
     }
+  }
+
+  @Test
+  public void testCreateAnnotatedTextFromHtml() {
+    String html = "A, B, C,<tag> </tag><tag>etc.</tag>";
+    AnnotatedText annotatedText = HtmlTools.htmlToAnnotatedText(html);
+    assertEquals("A, B, C, etc.", annotatedText.getPlainText());
+    assertEquals(html, annotatedText.getTextWithMarkup());
   }
 }

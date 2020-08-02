@@ -1,5 +1,7 @@
 package org.languagetool.tools;
 
+import org.languagetool.markup.AnnotatedText;
+import org.languagetool.markup.AnnotatedTextBuilder;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -18,6 +20,9 @@ import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.regex.MatchResult;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class HtmlTools {
   public static class HtmlAnonymizer {
@@ -184,6 +189,23 @@ public class HtmlTools {
 
   public static String getStringToReplace(String largestErrorContextWithoutHtmlTags) {
     return largestErrorContextWithoutHtmlTags.replaceAll("<err>(.+?)</err>", "$1");
+  }
+
+  public static AnnotatedText htmlToAnnotatedText(String html) {
+    AnnotatedTextBuilder annotatedTextBuilder = new AnnotatedTextBuilder();
+    Pattern regex = Pattern.compile("</?tag ?/?>");
+    Matcher matcher = regex.matcher(html);
+    int position = 0;
+    while (matcher.find()) {
+      MatchResult result = matcher.toMatchResult();
+      String textBefore = html.substring(position, result.start());
+      if (!textBefore.isEmpty()) {
+        annotatedTextBuilder.addText(textBefore);
+      }
+      annotatedTextBuilder.addMarkup(result.group());
+      position = result.end();
+    }
+    return annotatedTextBuilder.build();
   }
 
   public static class HTMLParser {
