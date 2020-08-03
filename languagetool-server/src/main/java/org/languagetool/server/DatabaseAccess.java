@@ -174,17 +174,6 @@ class DatabaseAccess {
     }
   }
 
-  List<CorpusMatchEntry> getSkippedCorpusMatches(String languageCode, int limit) {
-    if (sqlSessionFactory == null) {
-      return new ArrayList<>();
-    }
-    try (SqlSession session = sqlSessionFactory.openSession(true)) {
-      Map<Object, Object> map = new HashMap<>();
-      map.put("languageCode", languageCode);
-      return session.selectList("org.languagetool.server.WikipediaMapper.selectSkippedWikipediaSuggestions", map, new RowBounds(0, limit));
-    }
-  }
-
   CorpusArticleEntry getCorpusArticle(Integer articleId) {
     if (sqlSessionFactory == null) {
       return null;
