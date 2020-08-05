@@ -61,7 +61,7 @@ public class RuleMatchWithContexts extends RuleMatch {
   public String largeTextContext;
   public String htmlContext;
 
-  private static final Map<String, Map<String, Set<String>>> excludedJsonPaths = new HashMap<String, Map<String, Set<String>>>() {
+  private static final Map<String, Map<String, Set<String>>> excludedJsonPaths = new HashMap<>() {
     {
       put("ca", Map.of("data-mw", Set.of("parts[*].template.target[?(@.wt == 'Lang')]")));
       put("de", Map.of("data-mw", Set.of("parts[*].template.target[?(@.wt == 'lang')]")));
@@ -148,6 +148,11 @@ public class RuleMatchWithContexts extends RuleMatch {
     NamedNodeMap attributes = node.getAttributes();
     Map<String, Set<String>> excludedJsonPathsForLanguage = excludedJsonPaths.get(languageCode);
     JsonProvider jsonProvider = Configuration.defaultConfiguration().jsonProvider();
+
+    Node linkAttribute =attributes.getNamedItem("href");
+    if (linkAttribute != null && linkAttribute.getNodeValue().contains("action=edit")) {
+      throw new SuggestionNotApplicableException(" Match ignored because it is part of an 'edit' link");
+    }
 
     for (String attributeName : excludedJsonPathsForLanguage.keySet()) {
       Node attribute = attributes.getNamedItem(attributeName);

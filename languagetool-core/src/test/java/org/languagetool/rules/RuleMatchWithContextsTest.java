@@ -63,6 +63,13 @@ public class RuleMatchWithContextsTest {
     callMethod("fr", "<div data-mw='{\"parts\":[{\"template\":{\"target\":{\"wt\":\"Ouvrage\",\"href\":\"./Modèle:Ouvrage\"},\"params\":{\"langue\":{\"wt\":\"en\"}}}}]}'>text</div>");
   }
 
+  @Test
+  public void testTextExcludedInEditLinkMatch() throws Exception {
+    exceptionRule.expect(SuggestionNotApplicableException.class);
+    exceptionRule.expectMessage("Match ignored because it is part of an 'edit' link");
+    callMethod("fr", "<a href='index.php?title=Wikipedia&amp;action=edit'>text</a>");
+  }
+
   private void callMethod(String languageCode, String text) throws ParserConfigurationException, SuggestionNotApplicableException, IOException, SAXException {
     InputStream inputStream = new ByteArrayInputStream(text.getBytes());
 
