@@ -70,6 +70,13 @@ public class RuleMatchWithContextsTest {
     callMethod("fr", "<a href='index.php?title=Wikipedia&amp;action=edit'>text</a>");
   }
 
+  @Test
+  public void testTextExcludedInInvisibleSectionMatch() throws Exception {
+    exceptionRule.expect(SuggestionNotApplicableException.class);
+    exceptionRule.expectMessage("Match ignored because it is part of an invisible section");
+    callMethod("fr", "<a style='display:none'>text</a>");
+  }
+
   private void callMethod(String languageCode, String text) throws ParserConfigurationException, SuggestionNotApplicableException, IOException, SAXException {
     InputStream inputStream = new ByteArrayInputStream(text.getBytes());
 

@@ -149,9 +149,14 @@ public class RuleMatchWithContexts extends RuleMatch {
     Map<String, Set<String>> excludedJsonPathsForLanguage = excludedJsonPaths.get(languageCode);
     JsonProvider jsonProvider = Configuration.defaultConfiguration().jsonProvider();
 
-    Node linkAttribute =attributes.getNamedItem("href");
-    if (linkAttribute != null && linkAttribute.getNodeValue().contains("action=edit")) {
+    Node hrefAttribute =attributes.getNamedItem("href");
+    if (hrefAttribute != null && hrefAttribute.getNodeValue().contains("action=edit")) {
       throw new SuggestionNotApplicableException(" Match ignored because it is part of an 'edit' link");
+    }
+
+    Node styleAttribute =attributes.getNamedItem("style");
+    if (styleAttribute != null && styleAttribute.getNodeValue().matches("display:[ ]*none")) {
+      throw new SuggestionNotApplicableException(" Match ignored because it is part of an invisible section");
     }
 
     for (String attributeName : excludedJsonPathsForLanguage.keySet()) {
