@@ -101,8 +101,10 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
         " INSERT INTO corpus_match (article_id, ruleid, rule_category, rule_subid, rule_description, message, error_context, small_error_context, html_error_context, replacement_suggestion, languagetool_version)" +
         " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
       deleteNeverAppliedSuggestionsOfObsoleteArticles = conn.prepareStatement("" +
-        " DELETE FROM corpus_match" +
-        " WHERE applied IS NULL AND article_id IN (SELECT id FROM corpus_article WHERE title = ? AND language_code = ? AND revision <> ? )");
+        " DELETE corpus_match" +
+        " FROM corpus_match" +
+        " INNER JOIN corpus_article ON corpus_match.article_id = corpus_article.id" +
+        " WHERE applied IS NULL AND title = ? AND language_code = ? AND revision <> ?");
       deleteAlreadyAppliedSuggestionsInNewArticleRevisions = conn.prepareStatement("" +
         " DELETE from corpus_match WHERE article_id = ? AND id IN " +
         " (SELECT m.id" +
