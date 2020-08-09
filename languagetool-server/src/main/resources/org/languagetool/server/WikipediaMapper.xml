@@ -76,6 +76,7 @@
         </foreach>
         GROUP BY ruleid
         HAVING COUNT(*) >= 5
+        ORDER BY COUNT(*) DESC
     </select>
     <insert id="addIgnoredRule">
         INSERT INTO user_ignored_rules(language_code, username, ruleid) VALUES(#{languageCode}, #{username}, #{ruleid})
