@@ -8,17 +8,20 @@
         SELECT corpus_match.*
         FROM corpus_match
         INNER JOIN (
-            select corpus_match_id.id
-            from corpus_match corpus_match_id
-            inner join corpus_article article on article.id = corpus_match_id.article_id
+            select corpus_match.id
+            from corpus_match
+            inner join corpus_article article on article.id = corpus_match.article_id
             where applied is null
               and language_code in <foreach item="languageCode" index="index" collection="languageCodes"  open="(" separator="," close=")">
                   #{languageCode}
               </foreach>
+              and corpus_match.ruleid NOT IN (select ruleid from user_ignored_rules uir where (<foreach collection="usernames" index="languageCode" item="username" open="(" separator=" or " close=")">
+                  (uir.username = #{username} and uir.language_code = #{languageCode})
+              </foreach>))
               and not exists(
                   select 1
                   from corpus_match_skipped skipped
-                  where corpus_match_id = corpus_match_id.id
+                  where corpus_match_id = corpus_match.id
                     and <foreach collection="usernames" index="languageCode" item="username" open="(" separator=" or " close=")">
                         (skipped.username = #{username} and article.language_code = #{languageCode})
                     </foreach>
@@ -55,12 +58,34 @@
     <select id="selectWikipediaSuggestion" resultType="org.languagetool.server.CorpusMatchEntry">
         SELECT * FROM corpus_match WHERE id=#{id}
     </select>
-    <select id="updateWikipediaSuggestion">
+    <update id="updateWikipediaSuggestion">
         UPDATE corpus_match SET applied=#{applied}, applied_date=current_timestamp(), applied_reason=#{reason}, applied_username=#{username} WHERE id=#{id}
+    </update>
+    <select id="selectMostSkippedRules" resultType="hashmap">
+        SELECT
+               corpus_article.language_code,
+               corpus_match.ruleid,
+               IF(uir.ruleid IS NULL, 0, 1) AS ignored,
+               COUNT(*) AS skips_per_rule
+        FROM corpus_match_skipped
+        INNER JOIN corpus_match ON corpus_match.id = corpus_match_skipped.corpus_match_id
+        INNER JOIN corpus_article ON corpus_match.article_id=corpus_article.id
+        LEFT JOIN user_ignored_rules uir ON corpus_article.language_code = uir.language_code AND corpus_match_skipped.username = uir.username AND corpus_match.ruleid = uir.ruleid
+        WHERE <foreach collection="usernames" index="languageCode" item="username" open="(" separator=" or " close=")">
+            (corpus_match_skipped.username = #{username} and corpus_article.language_code = #{languageCode})
+        </foreach>
+        GROUP BY ruleid
+        HAVING COUNT(*) >= 5
     </select>
-    <select id="skipWikipediaSuggestion">
+    <insert id="addIgnoredRule">
+        INSERT INTO user_ignored_rules(language_code, username, ruleid) VALUES(#{languageCode}, #{username}, #{ruleid})
+    </insert>
+    <delete id="removeIgnoredRule">
+        DELETE FROM user_ignored_rules WHERE language_code=#{languageCode} AND username=#{username} AND ruleid=#{ruleid}
+    </delete>
+    <insert id="skipWikipediaSuggestion">
         INSERT INTO corpus_match_skipped(corpus_match_id, date, username) VALUES(#{corpus_match_id}, current_timestamp(), #{username})
-    </select>
+    </insert>
     <select id="selectAccessToken" resultType="org.languagetool.server.AccessToken">
         SELECT * FROM access_token WHERE access_token=#{accessToken} AND language_code=#{languageCode}
     </select>
@@ -124,10 +149,10 @@
         ORDER BY languagetool_version DESC, language_code, COUNT(*) DESC
         LIMIT 10
     </select>
-    <select id="insertAccessToken">
+    <insert id="insertAccessToken">
         INSERT INTO access_token(language_code, username, access_token, access_token_secret) VALUES(#{languageCode}, #{username}, #{accessToken}, #{accessTokenSecret})
-    </select>
-    <select id="deleteAccessToken">
+    </insert>
+    <delete id="deleteAccessToken">
         DELETE FROM access_token WHERE access_token=#{accessToken}
-    </select>
+    </delete>
 </mapper>

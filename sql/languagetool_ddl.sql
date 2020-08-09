@@ -89,3 +89,11 @@ create table corpus_match_skipped
             on delete cascade
 );
 
+create table user_ignored_rules
+(
+    language_code varchar(15) not null,
+    username varchar(255) not null,
+    ruleid varchar(255) not null,
+    primary key (language_code, username, ruleid)
+);
+

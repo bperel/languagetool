@@ -43,6 +43,7 @@ import java.sql.Statement;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * Encapsulate database access. Will do nothing if database access is not configured.
@@ -162,6 +163,24 @@ class DatabaseAccess {
     }
   }
 
+  List<SkippedRule> getMostSkippedRules(Map<String, String> usernames) {
+    if (sqlSessionFactory == null) {
+      return new ArrayList<>();
+    }
+    try (SqlSession session = sqlSessionFactory.openSession(true)) {
+      Map<Object, Object> parameters = new HashMap<>();
+      parameters.put("languageCodes", usernames.keySet());
+      parameters.put("usernames", usernames);
+      List<HashMap<String, Object>> results = session.selectList("org.languagetool.server.WikipediaMapper.selectMostSkippedRules", parameters);
+      return results.stream().map(result -> new SkippedRule(
+        (String)result.get("language_code"),
+        (String)result.get("ruleid"),
+        (Long) result.get("skips_per_rule"),
+        result.get("ignored").equals(1)
+      )).collect(Collectors.toList());
+    }
+  }
+
   List<CorpusMatchEntry> getPastDecisions(HashMap<String, String> usernames, int limit) {
     if (sqlSessionFactory == null) {
       return new ArrayList<>();
@@ -258,6 +277,27 @@ class DatabaseAccess {
       map.put("username", username);
       int affectedRows = session.update("org.languagetool.server.WikipediaMapper.skipWikipediaSuggestion", map);
       return affectedRows >= 1;
+    }
+  }
+
+
+  public boolean toggleIgnoredRule(String languageCode, String ruleId, String username, Boolean toggle) {
+    if (sqlSessionFactory == null) {
+      return false;
+    }
+    try (SqlSession session = sqlSessionFactory.openSession(true)) {
+      Map<Object, Object> map = new HashMap<>();
+      map.put("languageCode", languageCode);
+      map.put("ruleid", ruleId);
+      map.put("username", username);
+      int affectedRows;
+      if (toggle) {
+        affectedRows = session.insert("org.languagetool.server.WikipediaMapper.addIgnoredRule", map);
+      }
+      else {
+        affectedRows = session.delete("org.languagetool.server.WikipediaMapper.removeIgnoredRule", map);
+      }
+      return affectedRows == 1;
     }
   }
 
@@ -690,6 +730,36 @@ class DatabaseAccess {
 
     public String getOriginalHtml() {
       return originalHtml;
+    }
+  }
+
+  public static class SkippedRule {
+    private final String languageCode;
+    private final String ruleId;
+    private final Long timesSkipped;
+    private final Boolean isIgnored;
+
+    public SkippedRule(String languageCode, String ruleId, Long timesSkipped, Boolean isIgnored) {
+      this.languageCode = languageCode;
+      this.ruleId = ruleId;
+      this.timesSkipped = timesSkipped;
+      this.isIgnored = isIgnored;
+    }
+
+    public String getLanguageCode() {
+      return languageCode;
+    }
+
+    public String getRuleId() {
+      return ruleId;
+    }
+
+    public Long getTimesSkipped() {
+      return timesSkipped;
+    }
+
+    public Boolean getIgnored() {
+      return isIgnored;
     }
   }
 }

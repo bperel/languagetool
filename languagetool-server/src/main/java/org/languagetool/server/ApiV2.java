@@ -99,6 +99,12 @@ class ApiV2 {
       handleWikipediaUserRequest(httpExchange, parameters);
     } else if (path.equals("wikipedia/suggestions")) {
       handleWikipediaSuggestionListRequest(httpExchange, parameters);
+    } else if (path.equals("wikipedia/mostSkipped")) {
+      handleWikipediaMostSkippedRulesListRequest(httpExchange, parameters);
+    } else if (path.equals("wikipedia/ignoredRule/add")) {
+      handleWikipediaAddIgnoredRuleRequest(httpExchange, parameters);
+    } else if (path.equals("wikipedia/ignoredRule/remove")) {
+      handleWikipediaRemoveIgnoredRuleRequest(httpExchange, parameters);
     } else if (path.equals("wikipedia/suggestions/past")) {
       handleWikipediaSuggestionListPastRequest(httpExchange, parameters);
     } else if (path.equals("wikipedia/suggestion")) {
@@ -290,6 +296,54 @@ class ApiV2 {
     writeCorpusMatchListResponse(suggestions, articles, httpExchange);
   }
 
+  private void handleWikipediaMostSkippedRulesListRequest(HttpExchange httpExchange, Map<String, String> accessTokens) throws IOException {
+    ensureGetMethod(httpExchange, "/wikipedia/mostSkipped");
+    HashMap<String, String> usernames = getUsernamesFromAccessTokens(accessTokens);
+
+    List<SkippedRule> mostSkippedRules = new ArrayList<>();
+
+    HashMap<String, List<Rule>> rulesPerLanguage = new HashMap<>();
+    accessTokens.keySet().forEach(languageCode -> {
+      Language lang = Languages.getLanguageForShortCode(languageCode);
+      JLanguageTool lt = new JLanguageTool(lang);
+      rulesPerLanguage.put(languageCode, lt.getAllRules());
+    });
+
+    if (!usernames.values().isEmpty()) {
+      DatabaseAccess db = DatabaseAccess.getInstance();
+      mostSkippedRules = db.getMostSkippedRules(usernames);
+    }
+    writeMostSkippedRulesResponse(mostSkippedRules, rulesPerLanguage, httpExchange);
+  }
+
+  private void handleWikipediaAddIgnoredRuleRequest(HttpExchange httpExchange, Map<String, String> parameters) throws IOException {
+    boolean isOptions = !ensurePutMethod(httpExchange, "/wikipedia/ignoredRule/add");
+    if (!isOptions) {
+      handleWikipediaToggleIgnoredRuleRequest(httpExchange, parameters, true);
+    }
+  }
+
+  private void handleWikipediaRemoveIgnoredRuleRequest(HttpExchange httpExchange, Map<String, String> parameters) throws IOException {
+    boolean isOptions = !ensureDeleteMethod(httpExchange, "/wikipedia/ignoredRule/remove");
+    if (!isOptions) {
+      handleWikipediaToggleIgnoredRuleRequest(httpExchange, parameters, false);
+    }
+  }
+
+  private void handleWikipediaToggleIgnoredRuleRequest(HttpExchange httpExchange, Map<String, String> parameters, Boolean toggle) throws IOException {
+    ServerTools.setCommonHeaders(httpExchange, JSON_CONTENT_TYPE, allowOriginUrl);
+
+    String languageCode = parameters.get("languageCode");
+    String ruleId = parameters.get("ruleid");
+    String accessToken = parameters.get("accessToken");
+    AccessToken accessTokenData = getAccessTokenData(languageCode, accessToken);
+
+    DatabaseAccess db = DatabaseAccess.getInstance();
+    boolean success = db.toggleIgnoredRule(languageCode, ruleId, accessTokenData.getUsername(), toggle);
+    writeBooleanResponse("success", success, httpExchange);
+
+  }
+
   private void handleWikipediaSuggestionListPastRequest(HttpExchange httpExchange, Map<String, String> accessTokens) throws IOException {
     ensureGetMethod(httpExchange, "/wikipedia/suggestions/past");
     HashMap<String, String> usernames = getUsernamesFromAccessTokens(accessTokens);
@@ -479,22 +533,34 @@ class ApiV2 {
     sendJson(httpExchange, sw);
   }
 
-  private void ensureGetMethod(HttpExchange httpExchange, String url) {
-    if (!httpExchange.getRequestMethod().equalsIgnoreCase("get")) {
-      throw new IllegalArgumentException(url + " needs to be called with GET");
-    }
+  private Boolean ensureGetMethod(HttpExchange httpExchange, String url) throws IOException {
+    return ensureHttpMethod(httpExchange, "GET", url);
+  }
+
+  private Boolean ensurePostMethod(HttpExchange httpExchange, String url) throws IOException {
+    return ensureHttpMethod(httpExchange, "POST", url);
+  }
+
+  private Boolean ensurePutMethod(HttpExchange httpExchange, String url) throws IOException {
+    return ensureHttpMethod(httpExchange, "PUT", url);
+  }
+
+  private Boolean ensureDeleteMethod(HttpExchange httpExchange, String url) throws IOException {
+    return ensureHttpMethod(httpExchange, "DELETE", url);
   }
   
-  private void ensurePostMethod(HttpExchange httpExchange, String url) throws IOException {
-    if (httpExchange.getRequestMethod().equalsIgnoreCase("options")) {
+  private Boolean ensureHttpMethod(HttpExchange httpExchange, String method, String url) throws IOException {
+    if (!method.equals("GET") && httpExchange.getRequestMethod().equalsIgnoreCase("options")) {
       httpExchange.getResponseHeaders().add("Access-Control-Allow-Origin", allowOriginUrl);
-      httpExchange.getResponseHeaders().add("Access-Control-Allow-Methods", "POST, OPTIONS");
+      httpExchange.getResponseHeaders().add("Access-Control-Allow-Methods", method + ", OPTIONS");
       httpExchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type,Authorization");
       httpExchange.sendResponseHeaders(204, -1);
+      return false;
     }
-    else if (!httpExchange.getRequestMethod().equalsIgnoreCase("post")) {
-      throw new IllegalArgumentException(url + " needs to be called with POST");
+    else if (!httpExchange.getRequestMethod().equalsIgnoreCase(method)) {
+      throw new IllegalArgumentException(url + " needs to be called with " + method);
     }
+    return true;
   }
 
   @NotNull
@@ -569,6 +635,25 @@ class ApiV2 {
       }
       g.writeEndArray();
       g.writeEndObject();
+    }
+    sendJson(httpExchange, sw);
+  }
+
+  private void writeMostSkippedRulesResponse(List<SkippedRule> mostSkippedRules, HashMap<String, List<Rule>> rulesPerLanguage, HttpExchange httpExchange) throws IOException {
+    StringWriter sw = new StringWriter();
+    try (JsonGenerator g = factory.createGenerator(sw)) {
+      g.setCodec(new ObjectMapper());
+      g.writeStartArray();
+      for (SkippedRule skippedRule : mostSkippedRules) {
+        g.writeStartObject();
+        g.writeStringField("languageCode", skippedRule.getLanguageCode());
+        g.writeStringField("ruleid", skippedRule.getRuleId());
+        g.writeNumberField("count", skippedRule.getTimesSkipped());
+        g.writeBooleanField("ignored", skippedRule.getIgnored());
+        g.writeStringField("description", rulesPerLanguage.get(skippedRule.getLanguageCode()).stream().filter(rule -> skippedRule.getRuleId().equals(rule.getId())).findFirst().get().getDescription());
+        g.writeEndObject();
+      }
+      g.writeEndArray();
     }
     sendJson(httpExchange, sw);
   }
