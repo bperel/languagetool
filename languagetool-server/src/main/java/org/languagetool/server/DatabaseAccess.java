@@ -319,6 +319,18 @@ class DatabaseAccess {
     }
   }
 
+  List<UserStatistics> getUserStatistics(HashMap<String, String> usernames) {
+    if (sqlSessionFactory == null) {
+      return null;
+    }
+    try (SqlSession session = sqlSessionFactory.openSession(true)) {
+      Map<Object, Object> parameters = new HashMap<>();
+      parameters.put("languageCodes", usernames.keySet());
+      parameters.put("usernames", usernames);
+      return session.selectList("org.languagetool.server.WikipediaMapper.selectUserStats", parameters);
+    }
+  }
+
   List<ContributionStatisticsPerMonth> getContributorsStats() {
     final int limitPerMonthAndLanguage = 3;
     if (sqlSessionFactory == null) {
@@ -760,6 +772,30 @@ class DatabaseAccess {
 
     public Boolean getIgnored() {
       return isIgnored;
+    }
+  }
+
+  public static class UserStatistics {
+    private final String languageCode;
+    private final Boolean applied;
+    private final Integer count;
+
+    public UserStatistics(String languageCode, Boolean applied, Integer count) {
+      this.languageCode = languageCode;
+      this.applied = applied;
+      this.count = count;
+    }
+
+    public String getLanguageCode() {
+      return languageCode;
+    }
+
+    public Boolean getApplied() {
+      return applied;
+    }
+
+    public Integer getCount() {
+      return count;
     }
   }
 }

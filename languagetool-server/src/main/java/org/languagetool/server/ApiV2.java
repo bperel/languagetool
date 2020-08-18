@@ -97,6 +97,8 @@ class ApiV2 {
       handleWikipediaLogoutRequest(httpExchange, parameters);
     } else if (path.equals("wikipedia/user")) {
       handleWikipediaUserRequest(httpExchange, parameters);
+    } else if (path.equals("wikipedia/user/stats")) {
+      handleWikipediaUserStatsRequest(httpExchange, parameters);
     } else if (path.equals("wikipedia/suggestions")) {
       handleWikipediaSuggestionListRequest(httpExchange, parameters);
     } else if (path.equals("wikipedia/mostSkipped")) {
@@ -276,6 +278,18 @@ class ApiV2 {
     fields.put("userName", accessTokenData.getUsername());
     fields.put("languageCode", languageCode);
     writeStringHashMapResponse(fields, httpExchange);
+  }
+
+  private void handleWikipediaUserStatsRequest(HttpExchange httpExchange, Map<String, String> accessTokens) throws IOException {
+    ensureGetMethod(httpExchange, "/wikipedia/suggestions");
+    HashMap<String, String> usernames = getUsernamesFromAccessTokens(accessTokens);
+
+    List<UserStatistics> stats = new ArrayList<>();
+    if (!usernames.values().isEmpty()) {
+      DatabaseAccess db = DatabaseAccess.getInstance();
+      stats = db.getUserStatistics(usernames);
+    }
+    writeUserStatsResponse(stats, httpExchange);
   }
 
   private void handleWikipediaSuggestionListRequest(HttpExchange httpExchange, Map<String, String> accessTokens) throws IOException {
@@ -718,6 +732,26 @@ class ApiV2 {
       }
       g.writeEndArray();
       g.writeEndObject();
+    }
+    sendJson(httpExchange, sw);
+  }
+
+  private void writeUserStatsResponse(
+    List<UserStatistics> userStats,
+    HttpExchange httpExchange
+  ) throws IOException {
+    StringWriter sw = new StringWriter();
+    try (JsonGenerator g = factory.createGenerator(sw)) {
+      g.setCodec(new ObjectMapper());
+      g.writeStartArray();
+      for (UserStatistics stat : userStats) {
+        g.writeStartObject();
+        g.writeObjectField("languageCode", stat.getLanguageCode());
+        g.writeObjectField("applied", stat.getApplied());
+        g.writeObjectField("count", stat.getCount());
+        g.writeEndObject();
+      }
+      g.writeEndArray();
     }
     sendJson(httpExchange, sw);
   }

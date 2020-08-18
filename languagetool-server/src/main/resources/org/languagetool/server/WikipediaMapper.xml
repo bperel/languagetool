@@ -99,6 +99,19 @@
         GROUP BY date_format(applied_date, '%Y-%m-%d'), applied
         ORDER BY date_format(applied_date, '%Y-%m-%d'), applied
     </select>
+    <select id="selectUserStats" resultType="org.languagetool.server.DatabaseAccess$UserStatistics">
+        SELECT a.language_code,
+        (IF(skipped.date is not null, null, applied)) AS applied,
+        COUNT(*)
+        FROM corpus_match m
+        INNER JOIN corpus_article a on a.id = m.article_id
+        LEFT JOIN corpus_match_skipped skipped on m.id = skipped.corpus_match_id
+        WHERE <foreach collection="usernames" index="languageCode" item="username" open="(" separator=" or " close=")">
+        ((skipped.username = #{username} or m.applied_username = #{username}) and a.language_code = #{languageCode})
+    </foreach>
+        GROUP BY a.language_code,
+        applied
+    </select>
     <select id="getDecisionStatsPercentageWeek" resultType="org.languagetool.server.DatabaseAccess$WeekStatistics">
         select distinct date_format(applied_date, '%Y w%u') AS week,
                         100 * AVG(applied)
