@@ -177,3 +177,9 @@ Zella-Mehlis*
 Zeulenroda-Triebes*
 Garmisch-Partenkirchen*
 Garmisch-Partenkirchens*
+Saalbach-Hinterglemm*
+Saalbach-Hinterglemms*
+Friedrichshain-Kreuzberg*
+Tempelhof-Schöneberg*
+Peter-Ording*
+Wenningstedt-Braderup*

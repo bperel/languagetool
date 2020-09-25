@@ -29,6 +29,7 @@ import org.languagetool.tagging.disambiguation.rules.DisambiguationRuleTest;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static junit.framework.Assert.fail;
 import static org.junit.Assert.*;
@@ -46,6 +47,7 @@ public class LanguageSpecificTest {
 
   protected void runTests(Language lang, String onlyRunCode, String additionalValidationChars) throws IOException {
     new WordListValidatorTest(additionalValidationChars).testWordListValidity(lang);
+    testNoLineBreaksEtcInMessage(lang);
     testNoQuotesAroundSuggestion(lang);
     testJavaRules(onlyRunCode);
     //testExampleAvailable(onlyRunCode);
@@ -56,6 +58,24 @@ public class LanguageSpecificTest {
       new DisambiguationRuleTest().testDisambiguationRulesFromXML();
     } catch (Exception e) {
       throw new RuntimeException(e);
+    }
+  }
+
+  private void testNoLineBreaksEtcInMessage(Language lang) {
+    JLanguageTool lt = new JLanguageTool(lang);
+    for (Rule rule : lt.getAllRules()) {
+      if (lang.getShortCode().equals("en") && rule.getId().startsWith("EUPUB_")) {  // ignore, turned off anyway
+        continue;
+      }
+      if (rule instanceof AbstractPatternRule) {
+        String message = ((AbstractPatternRule) rule).getMessage();
+        if (message.contains("\n") || message.contains("\r")) {
+          System.err.println("*** WARNING: " + rule.getFullId() + " contains line break (\\n or \\r): " + message.replace("\n", "\\n").replace("\r", "\\r"));
+        }
+        if (message.contains("\t")) {
+          System.err.println("*** WARNING: " + rule.getFullId() + " contains tab (\\t): " + message.replace("\t", "\\t"));
+        }
+      }
     }
   }
 
@@ -112,6 +132,7 @@ public class LanguageSpecificTest {
           assertIdUniqueness(idsToClassName, ruleClasses, language, rule);
           assertIdValidity(language, rule);
           assertTrue(rule.supportsLanguage(language));
+          rule.setTags(rule.getTags().stream().filter(k -> !k.equals(Tag.picky)).collect(Collectors.toList()));  // make sure "picky" rules also run
           testExamples(rule, lt);
         }
       }
@@ -272,7 +293,7 @@ public class LanguageSpecificTest {
       }
     }
     System.out.println("Number of default='temp_off' rules for " + lang + ": " + count);
-    int limit = 1;
+    int limit = 10;
     if (count > limit) {
       System.err.println("################################################################################################");
       System.err.println("WARNING: " + count + " default='temp_off' rules for " + lang + ", please make sure to turn on these");

@@ -26,6 +26,7 @@ WordPress
 Uber
 Messenger
 Snapchat
+Walt Disney World
 Walt Disney
 IBM
 Mastercard
@@ -60,6 +61,7 @@ Kia
 Kia Motors
 Fiat
 Ferrari
+Ferraris
 Dacia
 Volvo
 Alfa Romeo
@@ -115,6 +117,7 @@ languagetoolplus.com
 languagetool.com
 SurveyMonkey
 Mailchimp
+Mailjet
 OpenAI
 Flickr
 Bitcoin
@@ -396,6 +399,7 @@ Bank of Nova Scotia
 Suncor Energy
 Anheuser-Busch
 Anheuser-Busch InBev
+AB InBev
 KBC Bank
 Epic Games
 Rockstar Games
@@ -631,6 +635,7 @@ Surface Pro
 Depeche Mode
 Zac Efron
 CSS
+SCSS
 HTML
 AdSense
 AdWords
@@ -803,6 +808,7 @@ Katniss Everdeen
 Office 365
 Samsung Galaxy
 Kylie Jenner
+Kendall Jenner
 Peloton
 Monty Python
 Super Bowl
@@ -814,6 +820,7 @@ OpenOffice
 LibreOffice
 4K
 LTE
+UMTS
 2G
 3G
 4G
@@ -1151,10 +1158,333 @@ IntelliJ
 IntelliJ IDEA
 NetBeans
 WebStorm
-Eclipse
 VMWare
 Bosch
 QVC
 Tomorrowland
 CloudFront
 ECMAScript
+LGBT
+LGBTQI
+LGBTQIA+
+Tesco
+Weetabix
+Rocket Internet
+Tommy Hilfiger
+Minecraft Dungeons
+Vanilla Ice
+J. K. Rowling
+J.K. Rowling
+JK Rowling
+Getty Images
+Frankfurter Allgemeine
+Frankfurter Allgemeine Zeitung
+WebKit
+Tom Ford
+Ralph Lauren
+Fred Perry
+Gilead
+Travis CI
+CricleCI
+Jenkins
+Overleaf
+LaTeX
+Nesquik
+Maggi
+⚠️
+Taboola
+Yuval
+Harari
+Philip Morris
+WinRAR
+WinZip
+Postmates
+Reckitt Benckiser
+Tata Motors
+Range Rover
+Emmanuel Macron
+After Effects
+Debian
+CrossFit
+Forbes
+Markdown
+Webpack
+NPM
+PowerShell
+Rackspace
+VueJS
+Windows 7 Ultimate
+Windows 10 Pro
+Secret Escapes
+Billabong
+RingCentral
+Dell XPS
+General Electric
+Walgreens
+Walgreens Boots
+Walgreens Boots Alliance
+EURO STOXX
+Euro Stoxx
+Polestar
+x86
+AMD Athlon
+PyTorch
+MediaTek
+Pitbull
+Sourceforge
+LastPass
+Norton
+Best Buy
+Steve Ballmer
+Satya Nadella
+Nikon
+Canon
+Synology
+Wunderlist
+Palmolive
+Armani
+Isuzu
+Isuzu Motors
+Jack Ma
+BMW iX
+BMW iNext
+TextMate
+Scrivener
+ABB
+Hapag-Lloyd
+Banksy
+Jio Platforms
+CBS
+Daihatsu
+Bugatti
+Buick
+Cadillac
+GMC
+Datsun
+Acura
+Abarth
+Lancia
+Dodge
+Vauxhall
+Petrobras
+Randstad
+Royal Dutch Shell
+Rabobank
+Interbrand
+Sprite
+Fanta
+Seven Up
+Dr Pepper
+Usenet
+Xcode
+macOS
+Visual Studio
+VS Code
+Shutterstock
+NordVPN
+SEMrush
+Benetton
+Fortnite
+iSight
+Mario Kart
+Super Nintendo
+Donkey Kong
+Super Mario Kart
+Game Boy
+The Legend of Zelda
+Legend of Zelda
+Udemy
+Babbel
+Rosetta Stone
+EQC
+Braintree
+MongoDB
+Zscaler
+Marriott
+GQ
+Vanity Fair
+Al Pacino
+Northvolt
+CCleaner
+Motörhead
+QNAP
+Netgear
+Waymo
+Zalando
+Guggenheim
+Cao Cao
+TomTom
+Halliburton
+Ant Financial
+AirDrop
+GPT-2
+GPT-3
+Bertrandt
+Roundcube
+GeForce
+Elvis Presley
+Mondelez
+Cadbury
+General Mills
+iA Writer
+Clippy
+Bang & Olufsen
+Sennheiser
+Germanwings
+Wizz Air
+Daft Punk
+Qualcomm
+YouGov
+iMac
+ABAP
+Rammstein
+Voldemort
+World of Warcraft
+Windows
+League of Legends
+Erasmus
+Harman Kardon
+Sonos
+JBL
+Garmin
+Counter Strike
+Flipkart
+Foxconn
+Palantir
+ASML
+✏️
+➡️
+WWDC
+Karl Lagerfeld
+Bharti Airtel
+Rivian
+Hooters
+Blaupunkt
+CloudFormation
+JSON
+Bora Bora
+Duran Duran
+Pago Pago
+Wagga Wagga
+Xiao Xiao
+Li Li
+Phi Phi
+Jay-Z
+NRA
+TAP
+TAP Air
+Onur Air
+Lana Del Rey
+Fruit of the Loom
+Kamala
+Harris
+UCLA
+HTTP
+HTTPS
+SEM
+SEO
+cPanel
+Webflow
+Bitwarden
+Cortana
+OpenVPN
+SugarCRM
+Pinduoduo
+Reels
+McLaren
+AVIF
+AVIFs
+SwiftUI
+Quizizz
+Unsplash
+C-SPAN
+Miley Cyrus
+Cardi B
+Megan Thee Stallion
+Juice WRLD
+DJ Khaled
+Kanye West
+J Balvin
+Lollapalooza
+Keith Urban
+Lil Wayne
+Nickelback
+Sergey Brin
+Larry Page
+Smart Fortwo
+smart fortwo
+Smart Forfour
+smart forfour
+Foodpanda
+Unity
+Bioderma
+TransferWise
+Transferwise
+StepStone
+AppGallery
+Neuralink
+BookBeat
+EXIF
+Java SE
+Mercedes-AMG
+OnlyFans
+GoFundMe
+Ban Ki-moon
+Powerade
+Audi TT
+IG
+Deezer
+♂️
+♀
+APNG
+WebP
+WebM
+FFmpeg
+Broadcom
+ClickBank
+Oculus VR
+Oculus Rift
+Oculus Quest
+Oculus Rift S
+Skoda
+Škoda
+UiPath
+MotoGP
+Baillie Gifford
+Alka-Seltzer
+Activision
+ResearchGate
+Gaia-X
+GAIA-X
+PGP
+Heckler & Koch
+SimilarWeb
+YubiKey
+Winamp
+Apple Watch
+Apple Watch Series
+Apple One
+Apple One Premier
+Apple One Individual
+Apple One Family
+Apple Arcade
+Apple TV
+Hurricane Sally
+4chan
+Mashable
+Sketch Engine
+Tidal
+eHarmony
+ProSiebenSat.1
+Euronext
+Ivy League
+MythBusters
+Ghostbusters
+Borsa Italiana
+TeXstudio
+Blinkist
+CSRF
+XSRF
+Citibank
+Xbox Series X
+Xbox Series S

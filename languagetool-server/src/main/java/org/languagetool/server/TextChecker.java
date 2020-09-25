@@ -20,7 +20,6 @@ package org.languagetool.server;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.sun.net.httpserver.HttpExchange;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -32,8 +31,8 @@ import org.languagetool.language.LanguageIdentifier;
 import org.languagetool.markup.AnnotatedText;
 import org.languagetool.markup.AnnotatedTextBuilder;
 import org.languagetool.rules.CategoryId;
-import org.languagetool.rules.RemoteRule;
 import org.languagetool.rules.DictionaryMatchFilter;
+import org.languagetool.rules.RemoteRule;
 import org.languagetool.rules.RuleMatch;
 import org.languagetool.rules.bitext.BitextRule;
 import org.languagetool.rules.spelling.morfologik.suggestions_ordering.SuggestionsOrdererConfig;
@@ -60,7 +59,7 @@ abstract class TextChecker {
   private static final int PINGS_MAX_SIZE = 5000;
 
   protected abstract void setHeaders(HttpExchange httpExchange);
-  protected abstract String getResponse(AnnotatedText text, DetectedLanguage lang, Language motherTongue, List<RuleMatch> matches,
+  protected abstract String getResponse(AnnotatedText text, Language language, DetectedLanguage lang, Language motherTongue, List<RuleMatch> matches,
                                         List<RuleMatch> hiddenMatches, String incompleteResultReason, int compactMode);
   @NotNull
   protected abstract List<String> getPreferredVariants(Map<String, String> parameters);
@@ -87,6 +86,8 @@ abstract class TextChecker {
   // keep track of timeouts of the hidden matches server, check health periodically;
   // -1 => healthy, else => check timed out at given date, check back if time difference > config.getHiddenMatchesFailTimeout()
   private long lastHiddenMatchesServerTimeout;
+  // counter; mark as down if this reaches hidenMatchesServerFall
+  private long hiddenMatchesServerFailures = 0;
   private final LanguageIdentifier identifier;
   private final ExecutorService executorService;
   private final ResultCache cache;
@@ -117,7 +118,9 @@ abstract class TextChecker {
 
     if (cache != null) {
       ServerMetricsCollector.getInstance().monitorCache("languagetool_matches_cache", cache.getMatchesCache());
+      ServerMetricsCollector.getInstance().monitorCache("languagetool_remote_matches_cache", cache.getRemoteMatchesCache());
       ServerMetricsCollector.getInstance().monitorCache("languagetool_sentences_cache", cache.getSentenceCache());
+      ServerMetricsCollector.getInstance().monitorCache("languagetool_remote_matches_cache", cache.getRemoteMatchesCache());
     }
 
     pipelinePool = new PipelinePool(config, cache, internalServer);
@@ -150,7 +153,7 @@ abstract class TextChecker {
       for (JLanguageTool.Mode mode : addonModes) {
         QueryParams params = new QueryParams(Collections.emptyList(), Collections.emptyList(), addonDisabledRules,
           Collections.emptyList(), Collections.emptyList(), false, true,
-          false, false, false, mode, null);
+          false, false, false, mode, JLanguageTool.Level.DEFAULT, null);
         PipelinePool.PipelineSettings settings = new PipelinePool.PipelineSettings(language, null, params, config.globalConfig, user);
         prewarmSettings.put(settings, NUM_PIPELINES_PER_SETTING);
 
@@ -186,7 +189,7 @@ abstract class TextChecker {
     executorService.shutdownNow();
     RemoteRule.shutdown();
   }
-  
+
   void checkText(AnnotatedText aText, HttpExchange httpExchange, Map<String, String> parameters, ErrorRequestLimiter errorRequestLimiter,
                  String remoteAddress) throws Exception {
     checkParams(parameters);
@@ -334,15 +337,18 @@ abstract class TextChecker {
     boolean allowIncompleteResults = "true".equals(parameters.get("allowIncompleteResults"));
     boolean enableHiddenRules = "true".equals(parameters.get("enableHiddenRules"));
     JLanguageTool.Mode mode = ServerTools.getMode(parameters);
+    JLanguageTool.Level level = ServerTools.getLevel(parameters);
     String callback = parameters.get("callback");
+    // allowed to log input on errors?
+    boolean inputLogging = !parameters.getOrDefault("inputLogging", "").equals("no");
     QueryParams params = new QueryParams(altLanguages, enabledRules, disabledRules,
       enabledCategories, disabledCategories, useEnabledOnly,
-      useQuerySettings, allowIncompleteResults, enableHiddenRules, enableTempOffRules, mode, callback);
+      useQuerySettings, allowIncompleteResults, enableHiddenRules, enableTempOffRules, mode, level, callback, inputLogging);
 
     int textSize = aText.getPlainText().length();
 
     List<RuleMatch> ruleMatchesSoFar = Collections.synchronizedList(new ArrayList<>());
-    
+
     Future<List<RuleMatch>> future = executorService.submit(new Callable<List<RuleMatch>>() {
       @Override
       public List<RuleMatch> call() throws Exception {
@@ -376,7 +382,7 @@ abstract class TextChecker {
       } else if (e.getCause() != null && e.getCause() instanceof OutOfMemoryError) {
         throw (OutOfMemoryError)e.getCause();
       } else {
-        throw new RuntimeException(e.getMessage() + ", detected: " + detLang, e);
+        throw new RuntimeException(ServerTools.cleanUserTextFromMessage(e.getMessage(), parameters) + ", detected: " + detLang, e);
       }
     } catch (TimeoutException e) {
       boolean cancelled = future.cancel(true);
@@ -396,7 +402,7 @@ abstract class TextChecker {
       if (params.allowIncompleteResults) {
         logger.info(message + " - returning " + ruleMatchesSoFar.size() + " matches found so far");
         matches = new ArrayList<>(ruleMatchesSoFar);  // threads might still be running, so make a copy
-        incompleteResultReason = "Results are incomplete: text checking took longer than allowed maximum of " + 
+        incompleteResultReason = "Results are incomplete: text checking took longer than allowed maximum of " +
                 String.format(Locale.ENGLISH, "%.2f", limits.getMaxCheckTimeMillis()/1000.0) + " seconds";
       } else {
         ServerMetricsCollector.getInstance().logRequestError(ServerMetricsCollector.RequestErrorType.MAX_CHECK_TIME);
@@ -414,6 +420,7 @@ abstract class TextChecker {
       if(config.getHiddenMatchesServerFailTimeout() > 0 && lastHiddenMatchesServerTimeout != -1 &&
         System.currentTimeMillis() - lastHiddenMatchesServerTimeout < config.getHiddenMatchesServerFailTimeout()) {
         ServerMetricsCollector.getInstance().logHiddenServerStatus(false);
+        ServerMetricsCollector.getInstance().logHiddenServerRequest(false);
         logger.warn("Warn: Skipped querying hidden matches server at " +
           config.getHiddenMatchesServer() + " because of recent error/timeout (timeout=" + config.getHiddenMatchesServerFailTimeout() + "ms).");
       } else {
@@ -426,15 +433,23 @@ abstract class TextChecker {
           logger.info("Hidden matches: " + extensionMatches.size() + " -> " + hiddenMatches.size() + " in " + (end - start) + "ms for " + lang.getShortCodeWithCountryAndVariant());
           ServerMetricsCollector.getInstance().logHiddenServerStatus(true);
           lastHiddenMatchesServerTimeout = -1;
+          hiddenMatchesServerFailures = 0;
+          ServerMetricsCollector.getInstance().logHiddenServerRequest(true);
         } catch (Exception e) {
-          ServerMetricsCollector.getInstance().logHiddenServerStatus(false);
-          logger.warn("Failed to query hidden matches server at " + config.getHiddenMatchesServer() + ": " + e.getClass() + ": " + e.getMessage() + ", input was " + aText.getPlainText().length() + " characters");
-          lastHiddenMatchesServerTimeout = System.currentTimeMillis();
+          ServerMetricsCollector.getInstance().logHiddenServerRequest(false);
+          hiddenMatchesServerFailures++;
+          if (hiddenMatchesServerFailures >= config.getHiddenMatchesServerFall()) {
+            ServerMetricsCollector.getInstance().logHiddenServerStatus(false);
+            logger.warn("Failed to query hidden matches server at " + config.getHiddenMatchesServer() + ": " + e.getClass() + ": " + e.getMessage() + ", input was " + aText.getPlainText().length() + " characters - marked as down now");
+            lastHiddenMatchesServerTimeout = System.currentTimeMillis();
+          } else {
+            logger.warn("Failed to query hidden matches server at " + config.getHiddenMatchesServer() + ": " + e.getClass() + ": " + e.getMessage() + ", input was " + aText.getPlainText().length() + " characters - " + (config.getHiddenMatchesServerFall() - hiddenMatchesServerFailures) + " errors until marked as down");
+          }
         }
       }
     }
     int compactMode = Integer.parseInt(parameters.getOrDefault("c", "0"));
-    String response = getResponse(aText, detLang, motherTongue, matches, hiddenMatches, incompleteResultReason, compactMode);
+    String response = getResponse(aText, lang, detLang, motherTongue, matches, hiddenMatches, incompleteResultReason, compactMode);
     if (params.callback != null) {
       // JSONP - still needed today for the special case of hosting your own on-premise LT without SSL
       // and using it from a local MS Word (not Online Word) - issue #89 in the add-in repo:
@@ -475,7 +490,7 @@ abstract class TextChecker {
     }
 
     ServerMetricsCollector.getInstance().logCheck(
-      lang, computationTime, textSize, matchCount, mode, agent, ruleMatchCount);
+      lang, computationTime, textSize, matchCount, mode);
 
     if (!config.isSkipLoggingChecks()) {
       DatabaseCheckLogEntry logEntry = new DatabaseCheckLogEntry(userId, agentId, logServerId, textSize, matchCount,
@@ -611,7 +626,7 @@ abstract class TextChecker {
     try {
       settings = new PipelinePool.PipelineSettings(lang, motherTongue, params, config.globalConfig, userConfig);
       lt = pipelinePool.getPipeline(settings);
-      matches.addAll(lt.check(aText, true, JLanguageTool.ParagraphHandling.NORMAL, listener, params.mode, executorService));
+      matches.addAll(lt.check(aText, true, JLanguageTool.ParagraphHandling.NORMAL, listener, params.mode, params.level, executorService));
     } finally {
       if (lt != null) {
         pipelinePool.returnPipeline(settings, lt);
@@ -701,10 +716,18 @@ abstract class TextChecker {
     final boolean enableHiddenRules;
     final boolean enableTempOffRules;
     final JLanguageTool.Mode mode;
+    final JLanguageTool.Level level;
     final String callback;
+    /** allowed to log input with stack traces to reproduce errors? */
+    final boolean inputLogging;
 
     QueryParams(List<Language> altLanguages, List<String> enabledRules, List<String> disabledRules, List<CategoryId> enabledCategories, List<CategoryId> disabledCategories,
-                boolean useEnabledOnly, boolean useQuerySettings, boolean allowIncompleteResults, boolean enableHiddenRules, boolean enableTempOffRules, JLanguageTool.Mode mode, @Nullable String callback) {
+                boolean useEnabledOnly, boolean useQuerySettings, boolean allowIncompleteResults, boolean enableHiddenRules, boolean enableTempOffRules, JLanguageTool.Mode mode, JLanguageTool.Level level, @Nullable String callback) {
+      this(altLanguages, enabledRules, disabledRules, enabledCategories, disabledCategories, useEnabledOnly, useQuerySettings, allowIncompleteResults, enableHiddenRules, enableTempOffRules, mode, level, callback, true);
+    }
+
+    QueryParams(List<Language> altLanguages, List<String> enabledRules, List<String> disabledRules, List<CategoryId> enabledCategories, List<CategoryId> disabledCategories,
+                boolean useEnabledOnly, boolean useQuerySettings, boolean allowIncompleteResults, boolean enableHiddenRules, boolean enableTempOffRules, JLanguageTool.Mode mode, JLanguageTool.Level level, @Nullable String callback, boolean inputLogging) {
       this.altLanguages = Objects.requireNonNull(altLanguages);
       this.enabledRules = enabledRules;
       this.disabledRules = disabledRules;
@@ -716,10 +739,12 @@ abstract class TextChecker {
       this.enableHiddenRules = enableHiddenRules;
       this.enableTempOffRules = enableTempOffRules;
       this.mode = Objects.requireNonNull(mode);
+      this.level = Objects.requireNonNull(level);
       if (callback != null && !callback.matches("[a-zA-Z]+")) {
         throw new IllegalArgumentException("'callback' value must match [a-zA-Z]+: '" + callback + "'");
       }
       this.callback = callback;
+      this.inputLogging = inputLogging;
     }
 
     @Override
@@ -736,7 +761,9 @@ abstract class TextChecker {
         .append(enableHiddenRules)
         .append(enableTempOffRules)
         .append(mode)
+        .append(level)
         .append(callback)
+        .append(inputLogging)
         .toHashCode();
     }
 
@@ -759,7 +786,9 @@ abstract class TextChecker {
         .append(enableHiddenRules, other.enableHiddenRules)
         .append(enableTempOffRules, other.enableTempOffRules)
         .append(mode, other.mode)
+        .append(level, other.level)
         .append(callback, other.callback)
+        .append(inputLogging, other.inputLogging)
         .isEquals();
     }
 
@@ -777,7 +806,9 @@ abstract class TextChecker {
         .append("enableHiddenRules", enableHiddenRules)
         .append("enableTempOffRules", enableTempOffRules)
         .append("mode", mode)
-        .append("callback", mode)
+        .append("level", level)
+        .append("callback", callback)
+        .append("inputLogging", inputLogging)
         .build();
     }
   }

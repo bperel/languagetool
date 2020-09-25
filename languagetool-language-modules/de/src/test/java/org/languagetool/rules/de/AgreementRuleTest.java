@@ -144,6 +144,7 @@ public class AgreementRuleTest {
     assertGood("Lieber jemanden, der einem Tipps gibt.");
     assertGood("Jainas ist sogar der Genuss jeglicher tierischer Nahrungsmittel strengstens untersagt.");
     assertGood("Es sind jegliche tierische Nahrungsmittel untersagt.");
+    assertGood("Das reicht bis weit ins heutige Hessen.");
     //assertGood("... der zu dieser Zeit aber ohnehin schon allen Einfluss verloren hatte.");
 
     assertGood("Wir machen das Januar.");
@@ -219,6 +220,7 @@ public class AgreementRuleTest {
     assertGood("Gleichzeitig wünscht sich Ihr frostresistenter Mitbewohner einige Grad weniger im eigenen Zimmer?");
     assertGood("Ein Trainer, der zum einen Fußballspiele sehr gut lesen und analysieren kann");
     assertGood("Eine Massengrenze, bis zu der Lithium nachgewiesen werden kann.");
+    assertGood("Bei uns im Krankenhaus betrifft das Operationssäle.");
 
     // relative clauses:
     assertGood("Das Recht, das Frauen eingeräumt wird.");
@@ -364,6 +366,8 @@ public class AgreementRuleTest {
     assertGood("Dein Vorschlag befindet sich unter meinen Top 5.");
     assertGood("Unter diesen rief das großen Unmut hervor.");
     assertGood("Bei mir löste das Panik aus.");
+    assertGood("Sie können das machen in dem sie die CAD.pdf öffnen.");
+    assertGood("Ich mache eine Ausbildung zur Junior Digital Marketing Managerin.");
 
     assertGood("Dann wird das Konsequenzen haben.");
     assertGood("Dann hat das Konsequenzen.");

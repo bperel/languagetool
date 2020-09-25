@@ -85,6 +85,22 @@ public class AgreementRule extends Rule {
 
   private static final List<List<PatternToken>> ANTI_PATTERNS = Arrays.asList(
     Arrays.asList(
+      token("uns"),  // "und wünschen uns allen Gesundheit."
+      token("allen"),
+      posRegex("SUB:.*:SIN:.*")
+    ),
+    Arrays.asList(
+      token("Domain"),
+      token("Name"),
+      tokenRegex("Systems?")
+    ),
+    Arrays.asList(
+      tokenRegex("der|das|die"),
+      new PatternTokenBuilder().min(0).build(),
+      token("Bad"),
+      token("Homburger")
+    ),
+    Arrays.asList(
       tokenRegex("der|die|das"),   // "Lieber jemanden, der einem Tipps gibt."
       token("einem"),
       posRegex("SUB:.*:PLU:.*")
@@ -357,8 +373,8 @@ public class AgreementRule extends Rule {
       posRegex("SUB:.*"),
       posRegex("PKT|KON:NEB|ZUS")// "Ist das Kunst?" / "Ist das Kunst oder Abfall?" / "Sind das Eier aus Bodenhaltung"
     ),
-    Arrays.asList( // Die Präsent AG
-      tokenRegex("Präsent|Windhorst|Energiedienst"),
+    Arrays.asList( // Die Präsent AG ("Theater AG" is found via DE_COMPOUNDS)
+      csRegex("[A-ZÄÖÜ].+"),
       token("AG")
     ),
     Arrays.asList(
@@ -753,6 +769,14 @@ public class AgreementRule extends Rule {
       tokenRegex("Steinberg|Park"),
       csToken("Apotheke")
     ),
+    Arrays.asList(
+      csToken("IT"),
+      csToken("Finanzmagazin")
+    ),
+    Arrays.asList(
+      csToken("Golden"),
+      csToken("Gate")
+    ),
     Arrays.asList( // Vielen Dank fürs Bescheid geben
       token("fürs"),
       token("Bescheid"),
@@ -775,6 +799,40 @@ public class AgreementRule extends Rule {
     Arrays.asList(
       csToken("FC"), // Die FC Bayern München Hymne (Vorschlag macht keinen Sinn "FC-Bayern")
       csToken("Bayern")
+    ),
+    Arrays.asList(
+      tokenRegex("Office|Microsoft"),
+      csToken("365")
+    ),
+    Arrays.asList( // "Bitte öffnen Sie die CAD.pdf"
+      tokenRegex("\\w+"),
+      new PatternTokenBuilder().token(".").setIsWhiteSpaceBefore(false).build(),
+      new PatternTokenBuilder().tokenRegex("pdf|zip|jpe?g|gif|png|rar|mp[34]|mpe?g|avi|docx?|xlsx?|pptx?|html?").setIsWhiteSpaceBefore(false).build()
+    ),
+    Arrays.asList( // "Ich mache eine Ausbildung zur Junior Digital Marketing Managerin"
+      new PatternTokenBuilder().tokenRegex("Junior|Senior").setSkip(3).build(),
+      tokenRegex("Manager[ns]?|Managerin(nen)?")
+    ),
+    Arrays.asList( // "Angel" is tagged like the "Die Angel" for fishing
+      csToken("Business"),
+      tokenRegex("Angel[ns]?")
+    ),
+    Arrays.asList(
+      csToken("Junior"),
+      csToken("Suite[sn]?")
+    ),
+    Arrays.asList( // "Angel" is tagged like the "Die Angel" for fishing
+      tokenRegex("Customer|User"),
+      tokenRegex("Journeys?")
+    ),
+    Arrays.asList( // Wir trinken ein kühles Blondes
+      token("kühles"),
+      token("Blondes")
+    ),
+    Arrays.asList( // "Bei uns im Krankenhaus betrifft das Operationssäle."
+      new PatternTokenBuilder().token("betreffen").matchInflectedForms().build(),
+      csToken("das"),
+      posRegex("SUB:AKK:PLU:.*")
     )
   );
 
@@ -827,6 +885,7 @@ public class AgreementRule extends Rule {
     "denen",
     "sich",
     "aller",
+    "allen",  // "das allen bekannte Wollnashorn"
     "man",
     "beide",
     "beiden",
@@ -1142,7 +1201,7 @@ public class AgreementRule extends Rule {
   private RuleMatch getRuleMatch(AnalyzedTokenReadings token1, AnalyzedSentence sentence, AnalyzedTokenReadings nextToken, String testPhrase, String hyphenTestPhrase) {
     try {
       initLt();
-      if (nextToken.getReadings().stream().allMatch(k -> k.getPOSTag() != null && k.getPOSTag().startsWith("EIG:"))) {
+      if (nextToken.getReadings().stream().allMatch(k -> k.getPOSTag() != null && !k.getPOSTag().startsWith("SUB:"))) {
         return null;
       }
       List<String> replacements = new ArrayList<>();

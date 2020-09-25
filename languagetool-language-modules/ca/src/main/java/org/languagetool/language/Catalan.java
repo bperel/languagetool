@@ -38,7 +38,7 @@ import java.util.*;
 public class Catalan extends Language {
 
   private static final Language DEFAULT_CATALAN = new Catalan();
-
+  
   @Override
   public String getName() {
     return "Catalan";
@@ -83,7 +83,6 @@ public class Catalan extends Language {
             new CatalanUnpairedQuestionMarksRule(messages, this),
             new CatalanUnpairedExclamationMarksRule(messages, this),
             new AccentuationCheckRule(messages),
-            new PostponedAdjectiveConcordanceRule(messages),
             new CatalanWrongWordInContextRule(messages),
             new CatalanWrongWordInContextDiacriticsRule(messages),
             new SimpleReplaceVerbsRule(messages, this),
@@ -125,6 +124,48 @@ public class Catalan extends Language {
   public Tokenizer createDefaultWordTokenizer() {
     return new CatalanWordTokenizer();
   }
+  
+  /** @since 5.1 */
+  @Override
+  public String getOpeningDoubleQuote() {
+    return "«";
+  }
+
+  /** @since 5.1 */
+  @Override
+  public String getClosingDoubleQuote() {
+    return "»";
+  }
+  
+  /** @since 5.1 */
+  @Override
+  public String getOpeningSingleQuote() {
+    return "‘";
+  }
+
+  /** @since 5.1 */
+  @Override
+  public String getClosingSingleQuote() {
+    return "’";
+  }
+  
+  /** @since 5.1 */
+  @Override
+  public boolean isAdvancedTypographyEnabled() {
+    return true;
+  }
+  
+  @Override
+  public String toAdvancedTypography (String input) {
+    String output = super.toAdvancedTypography(input);
+    
+    // special cases: apostrophe + quotation marks
+    output = output.replaceAll("(\\b[lmnstdLMNSTD])'", "$1’");
+    output = output.replaceAll("(\\b[lmnstdLMNSTD])’\"", "$1’" + getOpeningDoubleQuote());
+    output = output.replaceAll("(\\b[lmnstdLMNSTD])’'", "$1’" + getOpeningSingleQuote());
+    
+    return output;
+  }
 
   @Override
   public LanguageMaintainedState getMaintainedState() {
@@ -138,18 +179,28 @@ public class Catalan extends Language {
       case "INCORRECT_EXPRESSIONS": return 50;
       case "MOTS_NO_SEPARATS": return 40;
       case "REPETEAD_ELEMENTS": return 40;
+      case "ESPAIS_SOBRANTS": return 40; // greater than L
       case "CONCORDANCES_CASOS_PARTICULARS": return 30;
+      case "GERUNDI_PERD_T": return 30;
+      case "CONFUSIONS": return 30;
+      case "CA_SIMPLE_REPLACE": return 30; // greater than CA_SIMPLE_REPLACE_VERBS
+      case "INCORRECT_WORDS_IN_CONTEXT": return 30; // similar to CONFUSIONS
       case "CONFUSIONS_ACCENT": return 20;
       case "DIACRITICS": return 20;
+      case "PASSAT_PERIFRASTIC": return 20;
+      case "PRONOMS_FEBLES_SOLTS2": return 20;  // greater than PRONOMS_FEBLES_SOLTS
+      case "ORDINALS": return 20; // greater than SEPARAT
       case "ACCENTUATION_CHECK": return 10;
       case "HAVER_SENSE_HAC": return 10;
       case "CONCORDANCES_DET_NOM": return 5;
       case "VENIR_NO_REFLEXIU": return 5;
       case "REGIONAL_VERBS": return -10;
       case "FALTA_COMA_FRASE_CONDICIONAL": return -20;
-      case "SUBSTANTIUS_JUNTS": return -25;
       case "MUNDAR": return -50;
+      case "AGREEMENT_POSTPONED_ADJ_": return -50;
       case "MORFOLOGIK_RULE_CA_ES": return -100;
+      case "EXIGEIX_ACCENTUACIO_VALENCIANA": return -120;
+      case "SUBSTANTIUS_JUNTS": return -150;
       case "FALTA_ELEMENT_ENTRE_VERBS": return -200;
       case "NOMBRES_ROMANS": return -400;
       case "UPPERCASE_SENTENCE_START": return -500;

@@ -1,4 +1,8 @@
 #Només funciona amb verbs de la primera conjugació, acabats en -ar, que són la majoria
+securitzar|seguritzar=protegir
+rolejar|rollejar|rol·lejar=refinançar
+traumar=traumatitzar
+restregar=refregar|fregar
 postposar=posposar
 difundir=difondre
 confundir=confondre
@@ -213,7 +217,7 @@ miccionar=orinar
 ningunejar|ningunear=obviar|menysprear|menystenir|denigrar|humiliar
 objectivitzar=objectivar
 ofertar=oferir|fer una oferta
-pausar=aturar|interrompre|parar
+pausar=aturar|interrompre|parar|fer pausa|posar en pausa
 peatonalitzar=convertir en zona de vianants
 percatar=adonar|considerar|preveure|pensar
 pitar=xiular|tocar el clàxon
@@ -252,7 +256,7 @@ sesgar=esbiaixar
 solventar=resoldre|solucionar
 subjectivitzar=subjectivar
 substantivitzar=substantivar
-surfejar=fer surf
+#surfejar=fer surf
 subsanar=solucionar|superar|arreglar|resoldre
 tambalejar=trontollar|tentinejar
 tararejar=taral·lejar

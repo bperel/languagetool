@@ -23,9 +23,12 @@ import org.jetbrains.annotations.Nullable;
 import com.sun.star.awt.XMenuBar;
 import com.sun.star.awt.XPopupMenu;
 import com.sun.star.beans.Property;
+import com.sun.star.beans.PropertyValue;
 import com.sun.star.beans.XPropertySet;
 import com.sun.star.beans.XPropertySetInfo;
 import com.sun.star.frame.XDesktop;
+import com.sun.star.frame.XDispatchHelper;
+import com.sun.star.frame.XDispatchProvider;
 import com.sun.star.frame.XFrame;
 import com.sun.star.frame.XLayoutManager;
 import com.sun.star.lang.XComponent;
@@ -58,13 +61,14 @@ class OfficeTools {
 
   
   public static int DEBUG_MODE_SD = 0;
-  public static boolean DEBUG_MODE_MD = false;
-  public static boolean DEBUG_MODE_DC = false;
-  public static boolean DEBUG_MODE_FP = false;
-  public static boolean DEBUG_MODE_LM = false;
-  public static boolean DEBUG_MODE_TQ = false;
-  public static boolean DEBUG_MODE_LD = false;
-  public static boolean DEVELOP_MODE = false;
+  public static boolean DEBUG_MODE_MD = false;    //  Activate Debug Mode for MultiDocumentsHandler
+  public static boolean DEBUG_MODE_DC = false;    //  Activate Debug Mode for DocumentCache
+  public static boolean DEBUG_MODE_FP = false;    //  Activate Debug Mode for FlatParagraphTools
+  public static boolean DEBUG_MODE_LM = false;    //  Activate Debug Mode for LanguageToolMenus
+  public static boolean DEBUG_MODE_TQ = false;    //  Activate Debug Mode for TextLevelCheckQueue
+  public static boolean DEBUG_MODE_LD = false;    //  Activate Debug Mode for LtDictionary
+  public static boolean DEBUG_MODE_CD = false;    //  Activate Debug Mode for SpellAndGrammarCheckDialog
+  public static boolean DEVELOP_MODE = false;     //  Activate Development Mode
 
   private static final String MENU_BAR = "private:resource/menubar/menubar";
   private static final String LOG_DELIMITER = ",";
@@ -224,6 +228,62 @@ class OfficeTools {
     }
   }
   
+  /**
+   *  dispatch an internal LO/OO command
+   *  cmd does not include the ".uno:" substring; e.g. pass "Zoom" not ".uno:Zoom"
+   */
+  public static boolean dispatchCmd(String cmd, XComponentContext xContext) {
+    return dispatchCmd(cmd, new PropertyValue[0], xContext);
+  } 
+
+
+  public static boolean dispatchCmd(String cmd, PropertyValue[] props, XComponentContext xContext) {
+    try {
+      if (xContext == null) {
+        return false;
+      }
+      XMultiComponentFactory xMCF = UnoRuntime.queryInterface(XMultiComponentFactory.class,
+              xContext.getServiceManager());
+      if (xMCF == null) {
+        return false;
+      }
+      Object desktop = xMCF.createInstanceWithContext("com.sun.star.frame.Desktop", xContext);
+      if (desktop == null) {
+        return false;
+      }
+      XDesktop xdesktop = UnoRuntime.queryInterface(XDesktop.class, desktop);
+      if (xdesktop == null) {
+        return false;
+      }
+      
+      Object helper = xMCF.createInstanceWithContext("com.sun.star.frame.DispatchHelper", xContext);
+      if (helper == null) {
+        return false;
+      }
+      XDispatchHelper dispatchHelper = UnoRuntime.queryInterface(XDispatchHelper.class, helper);
+      if (dispatchHelper == null) {
+        return false;
+      }
+  
+      XDispatchProvider provider = UnoRuntime.queryInterface(XDispatchProvider.class, xdesktop.getCurrentFrame());
+      if (provider == null) {
+        MessageHandler.printToLogFile("Dispatch: provider == null");
+        return false;
+      }
+
+      dispatchHelper.executeDispatch(provider, (".uno:" + cmd), "", 0, props);
+
+      return true;
+    } catch (Throwable t) {
+      MessageHandler.printException(t);     // all Exceptions thrown by UnoRuntime.queryInterface are caught
+      return false;
+    }
+  }
+
+/**
+ * Handle logLevel for debugging and development
+ */
+  
   static void setLogLevel(String logLevel) {
     if (logLevel != null) {
       String[] levels = logLevel.split(LOG_DELIMITER);
@@ -272,6 +332,8 @@ class OfficeTools {
           DEBUG_MODE_TQ = true;
         } else if(level.equals("ld")) {
           DEBUG_MODE_LD = true;
+        } else if(level.equals("cd")) {
+          DEBUG_MODE_CD = true;
         } else if(level.equals("dev")) {
           DEVELOP_MODE = true;
         }

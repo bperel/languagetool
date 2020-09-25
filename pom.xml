@@ -17,11 +17,11 @@
 
   <groupId>org.languagetool</groupId>
   <artifactId>languagetool-parent</artifactId>
-  <version>5.0</version>
+  <version>5.1</version>
   <packaging>pom</packaging>
 
   <properties>
-      <languagetool.version>5.0</languagetool.version>
+      <languagetool.version>5.1</languagetool.version>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
       <maven.compiler.source>1.8</maven.compiler.source>
       <maven.compiler.target>1.8</maven.compiler.target>
@@ -30,7 +30,7 @@
       <maven.assemby.plugin>2.6</maven.assemby.plugin>
       <junit.version>4.12</junit.version>
       <morfologik.version>2.1.7</morfologik.version>
-      <jackson.version>2.10.0</jackson.version>
+      <jackson.version>2.11.2</jackson.version>
       <lucene.version>5.5.5</lucene.version>
   </properties>
   
@@ -74,7 +74,7 @@
               <plugin>
                   <groupId>pl.project13.maven</groupId>
                   <artifactId>git-commit-id-plugin</artifactId>
-                  <version>2.2.6</version>
+                  <version>4.0.2</version>
                   <executions>
                       <execution>
                           <id>get-the-git-infos</id>
@@ -92,7 +92,7 @@
               
               <plugin>
                   <artifactId>maven-compiler-plugin</artifactId>
-                  <version>3.8.0</version>
+                  <version>3.8.1</version>
                   <configuration>
                       <!-- helps IntelliJ to not forget the configuration (https://stackoverflow.com/questions/29888592/): -->
                       <source>${maven.compiler.source}</source>
@@ -102,7 +102,7 @@
 
               <plugin>
                   <artifactId>maven-surefire-plugin</artifactId>
-                  <version>2.22.0</version>
+                  <version>2.22.2</version>
                   <configuration>
                       <trimStackTrace>false</trimStackTrace>
                       <argLine>-Xms256m -Xmx1550m</argLine>

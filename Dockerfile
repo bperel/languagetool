@@ -1,5 +1,5 @@
 FROM maven:3-jdk-11 as build
-ENV LANGUAGETOOL_VERSION=5.0
+ENV LANGUAGETOOL_VERSION=5.1
 MAINTAINER Bruno Perel <brunoperel@gmail.com>
 
 WORKDIR /srv
@@ -20,7 +20,7 @@ EXPOSE 8010
 
 
 FROM openjdk:11-jre-buster as languagetool-wikipedia
-ENV LANGUAGETOOL_VERSION=5.0
+ENV LANGUAGETOOL_VERSION=5.1
 
 RUN apt-get update && apt-get install --no-install-recommends -y jq curl procps libxml-xpath-perl && apt-get clean
 

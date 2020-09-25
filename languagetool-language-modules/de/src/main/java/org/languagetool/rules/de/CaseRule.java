@@ -39,6 +39,8 @@ import java.net.URL;
 import java.util.*;
 import java.util.regex.Pattern;
 
+import javax.annotation.RegEx;
+
 import static org.languagetool.rules.patterns.PatternRuleBuilderHelper.*;
 
 /**
@@ -136,7 +138,31 @@ public class CaseRule extends Rule {
     Arrays.asList(
       // https://github.com/languagetool-org/languagetool/issues/1515
       SENT_START,
-      regex("▶︎|▶|▶️|→|\\*|•|-|★|⧪|⮞|✔︎|✓|✅|➡️"),
+      regex("▶︎|▶|▶️|→|\\*|•|-|★|⧪|⮞|✔︎|✓|✔️|✅|➡️|☛|%|◆|▪|☞|❤|/|_|✒︎|☑️"),
+      regex(".*")
+    ),
+    Arrays.asList(
+      // ignore uppercase word at beginning after a character that is not a letter or number (needed to ignore emojies or bullet points at the beginning of a sentence)
+      SENT_START,
+      regex("^[^A-Za-z0-9ÄÖÜäöüàÀß]{1,2}$"),
+      csRegex("[A-ZÖÜÄ].*")
+    ),
+    Arrays.asList(
+      SENT_START,
+      token("*"),
+      token("*"),
+      regex(".*")
+    ),
+    Arrays.asList( // two single quotes (’’) that create one double quote (needs different rule)
+      SENT_START,
+      token("’"),
+      token("’"),
+      regex(".*")
+    ),
+    Arrays.asList( // => Hallo test
+      SENT_START,
+      regex("=|-"),
+      token(">"),
       regex(".*")
     ),
     Arrays.asList(
@@ -179,7 +205,7 @@ public class CaseRule extends Rule {
     ),
     // names with english adjectives
     Arrays.asList(
-      regex("Digital|Global|Smart|International|Trade|Private|Live|Urban|Man|Total|Native|Imperial|Modern|Responsive|Simple|Legend|Human|Light"),
+      regex("Digital|Global|Smart|International|Trade|Private|Live|Urban|Man|Total|Native|Imperial|Modern|Responsive|Simple|Legend|Human|Light|Ministerial"),
       pos("UNKNOWN")
     ),
     Arrays.asList(
@@ -202,7 +228,7 @@ public class CaseRule extends Rule {
     // names with english adjectives
     Arrays.asList(
       pos("UNKNOWN"),
-      regex("Digital|Global|Smart|International|Trade|Private|Live|Urban|Man|Total|Native|Imperial|Modern|Responsive|Simple|Legend|Human|Light")
+      regex("Digital|Global|Smart|International|Trade|Private|Live|Urban|Man|Total|Native|Imperial|Modern|Responsive|Simple|Legend|Human|Light|Ministerial")
     ),
     // names with english adjectives
     Arrays.asList(
@@ -373,6 +399,13 @@ public class CaseRule extends Rule {
      csToken("Aus"),
      posRegex("^PRP:.+|VER:[1-3]:.+")
     ),
+    Arrays.asList(
+      // Das ist das Aus des Airbus A380.
+      regex("das"),
+      csToken("Aus"),
+      tokenRegex("des|eines"),
+      posRegex("EIG:.+|SUB:.*|UNKNOWN")
+    ),
     /*Arrays.asList(
       // "...,die ins Nichts griff."
       new PatternTokenBuilder().csTokenRegex("ins|ans|vors|durchs|hinters").setSkip(1).build(),
@@ -496,6 +529,10 @@ public class CaseRule extends Rule {
       csToken("Lasse"),
       posRegex("EIG:.*|UNKNOWN")
     ),
+    Arrays.asList( // Spanish name (e.g. "Las Condes")
+      csToken("Las"),
+      new PatternTokenBuilder().pos("UNKNOWN").csTokenRegex("[A-Z].+").build()
+    ),
     Arrays.asList(
       csToken("Just"),
       token("in"),
@@ -503,7 +540,7 @@ public class CaseRule extends Rule {
     ),
     Arrays.asList( // Hey Süßer,
       regex("Hey|Hi|Hallo|Na|Moin|Servus"),
-      regex("Süßer?|Hübscher?"),
+      regex("Süßer?|Hübscher?|Liebster?|Liebes"),
       pos("PKT")
     ),
     Arrays.asList( // Hey Matt (name),
@@ -585,6 +622,53 @@ public class CaseRule extends Rule {
       token("="),
       token("="),
       regex("[A-ZÄÜÖ].*")
+    ),
+    Arrays.asList(
+      // § 1 Allgemeine Bedingungen
+      SENT_START,
+      token("§"),
+      regex("\\d+"),
+      regex("[A-ZÄÜÖ].*")
+    ),
+    Arrays.asList(
+      // §1 Allgemeine Bedingungen
+      SENT_START,
+      regex("§\\d"),
+      regex("[A-ZÄÜÖ].*")
+    ),
+    Arrays.asList(
+      // 3a) Deine Idee ...
+      SENT_START,
+      regex("\\d+[a-z]"),
+      token(")"),
+      regex("[A-ZÄÜÖ].*")
+    ),
+    Arrays.asList(
+      // @Peter Hast du morgen Zeit?
+      SENT_START,
+      regex("@[a-zA-Z0-9]+"),
+      regex("[A-ZÄÜÖ].*")
+    ),
+    Arrays.asList(
+      // M3.2 Deine Idee ...
+      SENT_START,
+      regex("[A-Z]\\d+"),
+      token("."),
+      regex("\\d+"),
+      regex("[A-ZÄÜÖ].*")
+    ),
+    Arrays.asList(
+      csToken("Gefahren"),
+      csToken("lauern")
+    ),
+    Arrays.asList(
+      csRegex("[A-ZÄÜÖ].+"),
+      new PatternTokenBuilder().tokenRegex("\\*|:").setIsWhiteSpaceBefore(false).build(),
+      csToken("innen")
+    ),
+    Arrays.asList( // Am So 14:00 (should be "So." but that's a different error)
+      csRegex("am|jeden"),
+      csToken("So")
     )
   );
 
@@ -623,6 +707,7 @@ public class CaseRule extends Rule {
     "Sa",   // Sa. 12 - 16 Uhr
     "Gr",   // "Gr. 12" (Größe)
     "Mag",   // "Mag. Helke Müller"
+    "Nov",
     "Diss",
     "Invalide",
     "Invalider",
@@ -650,6 +735,9 @@ public class CaseRule extends Rule {
     "Veränderliche",
     "Veränderlicher",
     "Veränderlichen",
+    "Werbetreibende",
+    "Werbetreibender",
+    "Werbetreibenden",
     "Werktätige",
     "Werktätiger",
     "Werktätigen",
@@ -692,6 +780,10 @@ public class CaseRule extends Rule {
     "Rutsch",
     "Spar",
     "Merz",
+    "Minderjährige",
+    "Minderjähriger",
+    "Minderjährigen",
+    "Scheinselbstständige",
     "Bundestagsabgeordneter",
     "Bundestagsabgeordneten",
     "Bundestagsabgeordnete",
@@ -811,6 +903,8 @@ public class CaseRule extends Rule {
     "Dozierende",
     "Dozierenden",
     "Studierende",
+    "Studierender",
+    "Studierenden",
     "Suchbegriffen",
     "Plattdeutsch",
     "Wallet",
@@ -826,7 +920,11 @@ public class CaseRule extends Rule {
     "Mitwirkender",
     "Mitwirkenden",
     "Selbstständige",
+    "Selbstständigen",
     "Selbstständiger",
+    "Selbständige",
+    "Selbständigen",
+    "Selbständiger",
     "Genaueres",
     "Äußersten",
     "Dienstreisender",
@@ -1394,7 +1492,7 @@ public class CaseRule extends Rule {
         return true;
       }
       // "Die Schöne Tür": "Schöne" also has a noun reading but like "SUB:AKK:SIN:FEM:ADJ", ignore that:
-      AnalyzedTokenReadings allReadings = lookup(readings.getToken());  // unification in disambiguation.xml removes reading, so look up again
+      AnalyzedTokenReadings allReadings = lookup(readings.getToken().replaceAll("\\u00AD", ""));  // unification in disambiguation.xml removes reading, so look up again, removing soft hyphens
       if (allReadings != null) {
         for (AnalyzedToken reading : allReadings) {
           String posTag = reading.getPOSTag();

@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.languagetool</groupId>
         <artifactId>languagetool-parent</artifactId>
-        <version>5.0</version>
+        <version>5.1</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -156,7 +156,7 @@
         <dependency>
             <groupId>org.languagetool</groupId>
             <artifactId>languagetool-wikipedia</artifactId>
-            <version>5.0</version>
+            <version>5.1</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>

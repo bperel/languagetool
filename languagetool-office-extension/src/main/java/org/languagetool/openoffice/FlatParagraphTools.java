@@ -24,9 +24,13 @@ import java.util.Map;
 
 import org.jetbrains.annotations.Nullable;
 
+import com.sun.star.beans.Property;
+import com.sun.star.beans.PropertyState;
 import com.sun.star.beans.PropertyValue;
 import com.sun.star.beans.XPropertySet;
+import com.sun.star.beans.XPropertySetInfo;
 import com.sun.star.container.XStringKeyMap;
+import com.sun.star.lang.Locale;
 import com.sun.star.lang.XComponent;
 import com.sun.star.linguistic2.SingleProofreadingError;
 import com.sun.star.text.TextMarkupType;
@@ -131,6 +135,40 @@ public class FlatParagraphTools {
   }
 
   /**
+   * Change text of flat paragraph nPara 
+   * delete characters between nStart and nStart + nLen, insert newText at nStart
+   */
+  public XFlatParagraph getFlatParagraphAt (int nPara) {
+    try {
+      XFlatParagraph xFlatPara = getLastFlatParagraph();
+      if (xFlatPara == null) {
+//        if (debugMode) {
+          MessageHandler.printToLogFile("setLanguageOfParagraph: FlatParagraph == null");
+//        }
+        return null;
+      }
+      XFlatParagraph tmpFlatPara = xFlatPara;
+      while (tmpFlatPara != null) {
+        xFlatPara = tmpFlatPara;
+        tmpFlatPara = xFlatParaIter.getParaBefore(tmpFlatPara);
+      }
+      int num = 0;
+      while (xFlatPara != null && num < nPara) {
+        xFlatPara = xFlatParaIter.getParaAfter(xFlatPara);
+        num++;
+      }
+      if (xFlatPara == null) {
+        MessageHandler.printToLogFile("setLanguageOfParagraph: FlatParagraph == null; n = " + num + "; nPara = " + nPara);
+        return null;
+      }
+      return xFlatPara;
+    } catch (Throwable t) {
+      MessageHandler.printException(t);     // all Exceptions thrown by UnoRuntime.queryInterface are caught
+      return null;             // Return null as method failed
+    }
+  }
+  
+  /**
    * return text of current paragraph
    * return null if it fails
    */
@@ -176,7 +214,7 @@ public class FlatParagraphTools {
    * Returns null if it fails
    */
   @Nullable
-  public List<String> getAllFlatParagraphs() {
+  public ParagraphContainer getAllFlatParagraphs() {
     try {
       XFlatParagraph xFlatPara = getLastFlatParagraph();
       if (xFlatPara == null) {
@@ -186,17 +224,38 @@ public class FlatParagraphTools {
         return null;
       }
       List<String> allParas = new ArrayList<>();
+      List<Locale> locales = new ArrayList<>();
+      List<int[]> footnotePositions = new ArrayList<>();
       XFlatParagraph tmpFlatPara = xFlatPara;
       while (tmpFlatPara != null) {
-        allParas.add(0, tmpFlatPara.getText());
+        String text = tmpFlatPara.getText();
+        int len = text.length();
+        allParas.add(0, text);
+        footnotePositions.add(0, getPropertyValues("FootnotePositions", tmpFlatPara));
+        Locale local = tmpFlatPara.getLanguageOfText(0, len);
+        if (local == null || local.Language.isEmpty()) {
+          local = tmpFlatPara.getPrimaryLanguageOfText(0, len);
+        }
+        locales.add(0, local);
         tmpFlatPara = xFlatParaIter.getParaBefore(tmpFlatPara);
       }
       tmpFlatPara = xFlatParaIter.getParaAfter(xFlatPara);
       while (tmpFlatPara != null) {
-        allParas.add(tmpFlatPara.getText());
+        String text = tmpFlatPara.getText();
+        int len = text.length();
+        allParas.add(text);
+        footnotePositions.add(getPropertyValues("FootnotePositions", tmpFlatPara));
+        Locale local = tmpFlatPara.getLanguageOfText(0, len);
+        if (local == null || local.Language.isEmpty()) {
+          local = tmpFlatPara.getPrimaryLanguageOfText(0, len);
+        }
+        locales.add(local);
+        if (debugMode) {
+          printPropertyValueInfo(tmpFlatPara);
+        }
         tmpFlatPara = xFlatParaIter.getParaAfter(tmpFlatPara);
       }
-      return allParas;
+      return new ParagraphContainer(allParas, locales, footnotePositions);
     } catch (Throwable t) {
       MessageHandler.printException(t);     // all Exceptions thrown by UnoRuntime.queryInterface are caught
       return null;           // Return null as method failed
@@ -265,8 +324,35 @@ public class FlatParagraphTools {
   }
   
   /** 
+   * Print property values to logfile
+   */
+  private void printPropertyValueInfo(XFlatParagraph xFlatPara) {
+    if (xFlatPara == null) {
+      MessageHandler.printToLogFile("printPropertyValues: FlatParagraph == null");
+      return;
+    }
+    XPropertySet paraProps = UnoRuntime.queryInterface(XPropertySet.class, xFlatPara);
+    if (paraProps == null) {
+      MessageHandler.printToLogFile("XPropertySet == null");
+      return;
+    }
+    MessageHandler.printToLogFile("Property Value Info:");
+    try {
+      XPropertySetInfo propertySetInfo = paraProps.getPropertySetInfo();
+      
+      for (Property property : propertySetInfo.getProperties()) {
+        MessageHandler.printToLogFile("Name : " + property.Name + "; Type : " + property.Type.getTypeName() + "; Attributes : " + property.Attributes + "; Handle : " + property.Handle);
+      }
+    } catch (Throwable t) {
+      MessageHandler.printException(t);
+    }
+    return;
+  }
+  
+  /* 
    * Returns the absolute positions of all footnotes (and endnotes) of the text
    */
+/*
   List<int[]> getFootnotePositions() {
     List<int[]> paraPositions = new ArrayList<>();
     try {
@@ -297,7 +383,7 @@ public class FlatParagraphTools {
       return paraPositions;     // Return empty list as method failed
     }
   }
-
+*/
   /**
    * Marks all paragraphs as checked with exception of the paragraphs "from" to "to"
    */
@@ -328,7 +414,7 @@ public class FlatParagraphTools {
         if (debugMode && num >= isChecked.size()) {
           MessageHandler.printToLogFile("!?! List isChecked == null");
         }
-        if(num < isChecked.size() && isChecked.get(num)) {
+        if (num < isChecked.size() && isChecked.get(num)) {
           tmpFlatPara.setChecked(TextMarkupType.PROOFREADING, true);
         }
         tmpFlatPara = xFlatParaIter.getParaAfter(tmpFlatPara);
@@ -343,7 +429,7 @@ public class FlatParagraphTools {
         if (debugMode && num >= isChecked.size()) {
           MessageHandler.printToLogFile("!?! List isChecked == null");
         }
-        if(num < isChecked.size() && isChecked.get(num)) {
+        if (num < isChecked.size() && isChecked.get(num)) {
           tmpFlatPara.setChecked(TextMarkupType.PROOFREADING, true);
         }
         tmpFlatPara = xFlatParaIter.getParaAfter(tmpFlatPara);
@@ -394,7 +480,7 @@ public class FlatParagraphTools {
 
   public void markParagraphs(Map<Integer, SingleProofreadingError[]> changedParas, DocumentCache docCache, boolean override, XParagraphCursor cursor) {
     try {
-      if(changedParas == null || changedParas.isEmpty()) {
+      if (changedParas == null || changedParas.isEmpty()) {
         return;
       }
       XFlatParagraph xFlatPara = getLastFlatParagraph();
@@ -404,7 +490,7 @@ public class FlatParagraphTools {
         }
         return;
       }
-      if(override) {
+      if (override) {
         cursor.gotoStart(false);
       }
       XFlatParagraph tmpFlatPara = xFlatPara;
@@ -418,14 +504,12 @@ public class FlatParagraphTools {
       int nMarked = 0;
       while (tmpFlatPara != null && nMarked < changedParas.size()) {
         int nTextPara = docCache.getNumberOfTextParagraph(num);
-        if(nTextPara >= 0) {
-          if(changedParas.containsKey(nTextPara)) {
-            addMarksToOneParagraph(tmpFlatPara, changedParas.get(nTextPara), cursor, override);
-            nMarked++;
-          }
-          if (override && cursor != null) {
-            cursor.gotoNextParagraph(false);
-          }
+        if (changedParas.containsKey(num)) {
+          addMarksToOneParagraph(tmpFlatPara, changedParas.get(num), nTextPara < 0 ? null : cursor, override);
+          nMarked++;
+        }
+        if (override && cursor != null && nTextPara >= 0) {
+          cursor.gotoNextParagraph(false);
         }
         tmpFlatPara = xFlatParaIter.getParaAfter(tmpFlatPara);
         num++;
@@ -439,7 +523,7 @@ public class FlatParagraphTools {
    * add marks to existing marks of current paragraph
    */
   public void markCurrentParagraph(SingleProofreadingError[] pErrors) {
-    if(pErrors == null || pErrors.length == 0) {
+    if (pErrors == null || pErrors.length == 0) {
       return;
     }
     XFlatParagraph xFlatPara = getCurrentFlatParagraph();
@@ -458,7 +542,7 @@ public class FlatParagraphTools {
    */
   private void addMarksToOneParagraph(XFlatParagraph flatPara, SingleProofreadingError[] pErrors, XParagraphCursor cursor, boolean override) {
     
-    if(override && cursor != null) {
+    if (override && cursor != null) {
       XMarkingAccess xMarkingAccess = UnoRuntime.queryInterface(XMarkingAccess.class, cursor);
       if (xMarkingAccess == null) {
         MessageHandler.printToLogFile("xMarkingAccess == null");
@@ -466,7 +550,7 @@ public class FlatParagraphTools {
         xMarkingAccess.invalidateMarkings(TextMarkupType.PROOFREADING);
         flatPara.setChecked(TextMarkupType.PROOFREADING, true);
         XComponent markComponent = UnoRuntime.queryInterface(XComponent.class, xMarkingAccess);
-        if(markComponent != null) {
+        if (markComponent != null) {
           markComponent.dispose();
         }
       }
@@ -479,17 +563,17 @@ public class FlatParagraphTools {
       int color = -1;
       short type = -1;
       for(PropertyValue property : properties) {
-        if("LineColor".equals(property.Name)) {
+        if ("LineColor".equals(property.Name)) {
           color = (int) property.Value;
-        } else if("LineType".equals(property.Name)) {
+        } else if ("LineType".equals(property.Name)) {
           type = (short) property.Value;
         }
       }
       try {
-        if(color >= 0) {
+        if (color >= 0) {
           props.insertValue("LineColor", color);
         }
-        if(type > 0) {
+        if (type > 0) {
           props.insertValue("LineType", type);
         }
       } catch (Throwable t) {
@@ -498,10 +582,91 @@ public class FlatParagraphTools {
       flatPara.commitStringMarkup(TextMarkupType.PROOFREADING, pError.aRuleIdentifier, 
           pError.nErrorStart, pError.nErrorLength, props);
     }
-    if(override) {
+    if (override) {
       flatPara.getMarkupInfoContainer();
       flatPara.commitStringMarkup(TextMarkupType.SENTENCE, "Sentence", 0, flatPara.getText().length(), props);
     }
   }
 
+  public class ParagraphContainer {
+    public List<String> paragraphs;
+    public List<Locale> locales;
+    public List<int[]> footnotePositions;
+    
+    ParagraphContainer(List<String> paragraphs, List<Locale> locales, List<int[]> footnotePositions) {
+      this.paragraphs = paragraphs;
+      this.locales = locales;
+      this.footnotePositions = footnotePositions;
+    }
+  }
+  
+  /**
+   * Change text of flat paragraph nPara 
+   * delete characters between nStart and nStart + nLen, insert newText at nStart
+   */
+  public void changeTextOfParagraph (int nPara, int nStart, int nLen, String newText) {
+    try {
+      XFlatParagraph xFlatPara = getLastFlatParagraph();
+      if (xFlatPara == null) {
+//        if (debugMode) {
+          MessageHandler.printToLogFile("changeTextOfParagraph: FlatParagraph == null");
+//        }
+        return;
+      }
+      XFlatParagraph tmpFlatPara = xFlatPara;
+      while (tmpFlatPara != null) {
+        xFlatPara = tmpFlatPara;
+        tmpFlatPara = xFlatParaIter.getParaBefore(tmpFlatPara);
+      }
+      int num = 0;
+      while (xFlatPara != null && num < nPara) {
+        xFlatPara = xFlatParaIter.getParaAfter(xFlatPara);
+        num++;
+      }
+      if (xFlatPara == null) {
+        MessageHandler.printToLogFile("changeTextOfParagraph: FlatParagraph == null; n = " + num + "; nPara = " + nPara);
+        return;
+      }
+      xFlatPara.changeText(nStart, nLen, newText, new PropertyValue[0]);
+    } catch (Throwable t) {
+      MessageHandler.printException(t);     // all Exceptions thrown by UnoRuntime.queryInterface are caught
+      return;             // Return -1 as method failed
+    }
+  }
+  
+  /**
+   * Change text of flat paragraph nPara 
+   * delete characters between nStart and nStart + nLen, insert newText at nStart
+   */
+  public void setLanguageOfParagraph (int nPara, int nStart, int nLen, Locale locale) {
+    try {
+      XFlatParagraph xFlatPara = getLastFlatParagraph();
+      if (xFlatPara == null) {
+//        if (debugMode) {
+          MessageHandler.printToLogFile("setLanguageOfParagraph: FlatParagraph == null");
+//        }
+        return;
+      }
+      XFlatParagraph tmpFlatPara = xFlatPara;
+      while (tmpFlatPara != null) {
+        xFlatPara = tmpFlatPara;
+        tmpFlatPara = xFlatParaIter.getParaBefore(tmpFlatPara);
+      }
+      int num = 0;
+      while (xFlatPara != null && num < nPara) {
+        xFlatPara = xFlatParaIter.getParaAfter(xFlatPara);
+        num++;
+      }
+      if (xFlatPara == null) {
+        MessageHandler.printToLogFile("setLanguageOfParagraph: FlatParagraph == null; n = " + num + "; nPara = " + nPara);
+        return;
+      }
+      PropertyValue[] propertyValues = { new PropertyValue("CharLocale", -1, locale, PropertyState.DIRECT_VALUE) };
+      xFlatPara.changeAttributes(nStart, nLen, propertyValues);
+    } catch (Throwable t) {
+      MessageHandler.printException(t);     // all Exceptions thrown by UnoRuntime.queryInterface are caught
+      return;             // Return -1 as method failed
+    }
+  }
+  
 }

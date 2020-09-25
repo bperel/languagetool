@@ -18,6 +18,8 @@
  */
 package org.languagetool.dev.diff;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.*;
 import java.util.*;
 
@@ -29,7 +31,7 @@ import java.util.*;
 public class RuleMatchDiffFinder {
   
   List<RuleMatchDiff> getDiffs(List<LightRuleMatch> l1, List<LightRuleMatch> l2) {
-    System.out.println("Comparing result 1 (" + l1.size() + " matches) to result 2 (" + l2.size() + " matches)");
+    System.out.println("Comparing result 1 (" + l1.size() + " matches) to result 2 (" + l2.size() + " matches), step 1");
     //debugList("List 1", l1);
     //debugList("List 2", l2);
     List<RuleMatchDiff> result = new ArrayList<>();
@@ -49,16 +51,64 @@ public class RuleMatchDiffFinder {
         result.add(RuleMatchDiff.added(match));
       }
     }
+    System.out.println("Comparing result 1 (" + l1.size() + " matches) to result 2 (" + l2.size() + " matches), step 2");
+    Map<String, List<RuleMatchDiff>> addedToMatch = getAddedMatchesMap(result);
     Map<MatchKey, LightRuleMatch> newMatches = getMatchMap(l2);
     for (LightRuleMatch match : l1) {
       MatchKey key = new MatchKey(match.getLine(), match.getColumn(), match.getRuleId(), match.getTitle(), match.getCoveredText());
       LightRuleMatch newMatch = newMatches.get(key);
       if (newMatch == null) {
         // removed
-        result.add(RuleMatchDiff.removed(match));
+        String lookupKey = cleanSpan(match.getContext()) + "_" + match.getTitle();
+        List<RuleMatchDiff> addedMatches = addedToMatch.get(lookupKey);
+        LightRuleMatch replacedBy = null;
+        if (addedMatches != null) {
+          for (RuleMatchDiff addedMatch : addedMatches) {
+            LightRuleMatch tmp = addedMatch.getNewMatch();
+            boolean overlaps = tmp.getColumn() < match.getColumn() + match.getCoveredText().length() &&
+                               tmp.getColumn() + tmp.getCoveredText().length() > match.getColumn();
+            if (overlaps && !tmp.getFullRuleId().equals(match.getFullRuleId())) {
+              /*System.out.println(tmp + "\noverlaps\n" + match);
+              System.out.println("tmp " + tmp.getTitle());
+              System.out.println("match " + match.getTitle());
+              System.out.println("  " + tmp.getColumn() + " < " + match.getColumn() +" + "+ match.getCoveredText().length()  + " &&");
+              System.out.println("  " + tmp.getColumn() + " + " + tmp.getCoveredText().length() +" >  "+ match.getColumn());
+              System.out.println("   old covered: " + match.getCoveredText());
+              System.out.println("   new covered: " + tmp.getCoveredText());
+              System.out.println("");*/
+              replacedBy = addedMatch.getNewMatch();
+              addedMatch.setReplaces(match);
+              break;
+            }
+          }
+        }
+        result.add(RuleMatchDiff.removed(match, replacedBy));
       }
     }
     return result;
+  }
+
+  @NotNull
+  private Map<String, List<RuleMatchDiff>> getAddedMatchesMap(List<RuleMatchDiff> result) {
+    Map<String, List<RuleMatchDiff>> addedToMatch = new HashMap<>();
+    for (RuleMatchDiff diff : result) {
+      if (diff.getStatus() == RuleMatchDiff.Status.ADDED) {
+        String key = cleanSpan(diff.getNewMatch().getContext()) + "_" + diff.getNewMatch().getTitle();
+        List<RuleMatchDiff> val = addedToMatch.get(key);
+        if (val == null) {
+          List<RuleMatchDiff> diffs = new ArrayList<>();
+          diffs.add(diff);
+          addedToMatch.put(key, diffs);
+        } else {
+          val.add(diff);
+        }
+      }
+    }
+    return addedToMatch;
+  }
+
+  private String cleanSpan(String s) {
+    return s.replaceFirst("<span class='marker'>", "").replaceFirst("</span>", "");
   }
 
   private void debugList(String title, List<LightRuleMatch> l1) {
@@ -101,7 +151,7 @@ public class RuleMatchDiffFinder {
       }
       if (oldMatch != null && newMatch != null) {
         printRuleIdCol(fw, oldMatch, newMatch);
-        printMessage(fw, oldMatch, newMatch);
+        printMessage(fw, oldMatch, newMatch, diff.getReplaces(), diff.getReplacedBy());
         if (oldMatch.getSuggestions().equals(newMatch.getSuggestions())) {
           fw.write("  <td>" + oldMatch.getSuggestions() + "</td>\n");
         } else {
@@ -114,7 +164,7 @@ public class RuleMatchDiffFinder {
       } else {
         LightRuleMatch match = diff.getOldMatch() != null ? diff.getOldMatch() : diff.getNewMatch();
         printRuleIdCol(fw, null, match);
-        printMessage(fw, match, null);
+        printMessage(fw, match, null, diff.getReplaces(), diff.getReplacedBy());
         fw.write("  <td>" + match.getSuggestions() + "</td>\n");
         fw.write("</tr>\n");
       }
@@ -143,10 +193,17 @@ public class RuleMatchDiffFinder {
     if (oldMatch != null && newMatch.getStatus() != oldMatch.getStatus()) {
       fw.write("  <br><span class='status'>[" + oldMatch.getStatus() + " => " + newMatch.getStatus() + "]</span>");
     }
+    if (newMatch.getTags().size() > 0) {
+      fw.write("  <br><span class='status'>" + newMatch.getTags() + "</span>");
+    }
+    if (oldMatch != null && !newMatch.getTags().equals(oldMatch.getTags())) {
+      fw.write("  <br><span class='status'>" + oldMatch.getTags() + " => " + newMatch.getTags() + "</span>");
+    }
     fw.write(" </td>\n");
   }
 
-  private void printMessage(FileWriter fw, LightRuleMatch oldMatch, LightRuleMatch newMatch) throws IOException {
+  private void printMessage(FileWriter fw, LightRuleMatch oldMatch, LightRuleMatch newMatch,
+                            LightRuleMatch replaces, LightRuleMatch replacedBy) throws IOException {
     fw.write("  <td>");
     if (newMatch == null) {
       fw.write(oldMatch.getMessage());
@@ -160,6 +217,20 @@ public class RuleMatchDiffFinder {
         "<tt>new:</tt> " + showTrimSpace(newMatch.getMessage()));
     }
     fw.write("  <br><span class='sentence'>" + oldMatch.getContext() + "</span>");
+    if (replaces != null) {
+      fw.write("<br><br><i>Maybe replaces old match:</i><br>");
+      fw.write(replaces.getMessage());
+      fw.write("  <br><span class='sentence'>" + replaces.getContext() + "</span>");
+      fw.write("  <br><span class='suggestions'>Suggestions: " + replaces.getSuggestions() + "</span>");
+      fw.write("  <br><span class='id'>" + replaces.getFullRuleId() + "</span>");
+    }
+    if (replacedBy != null) {
+      fw.write("<br><br><i>Maybe replaced by new match:</i><br>");
+      fw.write(replacedBy.getMessage());
+      fw.write("  <br><span class='sentence'>" + replacedBy.getContext() + "</span>");
+      fw.write("  <br><span class='suggestions'>Suggestions: " + replacedBy.getSuggestions() + "</span>");
+      fw.write("  <br><span class='id'>" + replacedBy.getFullRuleId() + "</span>");
+    }
     fw.write("  </td>\n");
   }
 
@@ -239,21 +310,24 @@ public class RuleMatchDiffFinder {
 
   private Map<String, List<RuleMatchDiff>> groupDiffs(List<RuleMatchDiff> diffs) {
     Map<String, List<RuleMatchDiff>> keyToDiffs = new TreeMap<>();
+    String key = "";
     String prevKey = "";
     List<RuleMatchDiff> l = new ArrayList<>();
     for (RuleMatchDiff diff : diffs) {
-      String key;
       if (diff.getOldMatch() != null) {
         key = cleanSource(diff.getOldMatch().getRuleSource()) + " / " + diff.getOldMatch().getFullRuleId();
       } else {
         key = cleanSource(diff.getNewMatch().getRuleSource()) + " / " + diff.getNewMatch().getFullRuleId();
       }
-      if (!key.equals(prevKey)) {
+      if (!key.equals(prevKey) && l.size() > 0) {
         keyToDiffs.put(prevKey, l);
         l = new ArrayList<>();
       }
       l.add(diff);
       prevKey = key;
+    }
+    if (l.size() > 0) {
+      keyToDiffs.put(prevKey, l);
     }
     return keyToDiffs;
   }
@@ -266,11 +340,13 @@ public class RuleMatchDiffFinder {
     fw.write("  <meta charset='utf-8'>\n");
     fw.write("  <script src='https://unpkg.com/tablefilter@0.7.0/dist/tablefilter/tablefilter.js'></script>\n");  // https://github.com/koalyptus/TableFilter/
     fw.write("  <style>\n");
+    fw.write("    td { vertical-align: top; }\n");
     fw.write("    .sentence { color: #666; }\n");
     fw.write("    .marker { text-decoration: underline; }\n");
     fw.write("    .source { color: #999; }\n");
     fw.write("    .status { color: #999; }\n");
     fw.write("    .whitespace { background-color: #ccc; }\n");
+    fw.write("    .id { color: #666; }\n");
     fw.write("  </style>\n");
     fw.write("</head>\n");
     fw.write("<body>\n\n");

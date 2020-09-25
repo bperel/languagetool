@@ -45,7 +45,7 @@ amazon
 froward
 nerver
 heigh
-# brank is normally used in plural (branks), also it's scottish and archaic, easily confused with "bank", "blank", "rank", "crank" etc.
+# brank is normally used in plural (branks), also it's Scottish and archaic, easily confused with "bank", "blank", "rank", "crank" etc.
 brank
 sin-off
 sin-offs
@@ -65,3 +65,31 @@ T-mobile
 t-systems
 T-systems
 dc
+fo
+multi-task
+multi-tasks
+multi-tasked
+multi-tasking
+# commentor: AmE only, issue 3195
+commentor
+commentors
+dim-wit
+dim-wits
+nit-wit
+nit-wits
+# It is "K-pop" https://www.merriam-webster.com/dictionary/K-pop
+k-pop
+mean-time
+back-log
+christian
+editor-in-chiefs
+supp
+soom
+c-span
+c-Span
+C-Span
+well-planed
+# https://github.com/languagetool-org/languagetool/issues/3602
+mt
+hurst
+hursts
