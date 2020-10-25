@@ -24,6 +24,7 @@ import org.languagetool.JLanguageTool;
 import org.languagetool.Language;
 import org.languagetool.Languages;
 import org.languagetool.MultiThreadedJLanguageTool;
+import org.languagetool.rules.Category;
 import org.languagetool.rules.CategoryId;
 import org.languagetool.rules.Rule;
 import org.languagetool.rules.patterns.AbstractPatternRule;
@@ -68,11 +69,25 @@ public class SentenceSourceChecker {
         addDisabledRules(languageCode, disabledRuleIds, disabledRules);
       }
     }
+
+    Set<String> disabledRuleCategoryIds = new HashSet<>();
+    if (commandLine.hasOption("rule-category-properties")) {
+      File disabledRuleCategoriesPropFile = new File(commandLine.getOptionValue("rule-category-properties"));
+      if (!disabledRuleCategoriesPropFile.exists() || disabledRuleCategoriesPropFile.isDirectory()) {
+        throw new IOException("File not found or isn't a file: " + disabledRuleCategoriesPropFile.getAbsolutePath());
+      }
+      Properties disabledRuleCategories = new Properties();
+      try (FileInputStream stream = new FileInputStream(disabledRuleCategoriesPropFile)) {
+        disabledRuleCategories.load(stream);
+        addDisabledRuleCategories("all", disabledRuleIds, disabledRuleCategories);
+        addDisabledRuleCategories(languageCode, disabledRuleIds, disabledRuleCategories);
+      }
+    }
     String motherTongue = commandLine.getOptionValue('m');
     int maxArticles = Integer.parseInt(commandLine.getOptionValue("max-sentences", "0"));
     int maxErrors = Integer.parseInt(commandLine.getOptionValue("max-errors", "0"));
     int contextSize = Integer.parseInt(commandLine.getOptionValue("context-size", "50"));
-    prg.run(propFile, disabledRuleIds, languageCode, motherTongue, maxArticles,
+    prg.run(propFile, disabledRuleIds, disabledRuleCategoryIds, languageCode, motherTongue, maxArticles,
       maxErrors, contextSize,
       commandLine);
   }
@@ -82,6 +97,14 @@ public class SentenceSourceChecker {
     if (disabledRulesString != null) {
       String[] ids = disabledRulesString.split(",");
       disabledRuleIds.addAll(Arrays.asList(ids));
+    }
+  }
+
+  private static void addDisabledRuleCategories(String languageCode, Set<String> disabledRuleCategoryIds, Properties disabledRuleCategories) {
+    String disabledRuleCategoriesString = disabledRuleCategories.getProperty(languageCode);
+    if (disabledRuleCategoriesString != null) {
+      String[] ids = disabledRuleCategoriesString.split(",");
+      disabledRuleCategoryIds.addAll(Arrays.asList(ids));
     }
   }
 
@@ -97,6 +120,8 @@ public class SentenceSourceChecker {
                   "It can optionally define the batchSize for insert statements, which defaults to 1.").build());
     options.addOption(Option.builder().longOpt("rule-properties").argName("file").hasArg()
             .desc("A file to set rules which should be disabled per language (e.g. en=RULE1,RULE2 or all=RULE3,RULE4)").build());
+    options.addOption(Option.builder().longOpt("rule-category-properties").argName("file").hasArg()
+            .desc("A file to set rule categories which should be disabled per language (e.g. en=RULE_CATEGORY1,RULE_CATEGORY2 or all=RULE_CATEGORY3,RULE_CATEGORY4)").build());
     options.addOption(Option.builder("r").longOpt("rule-ids").argName("id").hasArg()
             .desc("comma-separated list of rule-ids to activate").build());
     options.addOption(Option.builder().longOpt("also-enable-categories").argName("categories").hasArg()
@@ -139,7 +164,7 @@ public class SentenceSourceChecker {
     throw new IllegalStateException();
   }
 
-  private void run(File propFile, Set<String> disabledRules, String langCode, String motherTongueCode,
+  private void run(File propFile, Set<String> disabledRules, Set<String> disabledRuleCategoryIds, String langCode, String motherTongueCode,
                    int maxSentences, int maxErrors, int contextSize,
                    CommandLine options) throws IOException {
     long startTime = System.currentTimeMillis();
@@ -193,7 +218,7 @@ public class SentenceSourceChecker {
       if (ruleIds != null) {
         enableOnlySpecifiedRules(ruleIds, lt);
       } else {
-        applyRuleDeactivation(lt, disabledRules);
+        applyRuleDeactivation(lt, disabledRules, disabledRuleCategoryIds);
       }
     } else {
       System.out.println("Activated " + activatedBySource + " rules from " + ruleSource);
@@ -252,12 +277,26 @@ public class SentenceSourceChecker {
     }
   }
 
-  private void applyRuleDeactivation(JLanguageTool lt, Set<String> disabledRules) {
+  private void applyRuleDeactivation(JLanguageTool lt, Set<String> disabledRules, Set<String> disabledRuleCategories) {
     // disabled via config file, usually to avoid too many false alarms:
     for (String disabledRuleId : disabledRules) {
       lt.disableRule(disabledRuleId);
     }
     System.out.println("These rules are disabled: " + lt.getDisabledRules());
+
+    Map<CategoryId, Category> categories = lt.getCategories();
+    for (String disabledRuleCategoryId : disabledRuleCategories) {
+      boolean found = false;
+      for (CategoryId categoryId : categories.keySet()) {
+        if (categoryId.toString().equals(disabledRuleCategoryId)) {
+          found = true;
+          lt.disableCategory(categoryId);
+        }
+      }
+      if (!found) {
+        System.err.println("Disabled category not found : " + disabledRuleCategoryId);
+      }
+    }
   }
 
   private void activateAdditionalCategories(String[] additionalCategoryIds, JLanguageTool lt) {
