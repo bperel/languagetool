@@ -210,11 +210,11 @@
 <!--            <artifactId>language-es</artifactId>-->
 <!--            <version>${languagetool.version}</version>-->
 <!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>org.languagetool</groupId>-->
-<!--            <artifactId>language-sv</artifactId>-->
-<!--            <version>${languagetool.version}</version>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>org.languagetool</groupId>
+            <artifactId>language-sv</artifactId>
+            <version>${languagetool.version}</version>
+        </dependency>
 <!--        <dependency>-->
 <!--            <groupId>org.languagetool</groupId>-->
 <!--            <artifactId>language-ta</artifactId>-->

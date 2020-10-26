@@ -75,6 +75,7 @@ public class RuleMatchWithContexts extends RuleMatch {
       put("pl", Map.of("data-mw", Set.of("parts[*].template.target[?(@.wt == 'J')]")));
       put("pt", Map.of("data-mw", Set.of("parts[*].template.target[?(@.wt == 'Lang')]")));
       put("ru", Map.of("data-mw", Set.of("parts[*].template.target[?(@.wt == 'Lang')]")));
+      put("sv", Map.of("data-mw", Set.of("parts[*].template.target[?(@.wt == 'Lang')]")));
       put("uk", Map.of("data-mw", Set.of("parts[*].template.target[?(@.wt == 'Lang')]")));
     }
   };

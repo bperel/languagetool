@@ -32,6 +32,7 @@ services:
       PARSOID_DOMAIN_wikipedia_pl: https://pl.wikipedia.org/w/api.php
       PARSOID_DOMAIN_wikipedia_pt: https://pt.wikipedia.org/w/api.php
       PARSOID_DOMAIN_wikipedia_ru: https://ru.wikipedia.org/w/api.php
+      PARSOID_DOMAIN_wikipedia_sv: https://sv.wikipedia.org/w/api.php
       PARSOID_DOMAIN_wikipedia_uk: https://uk.wikipedia.org/w/api.php
       PARSOID_NUM_WORKERS: ncpu
       PARSOID_STRICT_SSL: "false"
