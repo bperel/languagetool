@@ -121,7 +121,7 @@
     <select id="getPendingSuggestionsPerLanguageCode" resultType="org.languagetool.server.DatabaseAccess$PendingSuggestionsPerLanguageCode">
         SELECT article_language_code, count(*)
         FROM corpus_match
-        WHERE applied is null
+        WHERE applied is null AND article_language_code != 'en'
         GROUP BY article_language_code
         ORDER BY article_language_code
     </select>
