@@ -173,7 +173,7 @@ class DatabaseAccess {
       parameters.put("usernames", usernames);
       List<HashMap<String, Object>> results = session.selectList("org.languagetool.server.WikipediaMapper.selectMostSkippedRules", parameters);
       return results.stream().map(result -> new SkippedRule(
-        (String)result.get("language_code"),
+        (String)result.get("article_language_code"),
         (String)result.get("ruleid"),
         (Long) result.get("skips_per_rule"),
         result.get("ignored").equals(1)
@@ -345,7 +345,7 @@ class DatabaseAccess {
       for (ContributionStatisticsPerMonth contributionForLanguageAndUser : topContributors) {
         String monthAndLanguage = String.format("%s-%s",
           contributionForLanguageAndUser.date,
-          contributionForLanguageAndUser.languageCode);
+          contributionForLanguageAndUser.articleLanguageCode);
         if (! previousMonthAndLanguage.equals(monthAndLanguage) || currentLimit < limitPerMonthAndLanguage) {
           topContributorsLimited.add(contributionForLanguageAndUser);
           if (! previousMonthAndLanguage.equals(monthAndLanguage)) {
@@ -633,13 +633,13 @@ class DatabaseAccess {
 
   public static class ContributionStatisticsPerMonth {
     private final String date;
-    private final String languageCode;
+    private final String articleLanguageCode;
     private final String username;
     private final Integer count;
 
-    public ContributionStatisticsPerMonth(String date, String languageCode, String username, Integer count) {
+    public ContributionStatisticsPerMonth(String date, String articleLanguageCode, String username, Integer count) {
       this.date = date;
-      this.languageCode = languageCode;
+      this.articleLanguageCode = articleLanguageCode;
       this.username = username;
       this.count = count;
     }
@@ -648,8 +648,8 @@ class DatabaseAccess {
       return date;
     }
 
-    public String getLanguageCode() {
-      return languageCode;
+    public String getArticleLanguageCode() {
+      return articleLanguageCode;
     }
 
     public String getUsername() {
@@ -662,16 +662,16 @@ class DatabaseAccess {
   }
 
   public static class PendingSuggestionsPerLanguageCode {
-    private final String languageCode;
+    private final String articleLanguageCode;
     private final Integer count;
 
-    public PendingSuggestionsPerLanguageCode(String languageCode, Integer count) {
-      this.languageCode = languageCode;
+    public PendingSuggestionsPerLanguageCode(String articleLanguageCode, Integer count) {
+      this.articleLanguageCode = articleLanguageCode;
       this.count = count;
     }
 
-    public String getLanguageCode() {
-      return languageCode;
+    public String getArticleLanguageCode() {
+      return articleLanguageCode;
     }
 
     public Integer getCount() {
@@ -681,15 +681,15 @@ class DatabaseAccess {
 
   public static class RefusedSuggestionCategoryPerLanguageCode {
     private final String languagetoolVersion;
-    private final String languageCode;
+    private final String artcileLanguageCode;
     private final String ruleCategory;
     private final String ruleDescription;
     private final Integer count;
     private final Integer sampleSuggestionId;
 
-    public RefusedSuggestionCategoryPerLanguageCode(String languagetoolVersion, String languageCode, String ruleCategory, String ruleDescription, Integer count, Integer sampleSuggestionId) {
+    public RefusedSuggestionCategoryPerLanguageCode(String languagetoolVersion, String artcileLanguageCode, String ruleCategory, String ruleDescription, Integer count, Integer sampleSuggestionId) {
       this.languagetoolVersion = languagetoolVersion;
-      this.languageCode = languageCode;
+      this.artcileLanguageCode = artcileLanguageCode;
       this.ruleCategory = ruleCategory;
       this.ruleDescription = ruleDescription;
       this.count = count;
@@ -700,8 +700,8 @@ class DatabaseAccess {
       return languagetoolVersion;
     }
 
-    public String getLanguageCode() {
-      return languageCode;
+    public String getArtcileLanguageCode() {
+      return artcileLanguageCode;
     }
 
     public String getRuleCategory() {
@@ -746,20 +746,20 @@ class DatabaseAccess {
   }
 
   public static class SkippedRule {
-    private final String languageCode;
+    private final String articleLanguageCode;
     private final String ruleId;
     private final Long timesSkipped;
     private final Boolean isIgnored;
 
-    public SkippedRule(String languageCode, String ruleId, Long timesSkipped, Boolean isIgnored) {
-      this.languageCode = languageCode;
+    public SkippedRule(String articleLanguageCode, String ruleId, Long timesSkipped, Boolean isIgnored) {
+      this.articleLanguageCode = articleLanguageCode;
       this.ruleId = ruleId;
       this.timesSkipped = timesSkipped;
       this.isIgnored = isIgnored;
     }
 
-    public String getLanguageCode() {
-      return languageCode;
+    public String getArticleLanguageCode() {
+      return articleLanguageCode;
     }
 
     public String getRuleId() {
@@ -776,18 +776,18 @@ class DatabaseAccess {
   }
 
   public static class UserStatistics {
-    private final String languageCode;
+    private final String articleLanguageCode;
     private final Boolean applied;
     private final Integer count;
 
-    public UserStatistics(String languageCode, Boolean applied, Integer count) {
-      this.languageCode = languageCode;
+    public UserStatistics(String articleLanguageCode, Boolean applied, Integer count) {
+      this.articleLanguageCode = articleLanguageCode;
       this.applied = applied;
       this.count = count;
     }
 
-    public String getLanguageCode() {
-      return languageCode;
+    public String getArticleLanguageCode() {
+      return articleLanguageCode;
     }
 
     public Boolean getApplied() {
