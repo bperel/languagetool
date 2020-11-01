@@ -7,31 +7,26 @@
     <select id="selectNonAppliedWikipediaSuggestions" resultType="org.languagetool.server.CorpusMatchEntry">
         SELECT corpus_match.*
         FROM corpus_match
-        INNER JOIN (
-            select corpus_match.id
-            from corpus_match
-            inner join corpus_article article on article.id = corpus_match.article_id
-            where applied is null
-              and language_code in <foreach item="languageCode" index="index" collection="languageCodes"  open="(" separator="," close=")">
-                  #{languageCode}
-              </foreach>
-              and corpus_match.ruleid NOT IN (select ruleid from user_ignored_rules uir where (<foreach collection="usernames" index="languageCode" item="username" open="(" separator=" or " close=")">
-                  (uir.username = #{username} and uir.language_code = #{languageCode})
-              </foreach>))
-              and not exists(
-                  select 1
-                  from corpus_match_skipped skipped
-                  where corpus_match_id = corpus_match.id
-                    and <foreach collection="usernames" index="languageCode" item="username" open="(" separator=" or " close=")">
-                        (skipped.username = #{username} and article.language_code = #{languageCode})
-                    </foreach>
-              )
-            order by rand()
-            limit 10
-        ) AS ids ON ids.id = corpus_match.id
+        WHERE applied is null
+          AND article_language_code in <foreach item="languageCode" index="index" collection="languageCodes"  open="(" separator="," close=")">
+              #{languageCode}
+          </foreach>
+          AND corpus_match.ruleid NOT IN (select ruleid from user_ignored_rules uir where (<foreach collection="usernames" index="languageCode" item="username" open="(" separator=" or " close=")">
+              (uir.username = #{username} and uir.language_code = #{languageCode})
+          </foreach>))
+          AND not exists(
+              select 1
+              from corpus_match_skipped skipped
+              where corpus_match_id = corpus_match.id
+                and <foreach collection="usernames" index="languageCode" item="username" open="(" separator=" or " close=")">
+                    (skipped.username = #{username} and article_language_code = #{languageCode})
+                </foreach>
+          )
+        order by rand()
+        limit 10
     </select>
     <select id="selectAppliedWikipediaSuggestions" resultType="org.languagetool.server.CorpusMatchEntry">
-        SELECT m.id,
+        SELECT id,
                article_id,
                ruleid,
                rule_category,
@@ -48,10 +43,9 @@
                IFNULL(skipped.username, applied_username),
                languagetool_version
         FROM corpus_match m
-        INNER JOIN corpus_article a on a.id = m.article_id
         LEFT JOIN corpus_match_skipped skipped on m.id = skipped.corpus_match_id
         WHERE <foreach collection="usernames" index="languageCode" item="username" open="(" separator=" or " close=")">
-            ((skipped.username = #{username} or m.applied_username = #{username}) and a.language_code = #{languageCode})
+            ((skipped.username = #{username} or m.applied_username = #{username}) and article_language_code = #{languageCode})
         </foreach>
         ORDER BY IFNULL(skipped.date, applied_date) DESC LIMIT 10
     </select>
@@ -63,16 +57,15 @@
     </update>
     <select id="selectMostSkippedRules" resultType="hashmap">
         SELECT
-               corpus_article.language_code,
+               article_language_code,
                corpus_match.ruleid,
                IF(uir.ruleid IS NULL, 0, 1) AS ignored,
                COUNT(*) AS skips_per_rule
         FROM corpus_match_skipped
         INNER JOIN corpus_match ON corpus_match.id = corpus_match_skipped.corpus_match_id
-        INNER JOIN corpus_article ON corpus_match.article_id=corpus_article.id
-        LEFT JOIN user_ignored_rules uir ON corpus_article.language_code = uir.language_code AND corpus_match_skipped.username = uir.username AND corpus_match.ruleid = uir.ruleid
+        LEFT JOIN user_ignored_rules uir ON article_language_code = uir.language_code AND corpus_match_skipped.username = uir.username AND corpus_match.ruleid = uir.ruleid
         WHERE <foreach collection="usernames" index="languageCode" item="username" open="(" separator=" or " close=")">
-            (corpus_match_skipped.username = #{username} and corpus_article.language_code = #{languageCode})
+            (corpus_match_skipped.username = #{username} and article_language_code = #{languageCode})
         </foreach>
         GROUP BY ruleid
         HAVING COUNT(*) >= 5
@@ -100,16 +93,15 @@
         ORDER BY date_format(applied_date, '%Y-%m-%d'), applied
     </select>
     <select id="selectUserStats" resultType="org.languagetool.server.DatabaseAccess$UserStatistics">
-        SELECT a.language_code,
-        (IF(skipped.date is not null, null, applied)) AS applied,
-        COUNT(*)
+        SELECT m.article_language_code,
+            (IF(skipped.date is not null, null, applied)) AS applied,
+            COUNT(*)
         FROM corpus_match m
-        INNER JOIN corpus_article a on a.id = m.article_id
         LEFT JOIN corpus_match_skipped skipped on m.id = skipped.corpus_match_id
         WHERE <foreach collection="usernames" index="languageCode" item="username" open="(" separator=" or " close=")">
-        ((skipped.username = #{username} or m.applied_username = #{username}) and a.language_code = #{languageCode})
+        ((skipped.username = #{username} or m.applied_username = #{username}) and m.article_language_code = #{languageCode})
     </foreach>
-        GROUP BY a.language_code,
+        GROUP BY m.article_language_code,
         applied
     </select>
     <select id="getDecisionStatsPercentageWeek" resultType="org.languagetool.server.DatabaseAccess$WeekStatistics">
@@ -120,25 +112,22 @@
         group by week;
     </select>
     <select id="getTopContributors" resultType="org.languagetool.server.DatabaseAccess$ContributionStatisticsPerMonth">
-        SELECT date_format(applied_date, '%Y-%m') as month, language_code, applied_username, count(*)
+        SELECT date_format(applied_date, '%Y-%m') as month, article_language_code, applied_username, count(*)
         FROM corpus_match
-        INNER JOIN corpus_article ca on corpus_match.article_id = ca.id
         WHERE applied_date is not null
-        GROUP BY month, language_code, applied_username
-        ORDER BY month DESC, language_code, count(*) DESC
+        GROUP BY month, article_language_code, applied_username
+        ORDER BY month DESC, article_language_code, count(*) DESC
     </select>
     <select id="getPendingSuggestionsPerLanguageCode" resultType="org.languagetool.server.DatabaseAccess$PendingSuggestionsPerLanguageCode">
-        SELECT language_code, count(*)
-        FROM corpus_match use index (corpus_match_article_applied_index),
-             corpus_article
-        WHERE article_id = corpus_article.id
-          AND applied is null
-        GROUP BY language_code
-        ORDER BY language_code
+        SELECT article_language_code, count(*)
+        FROM corpus_match
+        WHERE applied is null
+        GROUP BY article_language_code
+        ORDER BY article_language_code
     </select>
     <select id="getMostRefusedSuggestionCategoriesPerLanguageCode" resultType="org.languagetool.server.DatabaseAccess$RefusedSuggestionCategoryPerLanguageCode">
         SELECT languagetool_version,
-               language_code,
+               article_language_code,
                rule_category,
                rule_description,
                COUNT(*),
@@ -146,7 +135,7 @@
                    SELECT sample.id
                    FROM corpus_match sample
                    WHERE sample.article_id IN (
-                       select id from corpus_article sample_article where article.language_code = sample_article.language_code
+                       select id from corpus_article sample_article where article_language_code = sample_article.language_code
                    )
                      AND rule.languagetool_version = sample.languagetool_version
                      AND rule.rule_category = sample.rule_category
@@ -155,12 +144,11 @@
                    LIMIT 1
                ) AS sample_suggestion_id
         FROM corpus_match rule
-                 INNER JOIN corpus_article article on rule.article_id = article.id
         WHERE applied = 0
           AND applied_date > date_sub(current_date, interval 2 week)
-        GROUP BY languagetool_version, language_code, rule_category, rule_description
+        GROUP BY languagetool_version, article_language_code, rule_category, rule_description
         HAVING COUNT(*) > 10
-        ORDER BY languagetool_version DESC, language_code, COUNT(*) DESC
+        ORDER BY languagetool_version DESC, article_language_code, COUNT(*) DESC
         LIMIT 10
     </select>
     <insert id="insertAccessToken">

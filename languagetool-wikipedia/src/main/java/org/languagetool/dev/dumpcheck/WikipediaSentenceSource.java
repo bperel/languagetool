@@ -177,7 +177,7 @@ public class WikipediaSentenceSource extends SentenceSource {
                 String html = (String) article[5];
                 String anonymizedHtml = (String) article[6];
 
-                addSentencesFromArticle(articleId, title, revisionId, anonymizedHtml);
+                addSentencesFromArticle(articleId, language.getShortCode(), title, revisionId, anonymizedHtml);
 
                 databaseHandler.deleteNeverAppliedSuggestionsOfObsoleteArticles(title, language.getShortCode(), revisionId);
                 processSentences(wikitext, cssUrl, html);
@@ -263,7 +263,7 @@ public class WikipediaSentenceSource extends SentenceSource {
     }
     WikipediaSentence wikiSentence = sentences.remove(0);
     String url = getUrl(wikiSentence.title, wikiSentence.revision);
-    return new Sentence(wikiSentence.sentence, getSource(), wikiSentence.title, url, wikiSentence.articleId);
+    return new Sentence(wikiSentence.sentence, getSource(), wikiSentence.title, url, wikiSentence.articleId, wikiSentence.articleLanguageCode);
   }
 
   @NotNull
@@ -302,10 +302,10 @@ public class WikipediaSentenceSource extends SentenceSource {
     return null;
   }
 
-  private void addSentencesFromArticle(Long articleId, String title, Integer revisionId, String anonymizedHtml) {
+  private void addSentencesFromArticle(Long articleId, String articleLanguageCode, String title, Integer revisionId, String anonymizedHtml) {
     for (String sentence : sentenceTokenizer.tokenize(anonymizedHtml)) {
       if (acceptSentence(sentence)) {
-        sentences.add(new WikipediaSentence(sentence, title, revisionId, articleId));
+        sentences.add(new WikipediaSentence(sentence, title, revisionId, articleId, articleLanguageCode));
       }
     }
   }
@@ -338,11 +338,14 @@ public class WikipediaSentenceSource extends SentenceSource {
     final String title;
     final Integer revision;
     final Long articleId;
-    WikipediaSentence(String sentence, String title, Integer revision, Long articleId) {
+    final String articleLanguageCode;
+
+    WikipediaSentence(String sentence, String title, Integer revision, Long articleId, String articleLanguageCode) {
       this.sentence = sentence;
       this.title = title;
       this.revision = revision;
       this.articleId = articleId;
+      this.articleLanguageCode = articleLanguageCode;
     }
   }
 }
