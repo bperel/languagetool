@@ -47,6 +47,7 @@ CREATE TABLE `corpus_article`
     `anonymized_html` mediumtext   NOT NULL,
     `css_url`         varchar(1023) DEFAULT NULL,
     `analyzed`        tinyint(1)   NOT NULL,
+    `import_date`     timestamp   NOT NULL DEFAULT current_timestamp,
     `url`             varchar(300) GENERATED ALWAYS AS (concat('https://', `language_code`, '.wikipedia.org/wiki/', `title`)) STORED,
     PRIMARY KEY (`id`),
     UNIQUE KEY `corpus_article_uindex` (`title`, `revision`),
