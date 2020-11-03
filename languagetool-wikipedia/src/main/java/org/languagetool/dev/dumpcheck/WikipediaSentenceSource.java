@@ -107,13 +107,10 @@ public class WikipediaSentenceSource extends SentenceSource {
         private StringBuilder text;
 
         @Override
-        public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
+        public void startElement(String uri, String localName, String qName, Attributes attributes) {
           currentQName = qName.toLowerCase();
 
           if (currentQName.equals("revision")) {
-            if (articleCount > 200) {
-              throw new ParseLimitExceededException(articleCount);
-            }
             isRevisionContext = true;
           }
           else if (currentQName.equals("page") || currentQName.equals("contributor")) {
