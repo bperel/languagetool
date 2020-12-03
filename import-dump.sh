@@ -1,4 +1,4 @@
-wikis="ca de en fr nl pl pt ru sv uk"
+wikis="ca de fr nl pl pt ru sv uk"
 
 cd /home/dumps || exit 1
 
