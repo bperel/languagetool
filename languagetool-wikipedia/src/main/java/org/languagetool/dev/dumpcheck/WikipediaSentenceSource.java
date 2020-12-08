@@ -243,7 +243,7 @@ public class WikipediaSentenceSource extends SentenceSource {
       } catch (DocumentLimitReachedException | ErrorLimitReachedException e) {
         System.out.println(getClass().getSimpleName() + ": " + e);
       } catch (Exception e) {
-        System.out.println("Check failed on sentence: " + StringUtils.abbreviate(sentence.getText(), 250));
+        System.out.println("Check failed on sentence: " + StringUtils.abbreviate(sentence.getText(), 250) + ", cause : " + e.getMessage());
       }
     }
   }
