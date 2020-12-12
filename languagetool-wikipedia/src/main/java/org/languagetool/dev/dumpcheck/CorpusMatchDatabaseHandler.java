@@ -57,6 +57,7 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
   static final ContextTools smallContextTools;
 
   private final PreparedStatement insertCorpusArticleSt;
+  private final PreparedStatement insertCorpusArticleErrorSt;
   private final PreparedStatement insertCorpusMatchSt;
   private final PreparedStatement deleteNeverAppliedSuggestionsOfObsoleteArticles;
   private final PreparedStatement deleteAlreadyAppliedSuggestionsInNewArticleRevisions;
@@ -93,6 +94,9 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
       insertCorpusArticleSt = conn.prepareStatement("" +
         " INSERT INTO corpus_article (language_code, title, revision, wikitext, html, anonymized_html, css_url, analyzed)" +
         " VALUES (?, ?, ?, ?, ?, ?, ?, 0)", Statement.RETURN_GENERATED_KEYS);
+      insertCorpusArticleErrorSt = conn.prepareStatement("" +
+        " INSERT INTO corpus_article (language_code, title, revision, wikitext, error, analyzed)" +
+        " VALUES (?, ?, ?, ?, ?, 1)", Statement.RETURN_GENERATED_KEYS);
       insertCorpusMatchSt = conn.prepareStatement("" +
         " INSERT INTO corpus_match (article_id, article_language_code, ruleid, rule_category, rule_subid, rule_description, message, error_context, small_error_context, html_error_context, replacement_suggestion, languagetool_version)" +
         " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
@@ -192,6 +196,17 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
     throw new SQLException("Couldn't create article " + title);
   }
 
+  void createErroredArticle(String languageCode, String title, Integer revision, String wikitext, String errorName) throws SQLException {
+    insertCorpusArticleErrorSt.setString(1, languageCode);
+    insertCorpusArticleErrorSt.setString(2, title);
+    insertCorpusArticleErrorSt.setInt(3, revision);
+    insertCorpusArticleErrorSt.setString(4, wikitext);
+    insertCorpusArticleErrorSt.setString(5, errorName);
+    insertCorpusArticleErrorSt.execute();
+
+    throw new SQLException("Couldn't create article " + title);
+  }
+
   private void createSentence(long articleId, String languageCode, RuleMatchWithContexts match) throws SQLException {
 
     Rule rule = match.getRule();
@@ -265,6 +280,7 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
   public void close() throws Exception {
     for (PreparedStatement preparedStatement : Arrays.asList(
       insertCorpusArticleSt,
+      insertCorpusArticleErrorSt,
       insertCorpusMatchSt,
       deleteNeverAppliedSuggestionsOfObsoleteArticles,
       deleteAlreadyAppliedSuggestionsInNewArticleRevisions,

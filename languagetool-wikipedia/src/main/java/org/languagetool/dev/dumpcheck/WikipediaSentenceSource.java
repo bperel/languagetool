@@ -35,6 +35,7 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.SocketTimeoutException;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.text.MessageFormat;
@@ -293,6 +294,14 @@ public class WikipediaSentenceSource extends SentenceSource {
         return new Object[] { articleId, 0, false, wikitext, cssUrl, html, anonymizedHtml };
       }
     } catch (Exception e) {
+      if (e instanceof SocketTimeoutException) {
+        try {
+          databaseHandler.createErroredArticle(language.getShortCode(), title, revisionId, wikitext, e.getClass().getSimpleName());
+        }
+        catch (SQLException e2) {
+          print("Could not extract text, skipping document: " + e2 + ", full stacktrace follows:");
+        }
+      }
       print("Could not extract text, skipping document: " + e + ", full stacktrace follows:");
       e.printStackTrace();
     }

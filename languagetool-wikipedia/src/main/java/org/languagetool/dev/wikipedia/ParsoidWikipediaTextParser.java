@@ -46,7 +46,7 @@ public class ParsoidWikipediaTextParser {
     this.urlBase = urlBase;
   }
 
-  public HtmlTools.HtmlAnonymizer convertWikitextToHtml(String title, String wikiText) {
+  public HtmlTools.HtmlAnonymizer convertWikitextToHtml(String title, String wikiText) throws SocketTimeoutException {
     try {
       String html = convertWikitextToHtml(wikiText);
       if (html == null) {
@@ -56,13 +56,15 @@ public class ParsoidWikipediaTextParser {
       htmlAnonymizer.anonymize();
 
       return htmlAnonymizer;
+    } catch (SocketTimeoutException e) {
+      throw e;
     } catch (IOException | ParserConfigurationException | SAXException e) {
       e.printStackTrace();
       return null;
     }
   }
 
-  private String convertWikitextToHtml(String inputText) {
+  private String convertWikitextToHtml(String inputText) throws SocketTimeoutException {
     URL url;
     try {
       url = new URL(this.urlBase + "/wikipedia_" + languageCode + "/v3/transform/wikitext/to/html");
@@ -107,6 +109,7 @@ public class ParsoidWikipediaTextParser {
     } catch (IOException e) {
       if (e instanceof SocketTimeoutException) {
         System.err.println("Timeout when calling Parsoid");
+        throw (SocketTimeoutException) e;
       }
       else {
         e.printStackTrace();
