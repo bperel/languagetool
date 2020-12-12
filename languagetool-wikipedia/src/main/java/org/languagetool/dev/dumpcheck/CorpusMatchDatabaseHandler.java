@@ -120,7 +120,7 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
         " )");
       updateCorpusArticleMarkAsAnalyzed = conn.prepareStatement("" +
         " UPDATE corpus_article" +
-        " SET analyzed = 1 WHERE id = ?");
+        " SET analyzed = 1, html = null, anonymized_html = '' WHERE id = ?");
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
