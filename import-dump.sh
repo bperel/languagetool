@@ -5,6 +5,15 @@ cd /home/dumps || exit 1
 while true; do
   for wiki in $wikis; do
     echo "Processing wiki $wiki"
+
+    pendingSuggestions=$(curl 'http://languagetool:8010/v2/wikipedia/stats' \
+      | jq ".pendingSuggestions[] | select(.language==\"$wiki\").count")
+
+    if [ "$pendingSuggestions" -gt 10000 ]; then
+      echo "There are already more than 10000 suggestions for $wiki ($pendingSuggestions suggestions), skipping import for this language"
+      continue
+    fi
+
     curl -s https://dumps.wikimedia.org/${wiki}wiki/ \
       | grep -Po '(?<=href=")[0-9]+(?!")' \
       | tac \
