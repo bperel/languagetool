@@ -42,9 +42,11 @@ import com.sun.star.uno.UnoRuntime;
 class DocumentCursorTools {
   
   private final XParagraphCursor xPCursor;
+  private final XTextCursor xTextCursor;
   private final List<Integer> headerNumbers = new ArrayList<Integer>();
   
   DocumentCursorTools(XComponent xComponent) {
+    xTextCursor = getCursor(xComponent);
     xPCursor = getParagraphCursor(xComponent);
   }
 
@@ -84,11 +86,10 @@ class DocumentCursorTools {
   @Nullable
   private XParagraphCursor getParagraphCursor(XComponent xComponent) {
     try {
-      XTextCursor xCursor = getCursor(xComponent);
-      if (xCursor == null) {
+      if (xTextCursor == null) {
         return null;
       }
-      return UnoRuntime.queryInterface(XParagraphCursor.class, xCursor);
+      return UnoRuntime.queryInterface(XParagraphCursor.class, xTextCursor);
     } catch (Throwable t) {
       MessageHandler.printException(t);     // all Exceptions thrown by UnoRuntime.queryInterface are caught
       return null;           // Return null as method failed
@@ -96,9 +97,17 @@ class DocumentCursorTools {
   }
   
   /** 
+   * Returns the TextCursor of the Document
+   * Returns null if it fails
+   */
+  @Nullable
+  public XTextCursor getTextCursor() {
+    return xTextCursor;
+  }
+  
+  /** 
    * Returns ParagraphCursor from TextCursor 
    * Returns null if it fails
-   * @return 
    */
   @Nullable
   public XParagraphCursor getParagraphCursor() {
@@ -141,7 +150,7 @@ class DocumentCursorTools {
       xPCursor.gotoStartOfParagraph(false);
       xPCursor.gotoEndOfParagraph(true);
       allParas.add(xPCursor.getString());
-      if(isHeadingOrTitle()) {
+      if (isHeadingOrTitle()) {
         headerNumbers.add(paraNum);
       }
       while (xPCursor.gotoNextParagraph(false)) {
@@ -149,7 +158,7 @@ class DocumentCursorTools {
         xPCursor.gotoEndOfParagraph(true);
         allParas.add(xPCursor.getString());
         paraNum++;
-        if(isHeadingOrTitle()) {
+        if (isHeadingOrTitle()) {
           headerNumbers.add(paraNum);
         }
       }
@@ -172,7 +181,7 @@ class DocumentCursorTools {
       MessageHandler.printException(e);
       return false;
     }
-    return (paraStyleName.startsWith("Heading") || paraStyleName.equals("Title") || paraStyleName.equals("Subtitle"));
+    return (paraStyleName.startsWith("Heading") || paraStyleName.startsWith("Contents") || paraStyleName.equals("Title") || paraStyleName.equals("Subtitle"));
   }
   
   /**
@@ -182,6 +191,9 @@ class DocumentCursorTools {
     return headerNumbers;
   }
   
+  /**
+   * Print properties to log file for the actual position of cursor
+   */
   void printProperties() {
     if (xPCursor == null) {
       MessageHandler.printToLogFile("Properties: ParagraphCursor == null");
@@ -189,7 +201,7 @@ class DocumentCursorTools {
     }
     XPropertySet xParagraphPropertySet = UnoRuntime.queryInterface(XPropertySet.class, xPCursor.getStart());
     Property[] properties = xParagraphPropertySet.getPropertySetInfo().getProperties();
-    for(Property property : properties) {
+    for (Property property : properties) {
       MessageHandler.printToLogFile("Properties: Name: " + property.Name + ", Type: " + property.Type);
     }
     try {

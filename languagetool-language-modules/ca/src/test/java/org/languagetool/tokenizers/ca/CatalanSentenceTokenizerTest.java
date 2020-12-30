@@ -49,6 +49,7 @@ public class CatalanSentenceTokenizerTest {
             "»La Maria va engegar el cotxe");
     testSplit("diu que va dir. ", "A mi em feia estrany.");
     testSplit("Són del s. III dC. ", "Són importants les pintures.");
+    testSplit("Primera frase.[4] ", "Segona frase");
     
     // N., t.
     testSplit("Vés-te’n. ", "A mi em feia estrany.");  
@@ -92,6 +93,9 @@ public class CatalanSentenceTokenizerTest {
     testSplit("Arriba fins a les pp. XI-XII.");
     testSplit("i no ho vol. ", "Malgrat que és així.");
     testSplit("i és del vol. 3 de la col·lecció");
+    testSplit("Els EE. UU. són un país.");
+    testSplit("Els EE.UU. són un país.");
+    testSplit("Me'n vaig als EE.UU. ", "Bon viatge.");
 
     // Exception to abbreviations
     testSplit("Ell és el número u. ", "Jo el dos.");

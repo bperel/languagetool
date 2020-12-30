@@ -18,14 +18,19 @@
  */
 package org.languagetool.rules;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import org.jetbrains.annotations.Nullable;
 import org.languagetool.AnalyzedSentence;
 import org.languagetool.AnalyzedToken;
 import org.languagetool.AnalyzedTokenReadings;
 import org.languagetool.JLanguageTool;
+import org.languagetool.synthesis.Synthesizer;
 import org.languagetool.tools.StringTools;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A rule that matches words which should not be used and suggests
@@ -37,6 +42,8 @@ import org.languagetool.tools.StringTools;
 public abstract class AbstractSimpleReplaceRule extends Rule {
 
   protected boolean ignoreTaggedWords = false;
+
+  private static final Logger logger = LoggerFactory.getLogger(AbstractSimpleReplaceRule.class);
   private boolean checkLemmas = true;
 
   protected abstract Map<String, List<String>> getWrongWords();
@@ -111,7 +118,7 @@ public abstract class AbstractSimpleReplaceRule extends Rule {
   }
 
   @Override
-  public RuleMatch[] match(AnalyzedSentence sentence) {
+  public RuleMatch[] match(AnalyzedSentence sentence) throws IOException {
     List<RuleMatch> ruleMatches = new ArrayList<>();
     AnalyzedTokenReadings[] tokens = sentence.getTokensWithoutWhitespace();
     for (AnalyzedTokenReadings tokenReadings : tokens) {
@@ -119,17 +126,18 @@ public abstract class AbstractSimpleReplaceRule extends Rule {
       if( JLanguageTool.SENTENCE_START_TAGNAME.equals(tokenReadings.getAnalyzedToken(0).getPOSTag()) ||
           tokenReadings.isImmunized() ||        //this rule is used mostly for spelling, so ignore both immunized
           tokenReadings.isIgnoredBySpeller() || //and speller-ignorable rules
+          isTokenException(tokenReadings) ||
           (ignoreTaggedWords && isTagged(tokenReadings))
       ) {
         continue;
       }
       List<RuleMatch> matchesForToken = findMatches(tokenReadings, sentence);
-      ruleMatches.addAll( matchesForToken );
+      ruleMatches.addAll(matchesForToken);
     }
     return toRuleMatchArray(ruleMatches);
   }
 
-  protected List<RuleMatch> findMatches(AnalyzedTokenReadings tokenReadings, AnalyzedSentence sentence) {
+  protected List<RuleMatch> findMatches(AnalyzedTokenReadings tokenReadings, AnalyzedSentence sentence) throws IOException {
     List<RuleMatch> ruleMatches = new ArrayList<>();
 
     String originalTokenStr = tokenReadings.getToken();
@@ -152,13 +160,26 @@ public abstract class AbstractSimpleReplaceRule extends Rule {
         }
       }
 
-      for (String lemma: lemmas) {
+      for (String lemma : lemmas) {
         List<String> replacements = getWrongWords().get(lemma);
         if (replacements != null) {
-          possibleReplacements.addAll(replacements);
+          Synthesizer synth = getSynthesizer();
+          if (synth != null) {
+            for (String replacementLemma : replacements) {
+              for (AnalyzedToken at : tokenReadings.getReadings()) {
+                if (at.getLemma() == null) {
+                  logger.warn("at.getLemma() == null for " + at + ", replacementLemma: " + replacementLemma);
+                }
+                AnalyzedToken newAt = new AnalyzedToken(at.getLemma(), at.getPOSTag(), replacementLemma);
+                String[] s = synth.synthesize(newAt, at.getPOSTag());
+                possibleReplacements.addAll(Arrays.asList(s));
+              }
+            }
+          } else {
+            possibleReplacements.addAll(replacements);
+          }
         }
       }
-
       possibleReplacements = possibleReplacements.stream().distinct().collect(Collectors.toList());
     }
 
@@ -216,4 +237,19 @@ public abstract class AbstractSimpleReplaceRule extends Rule {
     this.checkLemmas = checkLemmas;
   }
 
+  /**
+   * Synthesizer to generate inflected suggestions
+   * @since 5.1
+   */
+  @Nullable
+  public Synthesizer getSynthesizer() {
+    return null;
+  }
+
+  /*
+   * @since 5.2
+   */
+  protected boolean isTokenException(AnalyzedTokenReadings atr) {
+    return false;
+  }
 }

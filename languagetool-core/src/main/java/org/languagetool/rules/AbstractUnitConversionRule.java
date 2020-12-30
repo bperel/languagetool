@@ -84,7 +84,7 @@ public abstract class AbstractUnitConversionRule extends Rule {
   private static final int MAX_SUGGESTIONS = 5;
   private static final int WHITESPACE_LIMIT = 5;
 
-  protected Map<Pattern, Unit> unitPatterns = new HashMap<>();
+  protected Map<Pattern, Unit> unitPatterns = new LinkedHashMap<>();  // use LinkedHashMap for stable iteration order
 
   // for patterns that require a custom number parsing function
   protected Map<Pattern, Map.Entry<Unit, Function<MatchResult, Double>>> specialPatterns = new HashMap<>();
@@ -100,6 +100,13 @@ public abstract class AbstractUnitConversionRule extends Rule {
     CHECK_UNKNOWN_UNIT,
     UNIT_MISMATCH
   }
+
+  private final static List<Pattern> antiPatterns = Arrays.asList(
+          Pattern.compile("\\d+[-‐–]\\d+"),   // "3-5 pounds"
+          Pattern.compile("\\d+/\\d+"),   // "1/4 mile"
+          Pattern.compile("\\d+:\\d+"),   // "A 2:1 cup"
+          Pattern.compile("\\d+⁄\\d+")    // "1⁄4 cup" (it's not the standard slash)
+  );
 
   private URL buildURLForExplanation(String original) {
     try {
@@ -476,6 +483,10 @@ public abstract class AbstractUnitConversionRule extends Rule {
         Double convertedValueInText;
         try {
           convertedValueInText = getNumberFormat().parse(convertedMatcher.group(1)).doubleValue();
+          if (convertedMatcher.group().trim().matches("\\(\\d+ (feet|ft) \\d+ inch\\)")) {
+            // e.g. "(2 ft 6 inch)" would be interpreted as just "2 ft", given a wrong suggestion
+            return;
+          }
         } catch (ParseException e) {
           return;
         }
@@ -580,7 +591,24 @@ public abstract class AbstractUnitConversionRule extends Rule {
         other == null ? match :
         match.getToPos() > other.getToPos() ? match : other);
     }
+    if (matches.size() > 0) {
+      removeAntiPatternMatches(sentence, matchesByStart);
+    }
     return matchesByStart.values().toArray(new RuleMatch[0]);
   }
-  
+
+  private void removeAntiPatternMatches(AnalyzedSentence sentence, Map<Integer, RuleMatch> matchesByStart) {
+    for (Pattern antiPattern : antiPatterns) {
+      Matcher matcher = antiPattern.matcher(sentence.getText());
+      int pos = 0;
+      while (matcher.find(pos)) {
+        matchesByStart.entrySet().removeIf(entry ->
+                matcher.start() <= entry.getValue().getFromPos() && matcher.end() >= entry.getValue().getFromPos() ||
+                matcher.start() <= entry.getValue().getToPos() && matcher.end() >= entry.getValue().getToPos()
+        );
+        pos = matcher.end() + 1;
+      }
+    }
+  }
+
 }

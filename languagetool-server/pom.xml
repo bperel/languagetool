@@ -5,12 +5,12 @@
     <parent>
         <groupId>org.languagetool</groupId>
         <artifactId>languagetool-parent</artifactId>
-        <version>5.0</version>
+        <version>5.2</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <artifactId>languagetool-server</artifactId>
-    <url>http://www.languagetool.org</url>
+    <url>https://www.languagetool.org</url>
     <name>LanguageTool embedded HTTP server</name>
 
     <licenses>
@@ -104,7 +104,7 @@
         <dependency>
             <groupId>org.mybatis</groupId>
             <artifactId>mybatis</artifactId>
-            <version>3.5.2</version>
+            <version>3.5.6</version>
         </dependency>
         <dependency>
             <groupId>org.mariadb.jdbc</groupId>
@@ -156,7 +156,7 @@
         <dependency>
             <groupId>org.languagetool</groupId>
             <artifactId>languagetool-wikipedia</artifactId>
-            <version>5.0</version>
+            <version>5.2</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>

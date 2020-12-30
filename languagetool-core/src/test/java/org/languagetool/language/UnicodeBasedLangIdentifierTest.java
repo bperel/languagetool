@@ -28,11 +28,12 @@ public class UnicodeBasedLangIdentifierTest {
   private final UnicodeBasedLangIdentifier ident = new UnicodeBasedLangIdentifier(100);
 
   @Test
-  public void testGetAdditionalLangCodes() {
-    String arabic = "[ar]";
+  public void testGetDominantLangCodes() {
+    String arabic = "[ar, fa]";
     String cyrillic = "[ru, uk, be]";
     String cjk = "[zh, ja]";
     String devanagari = "[hi, mr]";
+    String thai = "[th]";
 
     assertThat(codes(""), is("[]"));
     assertThat(codes(" "), is("[]"));
@@ -86,9 +87,13 @@ public class UnicodeBasedLangIdentifierTest {
     assertThat(codes("दरलैंड में कोरोनोवायरस के दर्ज मामलों की संख्या 38 से बढ़कर 82 हो गई है।\n" +
                      " मामलों में वृद्धि तब होती है जब देश उत्तरी इटली में स्कीइंग की छुट्टियों"), is(devanagari));  // Hindi
     assertThat(codes("आम्हाला उशीर होणार नाही"), is(devanagari));  // Marathi
+
+    // Thai:
+    assertThat(codes("ลินุกซ์ (อังกฤษ: Linux) และรู้จักในชื่อ กะนู/ลินุกซ์"), is(thai));
+    assertThat(codes("ลินุกซ์มีสัญญาอนุญาตแบบ GPL ซึ่งเป็นสัญญาอนุญาตที่กำหนด"), is(thai));
   }
 
   private String codes(String s) {
-    return ident.getAdditionalLangCodes(s).toString();
+    return ident.getDominantLangCodes(s).toString();
   }
 }

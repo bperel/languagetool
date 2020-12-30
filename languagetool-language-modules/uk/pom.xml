@@ -4,12 +4,12 @@
     <parent>
         <groupId>org.languagetool</groupId>
         <artifactId>languagetool-parent</artifactId>
-        <version>5.0</version>
+        <version>5.2</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
     
     <artifactId>language-uk</artifactId>
-    <url>http://www.languagetool.org</url>
+    <url>https://www.languagetool.org</url>
     <name>Ukrainian module for LanguageTool</name>
 
     <licenses>
@@ -72,7 +72,7 @@
         <dependency>
             <groupId>ua.net.nlp</groupId>
             <artifactId>morfologik-ukrainian-lt</artifactId>
-            <version>5.0.6</version>
+            <version>5.2.0</version>
         </dependency>
 
         <dependency>
