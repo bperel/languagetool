@@ -56,8 +56,8 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
   static final ContextTools contextTools;
   static final ContextTools smallContextTools;
 
-  private final PreparedStatement selectCorpusArticleWithEqualOrHigherRevisionSt;
   private final PreparedStatement insertCorpusArticleSt;
+  private final PreparedStatement insertCorpusArticleErrorSt;
   private final PreparedStatement insertCorpusMatchSt;
   private final PreparedStatement deleteNeverAppliedSuggestionsOfObsoleteArticles;
   private final PreparedStatement deleteAlreadyAppliedSuggestionsInNewArticleRevisions;
@@ -91,15 +91,15 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
       throw new RuntimeException(e);
     }
     try {
-      selectCorpusArticleWithEqualOrHigherRevisionSt = conn.prepareStatement("" +
-        " SELECT id, revision, analyzed, wikitext, css_url, html, anonymized_html FROM corpus_article article" +
-        " WHERE title = ? AND language_code = ? AND revision = (SELECT MAX(revision) from corpus_article where title=article.title) AND revision >= ?");
       insertCorpusArticleSt = conn.prepareStatement("" +
         " INSERT INTO corpus_article (language_code, title, revision, wikitext, html, anonymized_html, css_url, analyzed)" +
         " VALUES (?, ?, ?, ?, ?, ?, ?, 0)", Statement.RETURN_GENERATED_KEYS);
+      insertCorpusArticleErrorSt = conn.prepareStatement("" +
+        " INSERT INTO corpus_article (language_code, title, revision, wikitext, error, analyzed)" +
+        " VALUES (?, ?, ?, ?, ?, 1)", Statement.RETURN_GENERATED_KEYS);
       insertCorpusMatchSt = conn.prepareStatement("" +
-        " INSERT INTO corpus_match (article_id, ruleid, rule_category, rule_subid, rule_description, message, error_context, small_error_context, html_error_context, replacement_suggestion, languagetool_version)" +
-        " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        " INSERT INTO corpus_match (article_id, article_language_code, ruleid, rule_category, rule_subid, rule_description, message, error_context, small_error_context, html_error_context, replacement_suggestion, languagetool_version)" +
+        " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
       deleteNeverAppliedSuggestionsOfObsoleteArticles = conn.prepareStatement("" +
         " DELETE corpus_match" +
         " FROM corpus_match" +
@@ -120,7 +120,7 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
         " )");
       updateCorpusArticleMarkAsAnalyzed = conn.prepareStatement("" +
         " UPDATE corpus_article" +
-        " SET analyzed = 1 WHERE id = ?");
+        " SET analyzed = 1, html = null, anonymized_html = '' WHERE id = ?");
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
@@ -149,7 +149,7 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
   protected void handleResult(Sentence sentence, List<RuleMatchWithContexts> rulesMatchesWithSuggestions) throws SQLIntegrityConstraintViolationException {
     try {
       for (RuleMatchWithContexts match : rulesMatchesWithSuggestions) {
-        createSentence(sentence.getArticleId(), match);
+        createSentence(sentence.getArticleId(), sentence.getArticleLanguageCode(), match);
         ++errorCount;
         checkMaxErrors();
       }
@@ -196,34 +196,51 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
     throw new SQLException("Couldn't create article " + title);
   }
 
-  private void createSentence(long articleId, RuleMatchWithContexts match) throws SQLException {
+  void createErroredArticle(String languageCode, String title, Integer revision, String wikitext, String errorName) throws SQLException {
+    insertCorpusArticleErrorSt.setString(1, languageCode);
+    insertCorpusArticleErrorSt.setString(2, title);
+    insertCorpusArticleErrorSt.setInt(3, revision);
+    insertCorpusArticleErrorSt.setString(4, wikitext);
+    insertCorpusArticleErrorSt.setString(5, errorName);
+    insertCorpusArticleErrorSt.execute();
+
+    throw new SQLException("Couldn't create article " + title);
+  }
+
+  private void createSentence(long articleId, String languageCode, RuleMatchWithContexts match) throws SQLException {
 
     Rule rule = match.getRule();
     insertCorpusMatchSt.setLong(1, articleId);
-    insertCorpusMatchSt.setString(2, rule.getId());
-    insertCorpusMatchSt.setString(3, rule.getCategory().getName());
+    insertCorpusMatchSt.setString(2, languageCode);
+    insertCorpusMatchSt.setString(3, rule.getId());
+    insertCorpusMatchSt.setString(4, rule.getCategory().getName());
     if (rule instanceof AbstractPatternRule) {
-      insertCorpusMatchSt.setString(4, ((AbstractPatternRule) rule).getSubId());
+      insertCorpusMatchSt.setString(5, ((AbstractPatternRule) rule).getSubId());
     } else {
-      insertCorpusMatchSt.setNull(4, Types.VARCHAR);
+      insertCorpusMatchSt.setNull(5, Types.VARCHAR);
     }
-    insertCorpusMatchSt.setString(5, rule.getDescription());
-    insertCorpusMatchSt.setString(6, StringUtils.abbreviate(match.getMessage(), 255));
-    insertCorpusMatchSt.setString(7, match.getTextContext());
-    insertCorpusMatchSt.setString(8, StringUtils.abbreviate(match.getSmallTextContext(), 255));
-    insertCorpusMatchSt.setString(9, match.getHtmlContext());
+    insertCorpusMatchSt.setString(6, rule.getDescription());
+    insertCorpusMatchSt.setString(7, StringUtils.abbreviate(match.getMessage(), 255));
+    insertCorpusMatchSt.setString(8, match.getTextContext());
+    insertCorpusMatchSt.setString(9, StringUtils.abbreviate(match.getSmallTextContext(), 255));
+    insertCorpusMatchSt.setString(10, match.getHtmlContext());
 
-    insertCorpusMatchSt.setString(10, match.getSuggestedReplacements().get(0));
-    insertCorpusMatchSt.setString(11, JLanguageTool.VERSION);
+    insertCorpusMatchSt.setString(11, match.getSuggestedReplacements().get(0));
+    insertCorpusMatchSt.setString(12, JLanguageTool.VERSION);
     insertCorpusMatchSt.executeQuery();
   }
 
   Object[] getAnalyzedArticle(String title, String languageCode, int revision) throws SQLException {
+    ResultSet corpusArticleResultSet = null;
+    PreparedStatement selectCorpusArticleWithEqualOrHigherRevisionSt = conn.prepareStatement("" +
+      " SELECT id, revision, analyzed, wikitext, css_url, html, anonymized_html FROM corpus_article article" +
+      " WHERE title = ? AND language_code = ? AND revision = (SELECT MAX(revision) from corpus_article where title=article.title AND revision=article.revision) AND revision >= ?");
     selectCorpusArticleWithEqualOrHigherRevisionSt.setString(1, title);
     selectCorpusArticleWithEqualOrHigherRevisionSt.setString(2, languageCode);
     selectCorpusArticleWithEqualOrHigherRevisionSt.setInt(3, revision);
 
-    ResultSet corpusArticleResultSet = selectCorpusArticleWithEqualOrHigherRevisionSt.executeQuery();
+    try {
+    corpusArticleResultSet = selectCorpusArticleWithEqualOrHigherRevisionSt.executeQuery();
     if (corpusArticleResultSet.next()) {
       return new Object[]{
         corpusArticleResultSet.getLong(1),
@@ -234,8 +251,23 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
         corpusArticleResultSet.getString(6),
         corpusArticleResultSet.getString(7)
       };
-    } else {
+    }
+    else {
       return null;
+    }
+    } finally {
+      if (corpusArticleResultSet != null) {
+        try {
+          corpusArticleResultSet.close();
+        } catch (SQLException e) {
+          System.err.println(e.getMessage());
+        }
+      }
+      try {
+        selectCorpusArticleWithEqualOrHigherRevisionSt.close();
+      } catch (SQLException e) {
+        System.err.println(e.getMessage());
+      }
     }
   }
 
@@ -247,8 +279,8 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
   @Override
   public void close() throws Exception {
     for (PreparedStatement preparedStatement : Arrays.asList(
-      selectCorpusArticleWithEqualOrHigherRevisionSt,
       insertCorpusArticleSt,
+      insertCorpusArticleErrorSt,
       insertCorpusMatchSt,
       deleteNeverAppliedSuggestionsOfObsoleteArticles,
       deleteAlreadyAppliedSuggestionsInNewArticleRevisions,

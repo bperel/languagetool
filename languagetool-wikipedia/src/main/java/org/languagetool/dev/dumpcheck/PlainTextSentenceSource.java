@@ -64,7 +64,7 @@ public class PlainTextSentenceSource extends SentenceSource {
     if (sentences.isEmpty()) {
       throw new NoSuchElementException();
     }
-    return new Sentence(sentences.remove(0), getSource(), "<plaintext>", null, ++articleCount);
+    return new Sentence(sentences.remove(0), getSource(), "<plaintext>", null, ++articleCount, null);
   }
 
   @Override

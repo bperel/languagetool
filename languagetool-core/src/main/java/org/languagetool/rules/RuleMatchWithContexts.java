@@ -67,14 +67,15 @@ public class RuleMatchWithContexts extends RuleMatch {
       put("de", Map.of("data-mw", Set.of("parts[*].template.target[?(@.wt == 'lang')]")));
       put("en", Map.of("data-mw", Set.of("parts[*].template.target[?(@.wt == 'Lang')]")));
       put("fr", Map.of("data-mw", Set.of(
-        "parts[*].template.target[?(@.wt == 'Langue')]",
-        "parts[*].template[?(@.target.wt == 'Article')][?(@.params.langue)]",
-        "parts[*].template[?(@.target.wt == 'Ouvrage')][?(@.params.langue)]"
+        "parts[*].template.target[?(@.wt =~ /^[ ]*Langue[ ]*$/)]",
+        "parts[*].template[?(@.target.wt =~ /^[ ]*Article[ ]*$/)][?(@.params.langue)]",
+        "parts[*].template[?(@.target.wt =~ /^[ ]*Ouvrage[ ]*$/)][?(@.params.langue)]"
       )));
       put("nl", Map.of("data-mw", Set.of("parts[*].template.target[?(@.wt == 'Lang')]")));
       put("pl", Map.of("data-mw", Set.of("parts[*].template.target[?(@.wt == 'J')]")));
       put("pt", Map.of("data-mw", Set.of("parts[*].template.target[?(@.wt == 'Lang')]")));
       put("ru", Map.of("data-mw", Set.of("parts[*].template.target[?(@.wt == 'Lang')]")));
+      put("sv", Map.of("data-mw", Set.of("parts[*].template.target[?(@.wt == 'Lang')]")));
       put("uk", Map.of("data-mw", Set.of("parts[*].template.target[?(@.wt == 'Lang')]")));
     }
   };

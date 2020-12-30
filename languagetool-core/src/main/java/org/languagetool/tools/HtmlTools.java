@@ -161,7 +161,7 @@ public class HtmlTools {
         throw new SuggestionNotApplicableException(String.format("Article %s : match skipped : Match string '%s' is found multiple times in the wikitext of its article", articleTitle, stringToReplace));
       }
       else {
-        System.out.println(String.format("Article %s : Match string '%s' found in the wikitext of its article", articleTitle, stringToReplace));
+        System.out.printf("Article %s : Match string '%s' found in the wikitext of its article%n", articleTitle, stringToReplace);
         try {
           return largestErrorContextWithoutHtmlTags.replaceAll("<err>.+?</err>", suggestion);
         }

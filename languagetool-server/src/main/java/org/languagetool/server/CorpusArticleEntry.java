@@ -18,6 +18,8 @@
  */
 package org.languagetool.server;
 
+import java.sql.Timestamp;
+
 /**
  * A corpus article, fetched from a database.
  * @since 4.2
@@ -29,20 +31,24 @@ public class CorpusArticleEntry {
   private final String title;
   private final Integer revision;
   private final String wikitext;
+  private final String error;
   private final String anonymizedHtml;
   private final String cssUrl;
   private final Boolean analyzed;
+  private final Timestamp importDate;
   private final String url;
 
-  public CorpusArticleEntry(Integer id, String languageCode, String title, Integer revision, String wikiText, String anonymizedHtml, String cssUrl, Boolean analyzed, String url) {
+  public CorpusArticleEntry(Integer id, String languageCode, String title, Integer revision, String wikiText, String error, String anonymizedHtml, String cssUrl, Boolean analyzed, Timestamp importDate, String url) {
     this.id = id;
     this.languageCode = languageCode;
     this.title = title;
     this.revision = revision;
     this.wikitext = wikiText;
+    this.error = error;
     this.anonymizedHtml = anonymizedHtml;
     this.cssUrl = cssUrl;
     this.analyzed = analyzed;
+    this.importDate = importDate;
     this.url = url;
   }
 
@@ -58,24 +64,8 @@ public class CorpusArticleEntry {
     return title;
   }
 
-  public Integer getRevision() {
-    return revision;
-  }
-
   public String getWikitext() {
     return wikitext;
-  }
-
-  public String getAnonymizedHtml() {
-    return anonymizedHtml;
-  }
-
-  public String getCssUrl() {
-    return cssUrl;
-  }
-
-  public Boolean getAnalyzed() {
-    return analyzed;
   }
 
   public String getUrl() {

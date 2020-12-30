@@ -70,7 +70,7 @@ class CommonCrawlSentenceSource extends SentenceSource {
       throw new NoSuchElementException();
     }
     CommonCrawlSentence ccSentence = sentences.remove(0);
-    return new Sentence(ccSentence.sentence, getSource(), null, null, ccSentence.articleCount);
+    return new Sentence(ccSentence.sentence, getSource(), null, null, ccSentence.articleCount, null);
   }
 
   @Override

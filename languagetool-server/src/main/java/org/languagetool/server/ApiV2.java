@@ -660,11 +660,11 @@ class ApiV2 {
       g.writeStartArray();
       for (SkippedRule skippedRule : mostSkippedRules) {
         g.writeStartObject();
-        g.writeStringField("languageCode", skippedRule.getLanguageCode());
+        g.writeStringField("languageCode", skippedRule.getArticleLanguageCode());
         g.writeStringField("ruleid", skippedRule.getRuleId());
         g.writeNumberField("count", skippedRule.getTimesSkipped());
         g.writeBooleanField("ignored", skippedRule.getIgnored());
-        g.writeStringField("description", rulesPerLanguage.get(skippedRule.getLanguageCode()).stream().filter(rule -> skippedRule.getRuleId().equals(rule.getId())).findFirst().get().getDescription());
+        g.writeStringField("description", rulesPerLanguage.get(skippedRule.getArticleLanguageCode()).stream().filter(rule -> skippedRule.getRuleId().equals(rule.getId())).findFirst().get().getDescription());
         g.writeEndObject();
       }
       g.writeEndArray();
@@ -705,7 +705,7 @@ class ApiV2 {
       for (ContributionStatisticsPerMonth stat : contributorsStats) {
         g.writeStartObject();
         g.writeObjectField("month", stat.getDate());
-        g.writeObjectField("language", stat.getLanguageCode());
+        g.writeObjectField("language", stat.getArticleLanguageCode());
         g.writeObjectField("username", stat.getUsername());
         g.writeObjectField("count", stat.getCount());
         g.writeEndObject();
@@ -714,7 +714,7 @@ class ApiV2 {
       g.writeArrayFieldStart("pendingSuggestions");
       for (PendingSuggestionsPerLanguageCode stat : pendingSuggestionsStats) {
         g.writeStartObject();
-        g.writeObjectField("language", stat.getLanguageCode());
+        g.writeObjectField("language", stat.getArticleLanguageCode());
         g.writeObjectField("count", stat.getCount());
         g.writeEndObject();
       }
@@ -723,7 +723,7 @@ class ApiV2 {
       for (RefusedSuggestionCategoryPerLanguageCode stat : mostRefusedSuggestionCategoriesStats) {
         g.writeStartObject();
         g.writeObjectField("languagetoolVersion", stat.getLanguagetoolVersion());
-        g.writeObjectField("languageCode", stat.getLanguageCode());
+        g.writeObjectField("languageCode", stat.getArtcileLanguageCode());
         g.writeObjectField("ruleCategory", stat.getRuleCategory());
         g.writeObjectField("ruleDescription", stat.getRuleDescription());
         g.writeObjectField("count", stat.getCount());
@@ -746,7 +746,7 @@ class ApiV2 {
       g.writeStartArray();
       for (UserStatistics stat : userStats) {
         g.writeStartObject();
-        g.writeObjectField("languageCode", stat.getLanguageCode());
+        g.writeObjectField("languageCode", stat.getArticleLanguageCode());
         g.writeObjectField("applied", stat.getApplied());
         g.writeObjectField("count", stat.getCount());
         g.writeEndObject();

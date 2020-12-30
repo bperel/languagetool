@@ -62,7 +62,7 @@ class TatoebaSentenceSource extends SentenceSource {
     }
     TatoebaSentence sentence = sentences.remove(0);
     String title = "Tatoeba-" + sentence.id;
-    return new Sentence(sentence.sentence, getSource(), title, "http://tatoeba.org", ++articleCount);
+    return new Sentence(sentence.sentence, getSource(), title, "http://tatoeba.org", ++articleCount, null);
   }
 
   @Override

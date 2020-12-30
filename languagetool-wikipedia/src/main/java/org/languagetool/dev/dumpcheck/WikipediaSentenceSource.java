@@ -35,6 +35,7 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.SocketTimeoutException;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.text.MessageFormat;
@@ -107,13 +108,10 @@ public class WikipediaSentenceSource extends SentenceSource {
         private StringBuilder text;
 
         @Override
-        public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
+        public void startElement(String uri, String localName, String qName, Attributes attributes) {
           currentQName = qName.toLowerCase();
 
           if (currentQName.equals("revision")) {
-            if (articleCount > 200) {
-              throw new ParseLimitExceededException(articleCount);
-            }
             isRevisionContext = true;
           }
           else if (currentQName.equals("page") || currentQName.equals("contributor")) {
@@ -177,7 +175,7 @@ public class WikipediaSentenceSource extends SentenceSource {
                 String html = (String) article[5];
                 String anonymizedHtml = (String) article[6];
 
-                addSentencesFromArticle(articleId, title, revisionId, anonymizedHtml);
+                addSentencesFromArticle(articleId, language.getShortCode(), title, revisionId, anonymizedHtml);
 
                 databaseHandler.deleteNeverAppliedSuggestionsOfObsoleteArticles(title, language.getShortCode(), revisionId);
                 processSentences(wikitext, cssUrl, html);
@@ -246,7 +244,7 @@ public class WikipediaSentenceSource extends SentenceSource {
       } catch (DocumentLimitReachedException | ErrorLimitReachedException e) {
         System.out.println(getClass().getSimpleName() + ": " + e);
       } catch (Exception e) {
-        System.out.println("Check failed on sentence: " + StringUtils.abbreviate(sentence.getText(), 250));
+        System.out.println("Check failed on sentence: " + StringUtils.abbreviate(sentence.getText(), 250) + ", cause : " + e.getMessage());
       }
     }
   }
@@ -263,7 +261,7 @@ public class WikipediaSentenceSource extends SentenceSource {
     }
     WikipediaSentence wikiSentence = sentences.remove(0);
     String url = getUrl(wikiSentence.title, wikiSentence.revision);
-    return new Sentence(wikiSentence.sentence, getSource(), wikiSentence.title, url, wikiSentence.articleId);
+    return new Sentence(wikiSentence.sentence, getSource(), wikiSentence.title, url, wikiSentence.articleId, wikiSentence.articleLanguageCode);
   }
 
   @NotNull
@@ -296,16 +294,24 @@ public class WikipediaSentenceSource extends SentenceSource {
         return new Object[] { articleId, 0, false, wikitext, cssUrl, html, anonymizedHtml };
       }
     } catch (Exception e) {
+      if (e instanceof SocketTimeoutException) {
+        try {
+          databaseHandler.createErroredArticle(language.getShortCode(), title, revisionId, wikitext, e.getClass().getSimpleName());
+        }
+        catch (SQLException e2) {
+          print("Could not extract text, skipping document: " + e2 + ", full stacktrace follows:");
+        }
+      }
       print("Could not extract text, skipping document: " + e + ", full stacktrace follows:");
       e.printStackTrace();
     }
     return null;
   }
 
-  private void addSentencesFromArticle(Long articleId, String title, Integer revisionId, String anonymizedHtml) {
+  private void addSentencesFromArticle(Long articleId, String articleLanguageCode, String title, Integer revisionId, String anonymizedHtml) {
     for (String sentence : sentenceTokenizer.tokenize(anonymizedHtml)) {
       if (acceptSentence(sentence)) {
-        sentences.add(new WikipediaSentence(sentence, title, revisionId, articleId));
+        sentences.add(new WikipediaSentence(sentence, title, revisionId, articleId, articleLanguageCode));
       }
     }
   }
@@ -338,11 +344,14 @@ public class WikipediaSentenceSource extends SentenceSource {
     final String title;
     final Integer revision;
     final Long articleId;
-    WikipediaSentence(String sentence, String title, Integer revision, Long articleId) {
+    final String articleLanguageCode;
+
+    WikipediaSentence(String sentence, String title, Integer revision, Long articleId, String articleLanguageCode) {
       this.sentence = sentence;
       this.title = title;
       this.revision = revision;
       this.articleId = articleId;
+      this.articleLanguageCode = articleLanguageCode;
     }
   }
 }

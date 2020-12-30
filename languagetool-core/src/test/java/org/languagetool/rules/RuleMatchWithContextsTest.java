@@ -45,21 +45,28 @@ public class RuleMatchWithContextsTest {
   @Test
   public void testTextExcludedOnTextLangMatch() throws Exception {
     exceptionRule.expect(SuggestionNotApplicableException.class);
-    exceptionRule.expectMessage("Match ignored because it matches the following path : parts[*].template.target[?(@.wt == 'Langue')]");
+    exceptionRule.expectMessage("Match ignored because it matches the following path : parts[*].template.target[?(@.wt =~ /^[ ]*Langue[ ]*$/)]");
     callMethod("fr", "<div data-mw='{\"parts\":[{\"template\":{\"target\":{\"wt\":\"Langue\",\"href\":\"./Modèle:Langue\"}}}]}'>text</div>");
+  }
+
+  @Test
+  public void testTextExcludedOnTextLangWithSpaceMatch() throws Exception {
+    exceptionRule.expect(SuggestionNotApplicableException.class);
+    exceptionRule.expectMessage("Match ignored because it matches the following path : parts[*].template.target[?(@.wt =~ /^[ ]*Langue[ ]*$/)]");
+    callMethod("fr", "<div data-mw='{\"parts\":[{\"template\":{\"target\":{\"wt\":\"Langue \",\"href\":\"./Modèle:Langue\"}}}]}'>text</div>");
   }
 
   @Test
   public void testTextExcludedOnArticleLangMatch() throws Exception {
     exceptionRule.expect(SuggestionNotApplicableException.class);
-    exceptionRule.expectMessage("Match ignored because it matches the following path : parts[*].template[?(@.target.wt == 'Article')][?(@.params.langue)]");
+    exceptionRule.expectMessage("Match ignored because it matches the following path : parts[*].template[?(@.target.wt =~ /^[ ]*Article[ ]*$/)][?(@.params.langue)]");
     callMethod("fr", "<div data-mw='{\"parts\":[{\"template\":{\"target\":{\"wt\":\"Article\",\"href\":\"./Modèle:Article\"},\"params\":{\"langue\":{\"wt\":\"en\"}}}}]}'>text</div>");
   }
 
   @Test
   public void testTextExcludedOnBookLangMatch() throws Exception {
     exceptionRule.expect(SuggestionNotApplicableException.class);
-    exceptionRule.expectMessage("Match ignored because it matches the following path : parts[*].template[?(@.target.wt == 'Ouvrage')][?(@.params.langue)]");
+    exceptionRule.expectMessage("Match ignored because it matches the following path : parts[*].template[?(@.target.wt =~ /^[ ]*Ouvrage[ ]*$/)][?(@.params.langue)]");
     callMethod("fr", "<div data-mw='{\"parts\":[{\"template\":{\"target\":{\"wt\":\"Ouvrage\",\"href\":\"./Modèle:Ouvrage\"},\"params\":{\"langue\":{\"wt\":\"en\"}}}}]}'>text</div>");
   }
 

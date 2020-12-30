@@ -29,13 +29,15 @@ public class Sentence {
   private final String title;
   private final String url;
   private final Long articleId;
+  private final String articleLanguageCode;
 
-  Sentence(String sentence, String source, String title, String url, Long articleId) {
+  Sentence(String sentence, String source, String title, String url, Long articleId, String articleLanguageCode) {
     this.sentence = sentence.trim();
     this.source = source;
     this.title = title;
     this.url = url;
     this.articleId = articleId;
+    this.articleLanguageCode = articleLanguageCode;
   }
 
   public String getText() {
@@ -56,6 +58,10 @@ public class Sentence {
 
   Long getArticleId() {
     return articleId;
+  }
+
+  String getArticleLanguageCode() {
+    return articleLanguageCode;
   }
 
   @Override
