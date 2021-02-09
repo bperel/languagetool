@@ -5,25 +5,29 @@
         SELECT id, language_code, title, revision, wikitext, error, anonymized_html, css_url, analyzed, import_date, url FROM corpus_article WHERE id=#{id}
     </select>
     <select id="selectNonAppliedWikipediaSuggestions" resultType="org.languagetool.server.CorpusMatchEntry">
-        SELECT corpus_match.*
-        FROM corpus_match
-        WHERE applied is null
-          AND article_language_code in <foreach item="languageCode" index="index" collection="languageCodes"  open="(" separator="," close=")">
-              #{languageCode}
-          </foreach>
-          AND corpus_match.ruleid NOT IN (select ruleid from user_ignored_rules uir where (<foreach collection="usernames" index="languageCode" item="username" open="(" separator=" or " close=")">
-              (uir.username = #{username} and uir.language_code = #{languageCode})
-          </foreach>))
-          AND not exists(
-              select 1
-              from corpus_match_skipped skipped
-              where corpus_match_id = corpus_match.id
-                and <foreach collection="usernames" index="languageCode" item="username" open="(" separator=" or " close=")">
-                    (skipped.username = #{username} and article_language_code = #{languageCode})
-                </foreach>
-          )
-        order by rand()
-        limit 10
+        SELECT full_match.*
+        FROM corpus_match full_match
+        INNER JOIN (
+            SELECT match_id.id
+            FROM corpus_match match_id
+            WHERE match_id.applied is null
+              AND match_id.article_language_code in <foreach item="languageCode" index="index" collection="languageCodes"  open="(" separator="," close=")">
+                  #{languageCode}
+              </foreach>
+              AND match_id.ruleid NOT IN (select ruleid from user_ignored_rules uir where (<foreach collection="usernames" index="languageCode" item="username" open="(" separator=" or " close=")">
+                  (uir.username = #{username} and uir.language_code = #{languageCode})
+              </foreach>))
+              AND not exists(
+                  select 1
+                  from corpus_match_skipped skipped
+                  where skipped.corpus_match_id = match_id.id
+                    and <foreach collection="usernames" index="languageCode" item="username" open="(" separator=" or " close=")">
+                        (skipped.username = #{username} and match_id.article_language_code = #{languageCode})
+                    </foreach>
+              )
+            order by rand()
+            limit 10
+        ) AS match_id on match_id.id = full_match.id
     </select>
     <select id="selectAppliedWikipediaSuggestions" resultType="org.languagetool.server.CorpusMatchEntry">
         SELECT id,
