@@ -1,3 +1,5 @@
+#!/bin/bash
+
 wikis="ca de fr nl pl pt ru sv uk"
 
 cd /home/dumps || exit 1
@@ -12,6 +14,8 @@ while true; do
     if [ "$pendingSuggestions" -gt 10000 ]; then
       echo "There are already more than 10000 suggestions for $wiki ($pendingSuggestions suggestions), skipping import for this language"
       continue
+    else
+      echo "There are currently $pendingSuggestions suggestions pending for $wiki"
     fi
 
     curl -s https://dumps.wikimedia.org/${wiki}wiki/ \
@@ -48,6 +52,13 @@ while true; do
             && touch "$file.done" && rm -f "$file" && break
         fi
       done
+
+      pendingSuggestions=$(curl 'http://languagetool:8010/v2/wikipedia/stats' \
+        | jq ".pendingSuggestions[] | select(.language==\"$wiki\").count")
+      if [ "$pendingSuggestions" -gt 10000 ]; then
+        echo "There are already more than 10000 suggestions for $wiki ($pendingSuggestions suggestions), skipping import for this language"
+        break
+      fi
     done
   done
 
