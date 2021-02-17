@@ -43,6 +43,11 @@ public class RuleMatchWithContextsTest {
   }
 
   @Test
+  public void testTextNotExcludedIfNoPartsData() throws Exception {
+    callMethod("fr", "<div data-mw='{\"name\":\"ref\",\"attrs\":{},\"body\":{\"id\":\"mw-reference-text-cite_note-1\"}}'></div>");
+  }
+
+  @Test
   public void testTextExcludedOnTextLangMatch() throws Exception {
     exceptionRule.expect(SuggestionNotApplicableException.class);
     exceptionRule.expectMessage("Match ignored because it matches the following path : parts[*].template.target[?(@.wt =~ /^[ ]*Langue[ ]*$/)]");

@@ -2,6 +2,7 @@ package org.languagetool.rules;
 
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
+import com.jayway.jsonpath.PathNotFoundException;
 import com.jayway.jsonpath.spi.json.JsonProvider;
 import net.minidev.json.JSONArray;
 import org.languagetool.AnalyzedSentence;
@@ -165,10 +166,13 @@ public class RuleMatchWithContexts extends RuleMatch {
       if (attribute != null) {
         Object attributeContent = jsonProvider.parse(attribute.getNodeValue());
         for (String jsonPath : excludedJsonPathsForLanguage.get(attributeName)) {
-          JSONArray match = JsonPath.read(attributeContent, jsonPath);
-          if (match != null && !match.isEmpty()) {
-            throw new SuggestionNotApplicableException(" Match ignored because it matches the following path : " + jsonPath);
+          try {
+            JSONArray match = JsonPath.read(attributeContent, jsonPath);
+            if (match != null && !match.isEmpty()) {
+              throw new SuggestionNotApplicableException(" Match ignored because it matches the following path : " + jsonPath);
+            }
           }
+          catch(PathNotFoundException ignored) {}
         }
       }
     }
