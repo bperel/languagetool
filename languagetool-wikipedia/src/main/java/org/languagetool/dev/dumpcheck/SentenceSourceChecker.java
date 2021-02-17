@@ -236,7 +236,7 @@ public class SentenceSourceChecker {
     System.out.println("Skip: " + sentencesToSkip);
     //System.out.println("Version: " + JLanguageTool.VERSION + " (" + JLanguageTool.BUILD_DATE + ")");
 
-    CorpusMatchDatabaseHandler databaseHandler = new CorpusMatchDatabaseHandler(propFile, maxSentences, maxErrors);
+    CorpusMatchDatabaseHandler databaseHandler = new CorpusMatchDatabaseHandler(propFile, lang.getShortCode(), maxSentences, maxErrors);
     FileInputStream inStream = new FileInputStream(propFile);
     Properties properties = new Properties();
     properties.load(inStream);

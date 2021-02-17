@@ -42,15 +42,18 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
   private static final String MARKER_START = "<err>";
   private static final String MARKER_END = "</err>";
 
+  private int matchCount = 0;
   private int sentenceCount = 0;
   private int errorCount = 0;
 
+  private final int maxMatches;
   private final int maxSentences;
   private final int maxErrors;
 
   private final Connection conn;
 
   static final int MAX_CONTEXT_LENGTH = 500;
+  static final int MAX_NON_APPLIED_MATCHES_PER_LANGUAGE = 10000;
   private static final int SMALL_CONTEXT_LENGTH = 40;  // do not modify - it would break lookup of errors marked as 'false alarm'
 
   static final ContextTools contextTools;
@@ -76,7 +79,7 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
     smallContextTools.setEscapeHtml(false);
   }
 
-  CorpusMatchDatabaseHandler(File propertiesFile, int maxSentences, int maxErrors) {
+  CorpusMatchDatabaseHandler(File propertiesFile, String languageCode, int maxSentences, int maxErrors) {
     this.maxSentences = maxSentences;
     this.maxErrors = maxErrors;
 
@@ -121,6 +124,20 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
       updateCorpusArticleMarkAsAnalyzed = conn.prepareStatement("" +
         " UPDATE corpus_article" +
         " SET analyzed = 1, html = null, anonymized_html = '' WHERE id = ?");
+
+
+      PreparedStatement selectCorpusMatchCountSt = conn.prepareStatement("" +
+        " SELECT COUNT(*) AS nonAppliedCount FROM corpus_match WHERE applied IS NULL AND article_language_code=?"
+      );
+      selectCorpusMatchCountSt.setString(1, languageCode);
+      selectCorpusMatchCountSt.execute();
+      ResultSet result = selectCorpusMatchCountSt.getResultSet();
+
+      this.maxMatches = result.next()
+        ? MAX_NON_APPLIED_MATCHES_PER_LANGUAGE - result.getInt("nonAppliedCount")
+        : MAX_NON_APPLIED_MATCHES_PER_LANGUAGE;
+      System.out.println("Max matches for " + languageCode + " : " + this.maxMatches);
+
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
@@ -129,6 +146,12 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
   protected void checkMaxSentences() {
     if (maxSentences > 0 && sentenceCount >= maxSentences) {
       throw new DocumentLimitReachedException(maxSentences);
+    }
+  }
+
+  protected void checkMaxMatches() {
+    if (maxMatches > 0 && matchCount >= maxMatches) {
+      throw new MatchLimitReachedException(maxMatches);
     }
   }
 
@@ -152,6 +175,8 @@ class CorpusMatchDatabaseHandler implements AutoCloseable {
         createSentence(sentence.getArticleId(), sentence.getArticleLanguageCode(), match);
         ++errorCount;
         checkMaxErrors();
+        ++matchCount;
+        checkMaxMatches();
       }
       ++sentenceCount;
       checkMaxSentences();
